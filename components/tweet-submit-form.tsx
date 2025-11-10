@@ -2,6 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Field, FieldLabel, FieldDescription } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { CheckCircle2 } from "lucide-react";
 
 interface TweetSubmitFormProps {
 	apiSecret?: string;
@@ -117,127 +123,110 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 
 	return (
 		<div className="w-full max-w-2xl mx-auto p-6 border rounded-lg bg-card">
-			<div className="flex justify-between items-center mb-4">
+			<div className="flex justify-between items-center mb-6">
 				<h2 className="text-2xl font-semibold">Add a Tweet</h2>
 
 				{/* API Secret Status */}
 				{hasStoredSecret && (
 					<div className="flex items-center gap-2 text-sm">
 						<span className="text-green-600 dark:text-green-400 flex items-center gap-1">
-							<svg
-								className="w-4 h-4"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-								aria-label="Checkmark"
-							>
-								<title>Checkmark</title>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-								/>
-							</svg>
+							<CheckCircle2 className="h-4 w-4" />
 							API Secret Saved
 						</span>
-						<button
+						<Button
 							type="button"
+							variant="ghost"
+							size="sm"
 							onClick={handleClearSecret}
-							className="text-xs text-gray-500 hover:text-red-600 underline"
+							className="text-xs h-auto px-2 py-1 text-muted-foreground hover:text-destructive"
 						>
 							Clear
-						</button>
+						</Button>
 					</div>
 				)}
 			</div>
 
-			<form onSubmit={handleSubmit} className="space-y-4">
-				<div>
-					<label htmlFor="tweet-url" className="block text-sm font-medium mb-2">
-						Tweet URL or ID
-					</label>
-					<input
+			<form onSubmit={handleSubmit} className="space-y-6">
+				<Field>
+					<FieldLabel htmlFor="tweet-url">Tweet URL or ID</FieldLabel>
+					<Input
 						id="tweet-url"
 						type="text"
 						value={url}
 						onChange={(e) => setUrl(e.target.value)}
 						placeholder="https://twitter.com/user/status/123... or just the ID"
-						className="w-full px-4 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
 						required
 						disabled={isSubmitting}
 					/>
-					<p className="text-sm text-muted-foreground mt-1">
+					<FieldDescription>
 						Paste a full Twitter/X URL or just the tweet ID
-					</p>
-				</div>
+					</FieldDescription>
+				</Field>
 
-				<div>
-					<label
-						htmlFor="submitted-by"
-						className="block text-sm font-medium mb-2"
-					>
-						Your Name (Optional)
-					</label>
-					<input
+				<Field>
+					<FieldLabel htmlFor="submitted-by">Your Name</FieldLabel>
+					<Input
 						id="submitted-by"
 						type="text"
 						value={submittedBy}
 						onChange={(e) => setSubmittedBy(e.target.value)}
 						placeholder="e.g., Nico, Rebecca"
-						className="w-full px-4 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
 						disabled={isSubmitting}
 					/>
-				</div>
+					<FieldDescription>
+						Optional - helps identify who added the tweet
+					</FieldDescription>
+				</Field>
 
 				{/* API Secret field - only show if not stored or user wants to change */}
 				{!apiSecret && (showSecretField || !hasStoredSecret) && (
-					<div>
-						<label
-							htmlFor="api-secret"
-							className="block text-sm font-medium mb-2"
-						>
-							API Secret
-						</label>
-						<input
-							id="api-secret"
-							type="password"
-							value={secret}
-							onChange={(e) => setSecret(e.target.value)}
-							placeholder="Enter your API secret"
-							className="w-full px-4 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-							required
-							disabled={isSubmitting}
-						/>
+					<div className="space-y-4">
+						<Field>
+							<FieldLabel htmlFor="api-secret">API Secret</FieldLabel>
+							<Input
+								id="api-secret"
+								type="password"
+								value={secret}
+								onChange={(e) => setSecret(e.target.value)}
+								placeholder="Enter your API secret"
+								required
+								disabled={isSubmitting}
+							/>
+							<FieldDescription>
+								The shared secret to authenticate your submission
+							</FieldDescription>
+						</Field>
 
 						{/* Remember checkbox */}
-						<div className="flex items-center gap-2 mt-2">
-							<input
+						<div className="flex items-center space-x-2">
+							<Checkbox
 								id="remember-secret"
-								type="checkbox"
 								checked={rememberSecret}
-								onChange={(e) => setRememberSecret(e.target.checked)}
-								className="w-4 h-4 rounded border-gray-300"
+								onCheckedChange={(checked) =>
+									setRememberSecret(checked === true)
+								}
 							/>
-							<label
+							<Label
 								htmlFor="remember-secret"
-								className="text-sm text-muted-foreground cursor-pointer"
+								className="text-sm font-normal text-muted-foreground cursor-pointer"
 							>
 								Remember secret in this browser (stored locally)
-							</label>
+							</Label>
 						</div>
 					</div>
 				)}
 
 				{/* Show button to enter secret if one is stored */}
 				{hasStoredSecret && !showSecretField && (
-					<button
+					<Button
 						type="button"
+						variant="link"
+						size="sm"
 						onClick={() => setShowSecretField(true)}
-						className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+						className="h-auto p-0"
 					>
 						Change API secret
-					</button>
+					</Button>
 				)}
 
 				{message && (
@@ -252,13 +241,9 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 					</div>
 				)}
 
-				<button
-					type="submit"
-					disabled={isSubmitting}
-					className="w-full px-6 py-3 bg-primary text-primary-foreground rounded-md font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-				>
+				<Button type="submit" disabled={isSubmitting} className="w-full">
 					{isSubmitting ? "Adding..." : "Add Tweet"}
-				</button>
+				</Button>
 			</form>
 		</div>
 	);

@@ -66,24 +66,26 @@ export function TweetWithActions({
 	};
 
 	return (
-		<div className="w-full space-y-0  ">
+		<div className="w-full flex flex-col items-center space-y-2">
 			{/* Tweet display */}
-			<div className="tweet-container flex justify-center ">
+			<div className="tweet-container w-full flex justify-center border rounded-lg">
+				{/* @ts-expect-error - React 19 compatibility issue with react-tweet */}
 				<Tweet id={tweetId} />
 			</div>
 
-			{/* Action buttons below the tweet */}
-			<div className="flex justify-end">
+			{/* Action buttons below the tweet - constrained to tweet width */}
+			<div className="w-full max-w-[550px] flex justify-end px-2">
 				{!showConfirm ? (
 					<Button
 						variant="destructive"
+						size="sm"
 						onClick={() => setShowConfirm(true)}
 						disabled={isDeleting}
 					>
 						Delete Tweet
 					</Button>
 				) : (
-					<div className="bg-card border rounded-md p-4 shadow-lg space-y-3">
+					<div className="bg-card border rounded-md p-4 shadow-lg space-y-3 w-full">
 						<p className="text-sm font-medium">
 							Are you sure you want to delete this tweet?
 						</p>
@@ -95,25 +97,27 @@ export function TweetWithActions({
 						)}
 
 						<div className="flex gap-2 justify-end">
-							<button
+							<Button
 								type="button"
+								variant="outline"
+								size="sm"
 								onClick={() => {
 									setShowConfirm(false);
 									setError(null);
 								}}
 								disabled={isDeleting}
-								className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
 							>
 								Cancel
-							</button>
-							<button
+							</Button>
+							<Button
 								type="button"
+								variant="destructive"
+								size="sm"
 								onClick={handleDelete}
 								disabled={isDeleting}
-								className="px-4 py-2 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 							>
 								{isDeleting ? "Deleting..." : "Delete"}
-							</button>
+							</Button>
 						</div>
 					</div>
 				)}

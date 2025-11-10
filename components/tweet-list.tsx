@@ -28,6 +28,7 @@ export function TweetList({
 						<TweetWithActions tweetId={tweet.id} apiSecret={apiSecret} />
 					) : (
 						<div className="tweet-container flex justify-center">
+							{/* @ts-expect-error - React 19 compatibility issue with react-tweet */}
 							<Tweet id={tweet.id} />
 						</div>
 					)}

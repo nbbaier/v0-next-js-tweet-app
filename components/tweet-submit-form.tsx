@@ -142,7 +142,7 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 			{/* Header with collapse toggle */}
 			<div className="flex justify-between items-center p-6 pb-0">
 				<div className="flex items-center gap-3">
-					<h2 className="text-2xl font-semibold">Add a Tweet</h2>
+					<h2 className="text-xl font-semibold">Add a Tweet</h2>
 					<Button
 						type="button"
 						variant="ghost"
@@ -157,6 +157,11 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 							<ChevronUp className="h-4 w-4" />
 						)}
 					</Button>
+					{isCollapsed && (
+						<span className="text-sm text-muted-foreground">
+							Click to expand and add a tweet
+						</span>
+					)}
 				</div>
 
 				{/* API Secret Status */}
@@ -282,14 +287,8 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 				</form>
 			)}
 
-			{/* Collapsed state hint */}
-			{isCollapsed && (
-				<div className="px-6 pb-6 pt-4">
-					<p className="text-sm text-muted-foreground">
-						Click to expand and add a tweet
-					</p>
-				</div>
-			)}
+			{/* Add padding when collapsed */}
+			{isCollapsed && <div className="pb-6" />}
 		</div>
 	);
 }

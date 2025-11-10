@@ -5,28 +5,56 @@
  * Allows users to submit tweet URLs to be added to the feed
  */
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 
 interface TweetSubmitFormProps {
   apiSecret?: string
 }
 
+const STORAGE_KEY = "tweet_api_secret"
+const NAME_STORAGE_KEY = "tweet_submitter_name"
+
 export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
   const [url, setUrl] = useState("")
   const [secret, setSecret] = useState(apiSecret || "")
   const [submittedBy, setSubmittedBy] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [rememberSecret, setRememberSecret] = useState(false)
+  const [hasStoredSecret, setHasStoredSecret] = useState(false)
+  const [showSecretField, setShowSecretField] = useState(false)
   const [message, setMessage] = useState<{
     type: "success" | "error"
     text: string
   } | null>(null)
   const router = useRouter()
 
+  // Load stored values from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedSecret = localStorage.getItem(STORAGE_KEY)
+      const storedName = localStorage.getItem(NAME_STORAGE_KEY)
+
+      if (storedSecret) {
+        setSecret(storedSecret)
+        setHasStoredSecret(true)
+        setRememberSecret(true)
+      } else {
+        setShowSecretField(true)
+      }
+
+      if (storedName) {
+        setSubmittedBy(storedName)
+      }
+    }
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setMessage(null)
+
+    const secretToUse = secret.trim()
 
     try {
       const response = await fetch("/api/tweets", {
@@ -36,7 +64,7 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
         },
         body: JSON.stringify({
           url: url.trim(),
-          secret: secret.trim(),
+          secret: secretToUse,
           submittedBy: submittedBy.trim() || undefined,
         }),
       })
@@ -47,15 +75,27 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
         throw new Error(data.error || "Failed to add tweet")
       }
 
+      // Save to localStorage if remember is checked and secret was valid
+      if (rememberSecret && secretToUse && typeof window !== "undefined") {
+        localStorage.setItem(STORAGE_KEY, secretToUse)
+        setHasStoredSecret(true)
+      }
+
+      // Save name to localStorage for convenience
+      if (submittedBy.trim() && typeof window !== "undefined") {
+        localStorage.setItem(NAME_STORAGE_KEY, submittedBy.trim())
+      }
+
       setMessage({
         type: "success",
-        text: `Tweet added successfully! ID: ${data.tweetId}`,
+        text: `Tweet added successfully!`,
       })
       setUrl("")
-      setSubmittedBy("")
 
       // Refresh the page to show the new tweet
-      router.refresh()
+      setTimeout(() => {
+        router.refresh()
+      }, 500)
     } catch (error) {
       setMessage({
         type: "error",
@@ -66,16 +106,58 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
     }
   }
 
+  const handleClearSecret = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(STORAGE_KEY)
+      setSecret("")
+      setHasStoredSecret(false)
+      setRememberSecret(false)
+      setShowSecretField(true)
+      setMessage({
+        type: "success",
+        text: "API secret cleared from browser storage",
+      })
+    }
+  }
+
   return (
     <div className="w-full max-w-2xl mx-auto p-6 border rounded-lg bg-card">
-      <h2 className="text-2xl font-semibold mb-4">Add a Tweet</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold">Add a Tweet</h2>
+
+        {/* API Secret Status */}
+        {hasStoredSecret && (
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-green-600 dark:text-green-400 flex items-center gap-1">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              API Secret Saved
+            </span>
+            <button
+              type="button"
+              onClick={handleClearSecret}
+              className="text-xs text-gray-500 hover:text-red-600 underline"
+            >
+              Clear
+            </button>
+          </div>
+        )}
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label
-            htmlFor="tweet-url"
-            className="block text-sm font-medium mb-2"
-          >
+          <label htmlFor="tweet-url" className="block text-sm font-medium mb-2">
             Tweet URL or ID
           </label>
           <input
@@ -108,7 +190,8 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
           />
         </div>
 
-        {!apiSecret && (
+        {/* API Secret field - only show if not stored or user wants to change */}
+        {!apiSecret && (showSecretField || !hasStoredSecret) && (
           <div>
             <label htmlFor="api-secret" className="block text-sm font-medium mb-2">
               API Secret
@@ -123,10 +206,35 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
               required
               disabled={isSubmitting}
             />
-            <p className="text-sm text-muted-foreground mt-1">
-              The shared secret to authenticate your submission
-            </p>
+
+            {/* Remember checkbox */}
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                id="remember-secret"
+                type="checkbox"
+                checked={rememberSecret}
+                onChange={(e) => setRememberSecret(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300"
+              />
+              <label
+                htmlFor="remember-secret"
+                className="text-sm text-muted-foreground cursor-pointer"
+              >
+                Remember secret in this browser (stored locally)
+              </label>
+            </div>
           </div>
+        )}
+
+        {/* Show button to enter secret if one is stored */}
+        {hasStoredSecret && !showSecretField && (
+          <button
+            type="button"
+            onClick={() => setShowSecretField(true)}
+            className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            Change API secret
+          </button>
         )}
 
         {message && (

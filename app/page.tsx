@@ -18,9 +18,6 @@ export default async function Home() {
 					<TweetSubmitForm />
 				</section>
 
-				{/* Divider */}
-				<div className="w-full max-w-2xl border-t" />
-
 				{/* Tweet feed */}
 				<section className="w-full max-w-4xl">
 					<h2 className="text-2xl font-semibold mb-6 text-center">

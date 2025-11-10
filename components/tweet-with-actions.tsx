@@ -20,7 +20,6 @@ export function TweetWithActions({
 	const [error, setError] = useState<string | null>(null);
 	const router = useRouter();
 
-	// Load stored API secret from localStorage on mount
 	useEffect(() => {
 		if (typeof window !== "undefined") {
 			const saved = localStorage.getItem("tweet_api_secret");
@@ -70,7 +69,7 @@ export function TweetWithActions({
 			{/* Tweet display */}
 			<div className="flex justify-center w-full tweet-container">
 				{/* @ts-expect-error - React 19 compatibility issue with react-tweet */}
-			<Tweet id={tweetId} />
+				<Tweet id={tweetId} />
 			</div>
 
 			{/* Action buttons below the tweet - constrained to tweet width */}

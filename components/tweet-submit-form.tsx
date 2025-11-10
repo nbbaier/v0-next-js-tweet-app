@@ -1,13 +1,13 @@
 "use client";
 
+import { CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Field, FieldLabel, FieldDescription } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 
 interface TweetSubmitFormProps {
 	apiSecret?: string;
@@ -138,11 +138,11 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 	};
 
 	return (
-		<div className="w-full max-w-2xl mx-auto border rounded-lg bg-card transition-all">
+		<div className="w-full max-w-xl mx-auto border rounded-lg bg-card transition-all">
 			{/* Header with collapse toggle */}
 			<div className="flex justify-between items-center p-6 pb-0">
 				<div className="flex items-center gap-3">
-					<h2 className="text-xl font-semibold">Add a Tweet</h2>
+					<h2 className="text-xl font-semibold -mr-1">Add a Tweet</h2>
 					<Button
 						type="button"
 						variant="ghost"
@@ -157,15 +157,10 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 							<ChevronUp className="h-4 w-4" />
 						)}
 					</Button>
-					{isCollapsed && (
-						<span className="text-sm text-muted-foreground">
-							Click to expand and add a tweet
-						</span>
-					)}
 				</div>
 
 				{/* API Secret Status */}
-				{hasStoredSecret && !isCollapsed && (
+				{hasStoredSecret && (
 					<div className="flex items-center gap-2 text-sm">
 						<span className="text-green-600 dark:text-green-400 flex items-center gap-1">
 							<CheckCircle2 className="h-4 w-4" />
@@ -187,99 +182,99 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 			{/* Form content - conditionally rendered */}
 			{!isCollapsed && (
 				<form onSubmit={handleSubmit} className="space-y-6 p-6 pt-6">
-				<Field>
-					<FieldLabel htmlFor="tweet-url">Tweet URL or ID</FieldLabel>
-					<Input
-						id="tweet-url"
-						type="text"
-						value={url}
-						onChange={(e) => setUrl(e.target.value)}
-						placeholder="https://twitter.com/user/status/123... or just the ID"
-						required
-						disabled={isSubmitting}
-					/>
-					<FieldDescription>
-						Paste a full Twitter/X URL or just the tweet ID
-					</FieldDescription>
-				</Field>
+					<Field>
+						<FieldLabel htmlFor="tweet-url">Tweet URL or ID</FieldLabel>
+						<Input
+							id="tweet-url"
+							type="text"
+							value={url}
+							onChange={(e) => setUrl(e.target.value)}
+							placeholder="https://twitter.com/user/status/123... or just the ID"
+							required
+							disabled={isSubmitting}
+						/>
+						<FieldDescription>
+							Paste a full Twitter/X URL or just the tweet ID
+						</FieldDescription>
+					</Field>
 
-				<Field>
-					<FieldLabel htmlFor="submitted-by">Your Name</FieldLabel>
-					<Input
-						id="submitted-by"
-						type="text"
-						value={submittedBy}
-						onChange={(e) => setSubmittedBy(e.target.value)}
-						placeholder="e.g., Nico, Rebecca"
-						disabled={isSubmitting}
-					/>
-					<FieldDescription>
-						Optional - helps identify who added the tweet
-					</FieldDescription>
-				</Field>
+					<Field>
+						<FieldLabel htmlFor="submitted-by">Your Name</FieldLabel>
+						<Input
+							id="submitted-by"
+							type="text"
+							value={submittedBy}
+							onChange={(e) => setSubmittedBy(e.target.value)}
+							placeholder="e.g., Nico, Rebecca"
+							disabled={isSubmitting}
+						/>
+						<FieldDescription>
+							Optional - helps identify who added the tweet
+						</FieldDescription>
+					</Field>
 
-				{/* API Secret field - only show if not stored or user wants to change */}
-				{!apiSecret && (showSecretField || !hasStoredSecret) && (
-					<div className="space-y-4">
-						<Field>
-							<FieldLabel htmlFor="api-secret">API Secret</FieldLabel>
-							<Input
-								id="api-secret"
-								type="password"
-								value={secret}
-								onChange={(e) => setSecret(e.target.value)}
-								placeholder="Enter your API secret"
-								required
-								disabled={isSubmitting}
-							/>
-							<FieldDescription>
-								The shared secret to authenticate your submission
-							</FieldDescription>
-						</Field>
+					{/* API Secret field - only show if not stored or user wants to change */}
+					{!apiSecret && (showSecretField || !hasStoredSecret) && (
+						<div className="space-y-4">
+							<Field>
+								<FieldLabel htmlFor="api-secret">API Secret</FieldLabel>
+								<Input
+									id="api-secret"
+									type="password"
+									value={secret}
+									onChange={(e) => setSecret(e.target.value)}
+									placeholder="Enter your API secret"
+									required
+									disabled={isSubmitting}
+								/>
+								<FieldDescription>
+									The shared secret to authenticate your submission
+								</FieldDescription>
+							</Field>
 
-						{/* Remember checkbox */}
-						<div className="flex items-center space-x-2">
-							<Checkbox
-								id="remember-secret"
-								checked={rememberSecret}
-								onCheckedChange={(checked) =>
-									setRememberSecret(checked === true)
-								}
-							/>
-							<Label
-								htmlFor="remember-secret"
-								className="text-sm font-normal text-muted-foreground cursor-pointer"
-							>
-								Remember secret in this browser (stored locally)
-							</Label>
+							{/* Remember checkbox */}
+							<div className="flex items-center space-x-2">
+								<Checkbox
+									id="remember-secret"
+									checked={rememberSecret}
+									onCheckedChange={(checked) =>
+										setRememberSecret(checked === true)
+									}
+								/>
+								<Label
+									htmlFor="remember-secret"
+									className="text-sm font-normal text-muted-foreground cursor-pointer"
+								>
+									Remember secret in this browser (stored locally)
+								</Label>
+							</div>
 						</div>
-					</div>
-				)}
+					)}
 
-				{/* Show button to enter secret if one is stored */}
-				{hasStoredSecret && !showSecretField && (
-					<Button
-						type="button"
-						variant="link"
-						size="sm"
-						onClick={() => setShowSecretField(true)}
-						className="h-auto p-0"
-					>
-						Change API secret
-					</Button>
-				)}
+					{/* Show button to enter secret if one is stored */}
+					{hasStoredSecret && !showSecretField && (
+						<Button
+							type="button"
+							variant="link"
+							size="sm"
+							onClick={() => setShowSecretField(true)}
+							className="h-auto p-0"
+						>
+							Change API secret
+						</Button>
+					)}
 
-				{message && (
-					<div
-						className={`p-4 rounded-md ${
-							message.type === "success"
-								? "bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-400"
-								: "bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-400"
-						}`}
-					>
-						{message.text}
-					</div>
-				)}
+					{message && (
+						<div
+							className={`p-4 rounded-md ${
+								message.type === "success"
+									? "bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-400"
+									: "bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-400"
+							}`}
+						>
+							{message.text}
+						</div>
+					)}
 
 					<Button type="submit" disabled={isSubmitting} className="w-full">
 						{isSubmitting ? "Adding..." : "Add Tweet"}

@@ -66,15 +66,14 @@ export function TweetWithActions({
 	};
 
 	return (
-		<div className="w-full flex flex-col items-center space-y-2">
+		<div className="flex flex-col items-center space-y-1 w-full">
 			{/* Tweet display */}
-			<div className="tweet-container w-full flex justify-center border rounded-lg">
-				{/* @ts-expect-error - React 19 compatibility issue with react-tweet */}
+			<div className="flex justify-center w-full tweet-container">
 				<Tweet id={tweetId} />
 			</div>
 
 			{/* Action buttons below the tweet - constrained to tweet width */}
-			<div className="w-full max-w-[550px] flex justify-end px-2">
+			<div className="w-full max-w-[calc(550px+1rem)] flex justify-end px-2">
 				{!showConfirm ? (
 					<Button
 						variant="destructive"
@@ -85,13 +84,13 @@ export function TweetWithActions({
 						Delete Tweet
 					</Button>
 				) : (
-					<div className="bg-card border rounded-md p-4 shadow-lg space-y-3 w-full">
+					<div className="p-4 space-y-3 w-full rounded-md border shadow-lg bg-card">
 						<p className="text-sm font-medium">
 							Are you sure you want to delete this tweet?
 						</p>
 
 						{error && (
-							<p className="text-xs text-red-600 bg-red-50 dark:bg-red-900/20 p-2 rounded">
+							<p className="p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20">
 								{error}
 							</p>
 						)}

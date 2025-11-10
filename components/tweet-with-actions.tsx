@@ -69,7 +69,8 @@ export function TweetWithActions({
 		<div className="flex flex-col items-center space-y-1 w-full">
 			{/* Tweet display */}
 			<div className="flex justify-center w-full tweet-container">
-				<Tweet id={tweetId} />
+				{/* @ts-expect-error - React 19 compatibility issue with react-tweet */}
+			<Tweet id={tweetId} />
 			</div>
 
 			{/* Action buttons below the tweet - constrained to tweet width */}

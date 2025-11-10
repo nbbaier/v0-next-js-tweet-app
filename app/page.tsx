@@ -11,7 +11,7 @@ export default async function Home() {
 		<div className="min-h-screen flex flex-col">
 			<TweetFeedHeader />
 
-			<main className="flex-1 flex flex-col items-center justify-center py-4 px-4 border border-black">
+			<main className="flex-1 flex flex-col items-center justify-center p-4">
 				<TweetList tweets={tweets} />
 			</main>
 

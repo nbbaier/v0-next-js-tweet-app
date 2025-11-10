@@ -4,12 +4,7 @@
  */
 
 import { getTweetIdsFromStorage } from "./tweet-storage";
-
-export const DEVELOPMENT_TWEET_IDS = [
-	"1987941484176560364",
-	"1987794603982938338",
-	"1987940762143826419",
-];
+import { DEVELOPMENT_TWEET_IDS } from "./development-tweets";
 
 /**
  * Get tweet IDs from Redis storage

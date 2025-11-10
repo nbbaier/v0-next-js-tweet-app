@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { TweetData } from "@/lib/tweet-service";
 import { TweetList } from "./tweet-list";
-import { DEVELOPMENT_TWEET_IDS } from "@/lib/tweet-config";
+import { DEVELOPMENT_TWEET_IDS } from "@/lib/development-tweets";
 
 interface TweetFeedProps {
 	tweets: TweetData[];

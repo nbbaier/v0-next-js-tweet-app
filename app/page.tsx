@@ -1,5 +1,5 @@
-import { TweetFeedHeader } from "@/components/tweet-feed-header";
 import { TweetFeed } from "@/components/tweet-feed";
+import { TweetFeedHeader } from "@/components/tweet-feed-header";
 import { TweetSubmitForm } from "@/components/tweet-submit-form";
 import { getTweetIds } from "@/lib/tweet-config";
 import { fetchTweetsWithCache } from "@/lib/tweet-service";
@@ -12,22 +12,17 @@ export default async function Home() {
 		<div className="min-h-screen flex flex-col">
 			<TweetFeedHeader />
 
-			<main className="flex-1 flex flex-col items-center p-4 gap-8">
-				{/* Tweet submission form */}
-				<section className="w-full max-w-2xl mt-8">
+			<main className="flex-1 flex flex-col items-center py-0 px-4 gap-8 outline-red-500">
+				<section className="bg-card w-full max-w-2xl mt-8">
 					<TweetSubmitForm />
 				</section>
 
-				{/* Tweet feed */}
-				<section className="w-full max-w-4xl">
-					<h2 className="text-2xl font-semibold mb-6 text-center">
-						Your Shared Tweets
-					</h2>
+				<section className="w-full py-9 max-w-2xl border border-black rounded-md">
 					<TweetFeed tweets={tweets} showActions={true} />
 				</section>
 			</main>
 
-			<footer className="border-t py-6 mt-8">
+			<footer className="py-6 mt-8">
 				<div className="flex justify-center">
 					<p className="text-center text-sm text-muted-foreground">
 						Shared tweet feed • Add tweets from Twitter/X to save and share

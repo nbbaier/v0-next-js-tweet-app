@@ -167,11 +167,12 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 				type: "success",
 				text: "API secret cleared from browser storage",
 			});
+			2;
 		}
 	};
 
 	return (
-		<div className="w-full max-w-xl mx-auto border rounded-lg bg-card transition-all">
+		<div className="w-full max-w-2xl mx-auto border border-black rounded-md bg-card transition-all">
 			{/* Header with collapse toggle */}
 			<div className="flex justify-between items-center p-6 pb-0">
 				<div className="flex items-center gap-3">

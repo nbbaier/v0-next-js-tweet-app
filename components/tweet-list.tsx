@@ -1,8 +1,3 @@
-/**
- * Tweet list component
- * Renders a list of tweets using react-tweet with action buttons
- */
-
 import type { TweetData } from "@/lib/tweet-service";
 import { TweetWithActions } from "./tweet-with-actions";
 

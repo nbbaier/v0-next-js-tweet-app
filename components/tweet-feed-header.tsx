@@ -1,7 +1,3 @@
-/**
- * Tweet feed header component
- */
-
 export function TweetFeedHeader() {
 	return (
 		<div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

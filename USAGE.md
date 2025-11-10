@@ -61,7 +61,7 @@ curl -X POST https://your-app.vercel.app/api/tweets \
   -d '{
     "url": "https://twitter.com/user/status/1234567890",
     "secret": "your-api-secret",
-    "submittedBy": "Partner 1"
+    "submittedBy": "**Partner** 1"
   }'
 ```
 

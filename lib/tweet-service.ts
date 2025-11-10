@@ -3,11 +3,11 @@
  * Handles fetching and caching logic with clean separation
  */
 
-import { getCachedTweet, setCachedTweet } from "./tweet-cache"
+import { getCachedTweet, setCachedTweet } from "./tweet-cache";
 
 export interface TweetData {
-  id: string
-  // Add other tweet metadata as needed
+	id: string;
+	// Add other tweet metadata as needed
 }
 
 /**
@@ -15,29 +15,33 @@ export interface TweetData {
  * Checks cache first, then fetches from API if needed
  */
 export async function fetchTweetWithCache(tweetId: string): Promise<TweetData> {
-  // Check cache first
-  const cached = await getCachedTweet(tweetId)
-  if (cached) {
-    return cached
-  }
+	// Check cache first
+	const cached = await getCachedTweet(tweetId);
+	if (cached) {
+		return cached;
+	}
 
-  // Simulate API fetch (react-tweet handles actual fetching)
-  // In production, you might fetch additional metadata here
-  const tweetData: TweetData = {
-    id: tweetId,
-  }
+	// Simulate API fetch (react-tweet handles actual fetching)
+	// In production, you might fetch additional metadata here
+	const tweetData: TweetData = {
+		id: tweetId,
+	};
 
-  // Store in cache
-  await setCachedTweet(tweetId, tweetData)
+	// Store in cache
+	await setCachedTweet(tweetId, tweetData);
 
-  return tweetData
+	return tweetData;
 }
 
 /**
  * Fetch multiple tweets with caching
  */
-export async function fetchTweetsWithCache(tweetIds: string[]): Promise<TweetData[]> {
-  const tweets = await Promise.all(tweetIds.map((id) => fetchTweetWithCache(id)))
+export async function fetchTweetsWithCache(
+	tweetIds: string[],
+): Promise<TweetData[]> {
+	const tweets = await Promise.all(
+		tweetIds.map((id) => fetchTweetWithCache(id)),
+	);
 
-  return tweets
+	return tweets;
 }

@@ -3,11 +3,13 @@
  */
 
 export function TweetFeedHeader() {
-  return (
-    <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container py-6">
-        <h1 className="text-3xl font-bold tracking-tight text-center">Tweet Feed</h1>
-      </div>
-    </div>
-  )
+	return (
+		<div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+			<div className="container mx-auto py-6 flex justify-center">
+				<h1 className="text-3xl font-bold tracking-tight text-center">
+					Tweet Feed
+				</h1>
+			</div>
+		</div>
+	);
 }

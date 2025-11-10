@@ -66,6 +66,39 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 		}
 	};
 
+	// Handle keyboard shortcuts
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		// Meta+Enter (Cmd+Enter on Mac, Ctrl+Enter on Windows/Linux) to submit
+		if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+			e.preventDefault();
+			const form = e.currentTarget as HTMLFormElement;
+			form.dispatchEvent(
+				new Event("submit", { bubbles: true, cancelable: true }),
+			);
+		}
+	};
+
+	const handleSaveSecret = () => {
+		const secretToUse = secret.trim();
+		if (!secretToUse) {
+			setMessage({
+				type: "error",
+				text: "Please enter an API secret to save",
+			});
+			return;
+		}
+
+		if (typeof window !== "undefined") {
+			localStorage.setItem(STORAGE_KEY, secretToUse);
+			setHasStoredSecret(true);
+			setRememberSecret(true);
+			setMessage({
+				type: "success",
+				text: "API secret saved successfully!",
+			});
+		}
+	};
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setIsSubmitting(true);
@@ -181,7 +214,11 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 
 			{/* Form content - conditionally rendered */}
 			{!isCollapsed && (
-				<form onSubmit={handleSubmit} className="space-y-6 p-6 pt-6">
+				<form
+					onSubmit={handleSubmit}
+					onKeyDown={handleKeyDown}
+					className="space-y-6 p-6 pt-6"
+				>
 					<Field>
 						<FieldLabel htmlFor="tweet-url">Tweet URL or ID</FieldLabel>
 						<Input
@@ -218,15 +255,26 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 						<div className="space-y-4">
 							<Field>
 								<FieldLabel htmlFor="api-secret">API Secret</FieldLabel>
-								<Input
-									id="api-secret"
-									type="password"
-									value={secret}
-									onChange={(e) => setSecret(e.target.value)}
-									placeholder="Enter your API secret"
-									required
-									disabled={isSubmitting}
-								/>
+								<div className="flex gap-2">
+									<Input
+										id="api-secret"
+										type="password"
+										value={secret}
+										onChange={(e) => setSecret(e.target.value)}
+										placeholder="Enter your API secret"
+										required
+										disabled={isSubmitting}
+										className="flex-1"
+									/>
+									<Button
+										type="button"
+										variant="outline"
+										onClick={handleSaveSecret}
+										disabled={isSubmitting || !secret.trim()}
+									>
+										Save Secret
+									</Button>
+								</div>
 								<FieldDescription>
 									The shared secret to authenticate your submission
 								</FieldDescription>

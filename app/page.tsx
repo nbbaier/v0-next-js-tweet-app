@@ -1,5 +1,5 @@
 import { TweetFeedHeader } from "@/components/tweet-feed-header";
-import { TweetList } from "@/components/tweet-list";
+import { TweetFeed } from "@/components/tweet-feed";
 import { TweetSubmitForm } from "@/components/tweet-submit-form";
 import { getTweetIds } from "@/lib/tweet-config";
 import { fetchTweetsWithCache } from "@/lib/tweet-service";
@@ -23,7 +23,7 @@ export default async function Home() {
 					<h2 className="text-2xl font-semibold mb-6 text-center">
 						Your Shared Tweets
 					</h2>
-					<TweetList tweets={tweets} showActions={true} />
+					<TweetFeed tweets={tweets} showActions={true} />
 				</section>
 			</main>
 

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 
 interface TweetSubmitFormProps {
 	apiSecret?: string;
@@ -15,6 +15,7 @@ interface TweetSubmitFormProps {
 
 const STORAGE_KEY = "tweet_api_secret";
 const NAME_STORAGE_KEY = "tweet_submitter_name";
+const FORM_COLLAPSED_KEY = "tweet_form_collapsed";
 
 export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 	const [url, setUrl] = useState("");
@@ -24,6 +25,7 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 	const [rememberSecret, setRememberSecret] = useState(false);
 	const [hasStoredSecret, setHasStoredSecret] = useState(false);
 	const [showSecretField, setShowSecretField] = useState(false);
+	const [isCollapsed, setIsCollapsed] = useState(false);
 	const [message, setMessage] = useState<{
 		type: "success" | "error";
 		text: string;
@@ -35,6 +37,7 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 		if (typeof window !== "undefined") {
 			const storedSecret = localStorage.getItem(STORAGE_KEY);
 			const storedName = localStorage.getItem(NAME_STORAGE_KEY);
+			const storedCollapsed = localStorage.getItem(FORM_COLLAPSED_KEY);
 
 			if (storedSecret) {
 				setSecret(storedSecret);
@@ -47,8 +50,21 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 			if (storedName) {
 				setSubmittedBy(storedName);
 			}
+
+			if (storedCollapsed === "true") {
+				setIsCollapsed(true);
+			}
 		}
 	}, []);
+
+	// Save collapsed state to localStorage when it changes
+	const toggleCollapsed = () => {
+		const newCollapsed = !isCollapsed;
+		setIsCollapsed(newCollapsed);
+		if (typeof window !== "undefined") {
+			localStorage.setItem(FORM_COLLAPSED_KEY, String(newCollapsed));
+		}
+	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -122,12 +138,29 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 	};
 
 	return (
-		<div className="w-full max-w-2xl mx-auto p-6 border rounded-lg bg-card">
-			<div className="flex justify-between items-center mb-6">
-				<h2 className="text-2xl font-semibold">Add a Tweet</h2>
+		<div className="w-full max-w-2xl mx-auto border rounded-lg bg-card transition-all">
+			{/* Header with collapse toggle */}
+			<div className="flex justify-between items-center p-6 pb-0">
+				<div className="flex items-center gap-3">
+					<h2 className="text-2xl font-semibold">Add a Tweet</h2>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						onClick={toggleCollapsed}
+						className="text-muted-foreground hover:text-foreground"
+						aria-label={isCollapsed ? "Expand form" : "Collapse form"}
+					>
+						{isCollapsed ? (
+							<ChevronDown className="h-4 w-4" />
+						) : (
+							<ChevronUp className="h-4 w-4" />
+						)}
+					</Button>
+				</div>
 
 				{/* API Secret Status */}
-				{hasStoredSecret && (
+				{hasStoredSecret && !isCollapsed && (
 					<div className="flex items-center gap-2 text-sm">
 						<span className="text-green-600 dark:text-green-400 flex items-center gap-1">
 							<CheckCircle2 className="h-4 w-4" />
@@ -146,7 +179,9 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 				)}
 			</div>
 
-			<form onSubmit={handleSubmit} className="space-y-6">
+			{/* Form content - conditionally rendered */}
+			{!isCollapsed && (
+				<form onSubmit={handleSubmit} className="space-y-6 p-6 pt-6">
 				<Field>
 					<FieldLabel htmlFor="tweet-url">Tweet URL or ID</FieldLabel>
 					<Input
@@ -241,10 +276,20 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 					</div>
 				)}
 
-				<Button type="submit" disabled={isSubmitting} className="w-full">
-					{isSubmitting ? "Adding..." : "Add Tweet"}
-				</Button>
-			</form>
+					<Button type="submit" disabled={isSubmitting} className="w-full">
+						{isSubmitting ? "Adding..." : "Add Tweet"}
+					</Button>
+				</form>
+			)}
+
+			{/* Collapsed state hint */}
+			{isCollapsed && (
+				<div className="px-6 pb-6 pt-4">
+					<p className="text-sm text-muted-foreground">
+						Click to expand and add a tweet
+					</p>
+				</div>
+			)}
 		</div>
 	);
 }

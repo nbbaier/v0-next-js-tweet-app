@@ -13,12 +13,16 @@ interface TweetFeedProps {
 
 export function TweetFeed({ tweets, showActions = true }: TweetFeedProps) {
 	const [showDevTweets, setShowDevTweets] = useState(false);
+	const [countdown, setCountdown] = useState(5);
+	const [isChecking, setIsChecking] = useState(false);
 	const router = useRouter();
 	const lastUpdatedRef = useRef<number | null>(null);
 
-	// Poll for updates every 10 seconds
+	// Poll for updates every 5 seconds
 	useEffect(() => {
 		const checkForUpdates = async () => {
+			setIsChecking(true);
+			setCountdown(5);
 			try {
 				const response = await fetch("/api/tweets/check");
 				if (!response.ok) return;
@@ -40,6 +44,8 @@ export function TweetFeed({ tweets, showActions = true }: TweetFeedProps) {
 				}
 			} catch (error) {
 				console.error("[TweetFeed] Failed to check for updates:", error);
+			} finally {
+				setIsChecking(false);
 			}
 		};
 
@@ -53,6 +59,18 @@ export function TweetFeed({ tweets, showActions = true }: TweetFeedProps) {
 		return () => clearInterval(interval);
 	}, [router]);
 
+	// Countdown timer effect
+	useEffect(() => {
+		const timer = setInterval(() => {
+			setCountdown((prev) => {
+				if (prev <= 1) return 5;
+				return prev - 1;
+			});
+		}, 1000);
+
+		return () => clearInterval(timer);
+	}, []);
+
 	// If we're showing dev tweets and there are no real tweets, create dev tweet data
 	const displayTweets =
 		tweets.length === 0 && showDevTweets
@@ -64,12 +82,30 @@ export function TweetFeed({ tweets, showActions = true }: TweetFeedProps) {
 			: tweets;
 
 	return (
-		<TweetList
-			tweets={displayTweets}
-			showActions={showActions}
-			isEmpty={tweets.length === 0}
-			showDevTweets={showDevTweets}
-			onToggleDevTweets={() => setShowDevTweets(!showDevTweets)}
-		/>
+		<div className="space-y-4">
+			{/* Auto-refresh countdown indicator */}
+			<div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+				<div className="flex items-center gap-2">
+					<div
+						className={`h-2 w-2 rounded-full ${
+							isChecking ? "bg-green-500 animate-pulse" : "bg-gray-400"
+						}`}
+					/>
+					<span>
+						{isChecking
+							? "Checking for new tweets..."
+							: `Next check in ${countdown}s`}
+					</span>
+				</div>
+			</div>
+
+			<TweetList
+				tweets={displayTweets}
+				showActions={showActions}
+				isEmpty={tweets.length === 0}
+				showDevTweets={showDevTweets}
+				onToggleDevTweets={() => setShowDevTweets(!showDevTweets)}
+			/>
+		</div>
 	);
 }

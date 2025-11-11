@@ -4,7 +4,6 @@ import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Tweet } from "react-tweet";
-import { Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
 import {
 	Dialog,

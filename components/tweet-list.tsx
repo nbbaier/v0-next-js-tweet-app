@@ -24,11 +24,15 @@ export function TweetList({
 			<div className="flex flex-col items-center justify-center py-12 gap-4">
 				<p className="text-muted-foreground text-lg">No tweets to display</p>
 				<p className="text-sm text-muted-foreground max-w-md text-center">
-					Add your first tweet using the form above, or toggle development tweets
-					to see some examples.
+					Add your first tweet using the form above, or toggle development
+					tweets to see some examples.
 				</p>
 				{onToggleDevTweets && (
-					<Button onClick={onToggleDevTweets} variant="outline" className="mt-2">
+					<Button
+						onClick={onToggleDevTweets}
+						variant="outline"
+						className="mt-2"
+					>
 						{showDevTweets ? "Hide" : "Show"} Development Tweets
 					</Button>
 				)}

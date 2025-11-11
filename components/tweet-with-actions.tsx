@@ -119,7 +119,7 @@ export function TweetWithActions({
 			{/* Submitter badge */}
 			<div className="w-full max-w-[550px] flex justify-start mb-1">
 				<span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
-					Saved by: {submittedBy}
+					Saved by: {submittedBy.charAt(0).toUpperCase() + submittedBy.slice(1)}
 				</span>
 			</div>
 

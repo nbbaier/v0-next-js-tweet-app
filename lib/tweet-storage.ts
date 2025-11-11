@@ -127,7 +127,9 @@ export async function updateTweetSeen(
 		};
 
 		await redis.set(`${TWEET_METADATA_PREFIX}${tweetId}`, updatedMetadata);
-		console.log(`[Storage] Updated seen status for tweet ${tweetId} to ${seen}`);
+		console.log(
+			`[Storage] Updated seen status for tweet ${tweetId} to ${seen}`,
+		);
 		return updatedMetadata;
 	} catch (error) {
 		console.error(

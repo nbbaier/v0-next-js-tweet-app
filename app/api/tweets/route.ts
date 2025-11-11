@@ -6,7 +6,7 @@
 
 import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
-import { isValidTweetId, parseTweetUrl } from "@/lib/tweet-parser";
+import { parseTweetUrl } from "@/lib/tweet-parser";
 import {
 	addTweetToStorage,
 	getTweetIdsFromStorage,

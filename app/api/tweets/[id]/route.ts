@@ -6,10 +6,7 @@
 import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
 import { isValidTweetId } from "@/lib/tweet-parser";
-import {
-	removeTweetFromStorage,
-	updateTweetSeen,
-} from "@/lib/tweet-storage";
+import { removeTweetFromStorage, updateTweetSeen } from "@/lib/tweet-storage";
 
 /**
  * DELETE /api/tweets/[id]

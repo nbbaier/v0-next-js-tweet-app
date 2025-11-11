@@ -3,8 +3,8 @@
  * Fetches tweet IDs from Redis storage
  */
 
-import { getTweetIdsFromStorage } from "./tweet-storage";
 import { DEVELOPMENT_TWEET_IDS } from "./development-tweets";
+import { getTweetIdsFromStorage } from "./tweet-storage";
 
 /**
  * Get tweet IDs from Redis storage

@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import type { TweetData } from "@/lib/tweet-service";
 
 interface UnseenTweetCounterProps {
@@ -32,15 +33,12 @@ export function UnseenTweetCounter({ tweets }: UnseenTweetCounterProps) {
 			<div>
 				<div className="flex flex-wrap gap-3">
 					{peopleWithUnseen.map(([person, count]) => (
-						<div
-							key={person}
-							className="flex items-center gap-2 bg-muted/50 rounded-full px-3 py-1.5"
-						>
-							<span className="text-sm font-medium">{person}</span>
-							<span className="bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+						<Badge key={person} variant="secondary">
+							<span className="text-xs font-medium">{person}</span>
+							<span className="text-primary-background text-xs font-bold">
 								{count}
 							</span>
-						</div>
+						</Badge>
 					))}
 				</div>
 			</div>

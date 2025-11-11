@@ -210,9 +210,13 @@ async function updateLastUpdated(): Promise<void> {
 	try {
 		const timestamp = Date.now();
 		await redis.set(LAST_UPDATED_KEY, timestamp);
-		console.log(`[Storage] Updated last_updated timestamp to ${timestamp}`);
+		console.log("[Storage] 🔄 UPDATED last_updated timestamp:", {
+			timestamp,
+			time: new Date(timestamp).toLocaleString(),
+			key: LAST_UPDATED_KEY,
+		});
 	} catch (error) {
-		console.error("[Storage ERROR] Failed to update last_updated:", error);
+		console.error("[Storage ERROR] ❌ Failed to update last_updated:", error);
 	}
 }
 
@@ -223,9 +227,14 @@ async function updateLastUpdated(): Promise<void> {
 export async function getLastUpdated(): Promise<number | null> {
 	try {
 		const timestamp = await redis.get(LAST_UPDATED_KEY);
+		console.log("[Storage] 🔍 getLastUpdated called:", {
+			timestamp: timestamp || null,
+			time: timestamp ? new Date(timestamp as number).toLocaleString() : "never",
+			key: LAST_UPDATED_KEY,
+		});
 		return timestamp as number | null;
 	} catch (error) {
-		console.error("[Storage ERROR] Failed to get last_updated:", error);
+		console.error("[Storage ERROR] ❌ Failed to get last_updated:", error);
 		return null;
 	}
 }

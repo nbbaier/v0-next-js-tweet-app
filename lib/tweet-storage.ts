@@ -20,6 +20,7 @@ const redis = new Redis({
 
 const TWEETS_LIST_KEY = "tweets:list";
 const TWEET_METADATA_PREFIX = "tweet:meta:";
+const LAST_UPDATED_KEY = "tweets:last_updated";
 
 export interface TweetMetadata {
 	id: string;
@@ -56,6 +57,9 @@ export async function addTweetToStorage(
 
 		// Store metadata separately
 		await redis.set(`${TWEET_METADATA_PREFIX}${tweetId}`, metadata);
+
+		// Update last modified timestamp
+		await updateLastUpdated();
 
 		console.log(`[Storage] Added tweet ${tweetId}`);
 		return metadata;
@@ -155,6 +159,9 @@ export async function removeTweetFromStorage(
 		// Remove metadata
 		await redis.del(`${TWEET_METADATA_PREFIX}${tweetId}`);
 
+		// Update last modified timestamp
+		await updateLastUpdated();
+
 		console.log(`[Storage] Removed tweet ${tweetId}`);
 		return removed > 0;
 	} catch (error) {
@@ -192,5 +199,33 @@ export async function getTweetCount(): Promise<number> {
 	} catch (error) {
 		console.error("[Storage ERROR] Failed to get tweet count:", error);
 		return 0;
+	}
+}
+
+/**
+ * Updates the last updated timestamp for the tweet list
+ * This is used for efficient polling to detect changes
+ */
+async function updateLastUpdated(): Promise<void> {
+	try {
+		const timestamp = Date.now();
+		await redis.set(LAST_UPDATED_KEY, timestamp);
+		console.log(`[Storage] Updated last_updated timestamp to ${timestamp}`);
+	} catch (error) {
+		console.error("[Storage ERROR] Failed to update last_updated:", error);
+	}
+}
+
+/**
+ * Gets the last updated timestamp for the tweet list
+ * @returns Unix timestamp of last update, or null if never updated
+ */
+export async function getLastUpdated(): Promise<number | null> {
+	try {
+		const timestamp = await redis.get(LAST_UPDATED_KEY);
+		return timestamp as number | null;
+	} catch (error) {
+		console.error("[Storage ERROR] Failed to get last_updated:", error);
+		return null;
 	}
 }

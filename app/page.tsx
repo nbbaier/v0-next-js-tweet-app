@@ -4,6 +4,10 @@ import { TweetSubmitForm } from "@/components/tweet-submit-form";
 import { getTweetIds } from "@/lib/tweet-config";
 import { fetchTweetsWithCache } from "@/lib/tweet-service";
 
+// Disable caching to ensure router.refresh() fetches fresh data
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function Home() {
 	const tweetIds = await getTweetIds();
 	const tweets = await fetchTweetsWithCache(tweetIds);

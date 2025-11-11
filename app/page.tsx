@@ -25,13 +25,13 @@ export default async function Home() {
 				</section>
 			</main>
 
-			<footer className="py-6 mt-8">
+			{/* <footer className="py-6 mt-8">
 				<div className="flex justify-center">
 					<p className="text-center text-sm text-muted-foreground">
 						Shared tweet feed • Add tweets from Twitter/X to save and share
 					</p>
 				</div>
-			</footer>
+			</footer> */}
 		</div>
 	);
 }

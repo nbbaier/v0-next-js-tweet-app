@@ -4,9 +4,12 @@
  */
 
 import { getCachedTweet, setCachedTweet } from "./tweet-cache";
+import { getTweetMetadata } from "./tweet-storage";
 
 export interface TweetData {
 	id: string;
+	submittedBy?: string;
+	seen?: boolean;
 	// Add other tweet metadata as needed
 }
 
@@ -18,13 +21,27 @@ export async function fetchTweetWithCache(tweetId: string): Promise<TweetData> {
 	// Check cache first
 	const cached = await getCachedTweet(tweetId);
 	if (cached) {
+		// Also fetch fresh metadata to ensure seen status is up to date
+		const metadata = await getTweetMetadata(tweetId);
+		if (metadata) {
+			return {
+				...cached,
+				submittedBy: metadata.submittedBy,
+				seen: metadata.seen,
+			};
+		}
 		return cached;
 	}
+
+	// Fetch metadata from storage
+	const metadata = await getTweetMetadata(tweetId);
 
 	// Simulate API fetch (react-tweet handles actual fetching)
 	// In production, you might fetch additional metadata here
 	const tweetData: TweetData = {
 		id: tweetId,
+		submittedBy: metadata?.submittedBy,
+		seen: metadata?.seen,
 	};
 
 	// Store in cache

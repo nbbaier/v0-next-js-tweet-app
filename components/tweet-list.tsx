@@ -41,7 +41,12 @@ export function TweetList({
 			{tweets.map((tweet) => (
 				<div key={tweet.id} className="w-full max-w-2xl">
 					{showActions ? (
-						<TweetWithActions tweetId={tweet.id} apiSecret={apiSecret} />
+						<TweetWithActions
+							tweetId={tweet.id}
+							apiSecret={apiSecret}
+							submittedBy={tweet.submittedBy}
+							seen={tweet.seen}
+						/>
 					) : (
 						<div className="tweet-container flex justify-center">
 							{/* @ts-expect-error - React 19 compatibility issue with react-tweet */}

@@ -17,7 +17,7 @@ This is a Next.js tweet app that automatically syncs with [v0.app](https://v0.ap
 
 ## Project Structure
 
-```
+\`\`\`
 /home/user/v0-next-js-tweet-app/
 ├── app/                    # Next.js app directory
 │   ├── layout.tsx         # Root layout with theme provider
@@ -35,7 +35,7 @@ This is a Next.js tweet app that automatically syncs with [v0.app](https://v0.ap
 ├── styles/               # Global styles
 └── .vscode/              # VS Code settings
 
-```
+\`\`\`
 
 ## Key Features
 
@@ -47,7 +47,7 @@ This is a Next.js tweet app that automatically syncs with [v0.app](https://v0.ap
 
 ## Development Commands
 
-```bash
+\`\`\`bash
 # Install dependencies
 pnpm install
 
@@ -62,7 +62,7 @@ pnpm start
 
 # Lint code
 pnpm lint
-```
+\`\`\`
 
 ## Important Notes
 

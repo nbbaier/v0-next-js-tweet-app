@@ -8,20 +8,20 @@ This guide explains how to set up and use your shared tweet app for saving and v
 
 Create a `.env.local` file in the root directory with the following variables:
 
-```bash
+\`\`\`bash
 # Upstash Redis Configuration (get from https://console.upstash.com/)
 UPSTASH_KV_KV_REST_API_URL=https://your-redis-instance.upstash.io
 UPSTASH_KV_KV_REST_API_TOKEN=your-token-here
 
 # Tweet API Secret (create a strong random string)
 TWEET_API_SECRET=your-secret-here
-```
+\`\`\`
 
 **To generate a secure API secret:**
 
-```bash
+\`\`\`bash
 openssl rand -base64 32
-```
+\`\`\`
 
 ### 2. Configure in Vercel
 
@@ -55,7 +55,7 @@ The tweet will appear in the feed immediately!
 
 You can also programmatically add tweets using the API:
 
-```bash
+\`\`\`bash
 curl -X POST https://your-app.vercel.app/api/tweets \
   -H "Content-Type: application/json" \
   -d '{
@@ -63,11 +63,11 @@ curl -X POST https://your-app.vercel.app/api/tweets \
     "secret": "your-api-secret",
     "submittedBy": "**Partner** 1"
   }'
-```
+\`\`\`
 
 **Success Response:**
 
-```json
+\`\`\`json
 {
    "success": true,
    "tweetId": "1234567890",
@@ -78,7 +78,7 @@ curl -X POST https://your-app.vercel.app/api/tweets \
       "url": "https://twitter.com/i/status/1234567890"
    }
 }
-```
+\`\`\`
 
 ### Deleting Tweets
 
@@ -115,7 +115,7 @@ Now you can share tweets directly from Twitter/X to your app!
 
 Create a bookmarklet to add the current tweet with one click:
 
-```javascript
+\`\`\`javascript
 javascript: (function () {
    const url = window.location.href;
    const secret = prompt("Enter API secret:");
@@ -130,7 +130,7 @@ javascript: (function () {
       .then((d) => alert(d.success ? "Tweet added!" : "Error: " + d.error))
       .catch((e) => alert("Error: " + e.message));
 })();
-```
+\`\`\`
 
 Save this as a bookmark and click it while viewing a tweet to add it to your feed.
 
@@ -142,17 +142,17 @@ Add a new tweet to the feed.
 
 **Request:**
 
-```json
+\`\`\`json
 {
    "url": "string (required) - Tweet URL or ID",
    "secret": "string (required) - API secret",
    "submittedBy": "string (optional) - Identifier for submitter"
 }
-```
+\`\`\`
 
 **Response (201 Created):**
 
-```json
+\`\`\`json
 {
    "success": true,
    "tweetId": "string",
@@ -163,7 +163,7 @@ Add a new tweet to the feed.
       "url": "string"
    }
 }
-```
+\`\`\`
 
 **Error Responses:**
 
@@ -178,19 +178,19 @@ Remove a tweet from the feed.
 
 **Headers:**
 
-```
+\`\`\`
 x-api-secret: your-secret-here
-```
+\`\`\`
 
 **Response (200 OK):**
 
-```json
+\`\`\`json
 {
    "success": true,
    "tweetId": "string",
    "message": "Tweet removed successfully"
 }
-```
+\`\`\`
 
 **Error Responses:**
 
@@ -205,19 +205,19 @@ Get all tweet IDs (requires authentication).
 
 **Headers:**
 
-```
+\`\`\`
 x-api-secret: your-secret-here
-```
+\`\`\`
 
 **Response (200 OK):**
 
-```json
+\`\`\`json
 {
    "success": true,
    "tweetIds": ["id1", "id2", "id3"],
    "count": 3
 }
-```
+\`\`\`
 
 ## Troubleshooting
 

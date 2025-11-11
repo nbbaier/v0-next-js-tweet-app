@@ -1,8 +1,15 @@
 "use client";
 
-import { CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import {
+	CheckCircle2,
+	ChevronDown,
+	ChevronUp,
+	Loader2,
+	XCircle,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
@@ -15,7 +22,6 @@ interface TweetSubmitFormProps {
 
 const STORAGE_KEY = "tweet_api_secret";
 const NAME_STORAGE_KEY = "tweet_submitter_name";
-const FORM_COLLAPSED_KEY = "tweet_form_collapsed";
 
 export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 	const [url, setUrl] = useState("");
@@ -24,8 +30,9 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [rememberSecret, setRememberSecret] = useState(false);
 	const [hasStoredSecret, setHasStoredSecret] = useState(false);
+	const [isLoadingSecret, setIsLoadingSecret] = useState(true);
 	const [showSecretField, setShowSecretField] = useState(false);
-	const [isCollapsed, setIsCollapsed] = useState(false);
+	const [isCollapsed, setIsCollapsed] = useState(true);
 	const [message, setMessage] = useState<{
 		type: "success" | "error";
 		text: string;
@@ -37,7 +44,6 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 		if (typeof window !== "undefined") {
 			const storedSecret = localStorage.getItem(STORAGE_KEY);
 			const storedName = localStorage.getItem(NAME_STORAGE_KEY);
-			const storedCollapsed = localStorage.getItem(FORM_COLLAPSED_KEY);
 
 			if (storedSecret) {
 				setSecret(storedSecret);
@@ -50,20 +56,12 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 			if (storedName) {
 				setSubmittedBy(storedName);
 			}
-
-			if (storedCollapsed === "true") {
-				setIsCollapsed(true);
-			}
 		}
+		setIsLoadingSecret(false);
 	}, []);
 
-	// Save collapsed state to localStorage when it changes
 	const toggleCollapsed = () => {
-		const newCollapsed = !isCollapsed;
-		setIsCollapsed(newCollapsed);
-		if (typeof window !== "undefined") {
-			localStorage.setItem(FORM_COLLAPSED_KEY, String(newCollapsed));
-		}
+		setIsCollapsed(!isCollapsed);
 	};
 
 	// Handle keyboard shortcuts
@@ -156,27 +154,12 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 		}
 	};
 
-	const handleClearSecret = () => {
-		if (typeof window !== "undefined") {
-			localStorage.removeItem(STORAGE_KEY);
-			setSecret("");
-			setHasStoredSecret(false);
-			setRememberSecret(false);
-			setShowSecretField(true);
-			setMessage({
-				type: "success",
-				text: "API secret cleared from browser storage",
-			});
-			2;
-		}
-	};
-
 	return (
 		<div className="w-full max-w-2xl mx-auto border border-border rounded-md bg-card transition-all">
 			{/* Header with collapse toggle */}
 			<div className="flex justify-between items-center p-6 pb-0">
 				<div className="flex items-center gap-3">
-					<h2 className="text-xl font-semibold -mr-1">Add a Tweet</h2>
+					<h2 className="text-xl font-semibold -mr-1.5">Add a Tweet</h2>
 					<Button
 						type="button"
 						variant="ghost"
@@ -194,22 +177,33 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 				</div>
 
 				{/* API Secret Status */}
-				{hasStoredSecret && (
-					<div className="flex items-center gap-2 text-sm">
-						<span className="text-green-600 dark:text-green-400 flex items-center gap-1">
-							<CheckCircle2 className="h-4 w-4" />
-							API Secret Saved
-						</span>
-						<Button
-							type="button"
-							variant="ghost"
-							size="sm"
-							onClick={handleClearSecret}
-							className="text-xs h-auto px-2 py-1 text-muted-foreground hover:text-destructive"
-						>
-							Clear
-						</Button>
-					</div>
+				{!isLoadingSecret && (
+					<Badge
+						variant={hasStoredSecret ? "default" : "destructive"}
+						className={` ${
+							hasStoredSecret
+								? "bg-green-500 text-white border-green-500 dark:bg-green-400 dark:border-green-400"
+								: ""
+						}`}
+					>
+						{hasStoredSecret ? (
+							<>
+								<CheckCircle2 />
+								API Secret stored
+							</>
+						) : (
+							<>
+								<XCircle />
+								API Secret not stored
+							</>
+						)}
+					</Badge>
+				)}
+				{isLoadingSecret && (
+					<Badge variant="outline" className="pt-[2px]">
+						<Loader2 className="animate-spin" />
+						Loading...
+					</Badge>
 				)}
 			</div>
 

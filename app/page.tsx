@@ -9,10 +9,10 @@ export default async function Home() {
 	const tweets = await fetchTweetsWithCache(tweetIds);
 
 	return (
-		<div className="min-h-screen flex flex-col">
+		<div className="min-h-screen flex flex-col px-4">
 			<TweetFeedHeader />
 
-			<main className="flex-1 flex flex-col items-center py-0 px-4 gap-8 outline-red-500">
+			<main className="flex-1 flex flex-col items-center py-0 gap-8 outline-red-500">
 				<section className="bg-card w-full max-w-2xl mt-8">
 					<TweetSubmitForm />
 				</section>

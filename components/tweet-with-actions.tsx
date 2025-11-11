@@ -84,7 +84,7 @@ export function TweetWithActions({
 						Delete Tweet
 					</Button>
 				) : (
-					<div className="p-4 space-y-3 w-full rounded-md border shadow-lg bg-card">
+					<div className="p-4 space-y-3 w-full rounded-md border border-border shadow-lg bg-card">
 						<p className="text-sm font-medium">
 							Are you sure you want to delete this tweet?
 						</p>

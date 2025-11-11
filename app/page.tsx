@@ -17,7 +17,7 @@ export default async function Home() {
 					<TweetSubmitForm />
 				</section>
 
-				<section className="w-full py-9 max-w-2xl border border-black rounded-md">
+				<section className="w-full py-9 max-w-2xl border border-border rounded-md">
 					<TweetFeed tweets={tweets} showActions={true} />
 				</section>
 			</main>

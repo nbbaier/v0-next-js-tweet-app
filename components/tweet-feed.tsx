@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { DEVELOPMENT_TWEET_IDS } from "@/lib/development-tweets";
 import type { TweetData } from "@/lib/tweet-service";
 import { TweetList } from "./tweet-list";
-import { DEVELOPMENT_TWEET_IDS } from "@/lib/development-tweets";
 
 interface TweetFeedProps {
 	tweets: TweetData[];
@@ -19,7 +19,8 @@ export function TweetFeed({ tweets, showActions = true }: TweetFeedProps) {
 			? DEVELOPMENT_TWEET_IDS.map((id) => ({
 					id,
 					type: "tweet" as const,
-			  }))
+					submittedBy: "dev",
+				}))
 			: tweets;
 
 	return (

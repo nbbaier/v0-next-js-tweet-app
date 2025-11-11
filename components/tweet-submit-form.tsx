@@ -15,6 +15,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 
 interface TweetSubmitFormProps {
 	apiSecret?: string;
@@ -215,41 +222,52 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 					className="space-y-6 p-6 pt-6"
 				>
 					<Field>
-						<FieldLabel htmlFor="tweet-url">Tweet URL or ID</FieldLabel>
+						<FieldLabel htmlFor="tweet-url" className="pl-1">
+							Tweet URL or ID
+						</FieldLabel>
 						<Input
 							id="tweet-url"
 							type="text"
 							value={url}
 							onChange={(e) => setUrl(e.target.value)}
-							placeholder="https://twitter.com/user/status/123... or just the ID"
+							placeholder="Paste a full Twitter/X URL or just the tweet ID"
 							required
 							disabled={isSubmitting}
 						/>
-						<FieldDescription>
-							Paste a full Twitter/X URL or just the tweet ID
-						</FieldDescription>
 					</Field>
 
 					<Field>
-						<FieldLabel htmlFor="submitted-by">Your Name</FieldLabel>
-						<Input
-							id="submitted-by"
-							type="text"
-							value={submittedBy}
-							onChange={(e) => setSubmittedBy(e.target.value)}
-							placeholder="e.g., Nico, Rebecca"
+						<FieldLabel htmlFor="submitted-by" className="pl-1">
+							Your Name
+						</FieldLabel>
+						<Select
+							value={submittedBy || undefined}
+							onValueChange={(value) => {
+								setSubmittedBy(value);
+								if (typeof window !== "undefined") {
+									localStorage.setItem(NAME_STORAGE_KEY, value);
+								}
+							}}
+							required
 							disabled={isSubmitting}
-						/>
-						<FieldDescription>
-							Optional - helps identify who added the tweet
-						</FieldDescription>
+						>
+							<SelectTrigger>
+								<SelectValue placeholder="Select a name" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="Nico">Nico</SelectItem>
+								<SelectItem value="Rebecca">Rebecca</SelectItem>
+							</SelectContent>
+						</Select>
 					</Field>
 
 					{/* API Secret field - only show if not stored or user wants to change */}
 					{!apiSecret && (showSecretField || !hasStoredSecret) && (
 						<div className="space-y-4">
 							<Field>
-								<FieldLabel htmlFor="api-secret">API Secret</FieldLabel>
+								<FieldLabel htmlFor="api-secret" className="pl-1">
+									API Secret
+								</FieldLabel>
 								<div className="flex gap-2">
 									<Input
 										id="api-secret"
@@ -303,7 +321,7 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 							variant="link"
 							size="sm"
 							onClick={() => setShowSecretField(true)}
-							className="h-auto p-0"
+							className="h-auto p-0 pl-1"
 						>
 							Change API secret
 						</Button>

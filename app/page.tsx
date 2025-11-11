@@ -19,7 +19,7 @@ export default async function Home() {
 
 				<section
 					id="tweet-feed"
-					className="w-full py-6 max-w-[550px] border-t border-border bg-card"
+					className="w-full py-6 max-w-[550px] border-t border-border bg-card max-h-[calc(100vh-20rem)] overflow-y-auto"
 				>
 					<TweetFeed tweets={tweets} showActions={true} />
 				</section>

@@ -1,10 +1,19 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Tweet } from "react-tweet";
-import { Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "./ui/dialog";
 
 interface TweetWithActionsProps {
 	tweetId: string;
@@ -23,7 +32,7 @@ export function TweetWithActions({
 	const [isSeen, setIsSeen] = useState(initialSeen);
 	const [isTogglingSeenStatus, setIsTogglingSeenStatus] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
-	const [showConfirm, setShowConfirm] = useState(false);
+	const [dialogOpen, setDialogOpen] = useState(false);
 	const [storedSecret, setStoredSecret] = useState<string>("");
 	const router = useRouter();
 
@@ -60,9 +69,7 @@ export function TweetWithActions({
 			router.refresh();
 		} catch (error) {
 			setError(
-				error instanceof Error
-					? error.message
-					: "Failed to update seen status",
+				error instanceof Error ? error.message : "Failed to update seen status",
 			);
 		} finally {
 			setIsTogglingSeenStatus(false);
@@ -94,7 +101,8 @@ export function TweetWithActions({
 				throw new Error(data.error || "Failed to delete tweet");
 			}
 
-			// Refresh the page to update the list
+			// Close dialog and refresh the page to update the list
+			setDialogOpen(false);
 			router.refresh();
 		} catch (error) {
 			setError(
@@ -141,21 +149,25 @@ export function TweetWithActions({
 							: "Mark as Seen"}
 				</Button>
 
-				{!showConfirm ? (
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => setShowConfirm(true)}
-						disabled={isDeleting}
-						className="px-2"
-					>
-						<Trash2 className="h-4 w-4 text-destructive" />
-					</Button>
-				) : (
-					<div className="absolute z-10 p-4 space-y-3 w-full max-w-[550px] rounded-md border border-border shadow-lg bg-card">
-						<p className="text-sm font-medium">
-							Are you sure you want to delete this tweet?
-						</p>
+				<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+					<DialogTrigger asChild>
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={isDeleting}
+							className="px-2"
+						>
+							<Trash2 className="h-4 w-4 text-destructive" />
+						</Button>
+					</DialogTrigger>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>Delete Tweet</DialogTitle>
+							<DialogDescription>
+								Are you sure you want to delete this tweet? This action cannot
+								be undone.
+							</DialogDescription>
+						</DialogHeader>
 
 						{error && (
 							<p className="p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20">
@@ -163,13 +175,12 @@ export function TweetWithActions({
 							</p>
 						)}
 
-						<div className="flex gap-2 justify-end">
+						<DialogFooter>
 							<Button
 								type="button"
 								variant="outline"
-								size="sm"
 								onClick={() => {
-									setShowConfirm(false);
+									setDialogOpen(false);
 									setError(null);
 								}}
 								disabled={isDeleting}
@@ -179,19 +190,18 @@ export function TweetWithActions({
 							<Button
 								type="button"
 								variant="destructive"
-								size="sm"
 								onClick={handleDelete}
 								disabled={isDeleting}
 							>
 								{isDeleting ? "Deleting..." : "Delete"}
 							</Button>
-						</div>
-					</div>
-				)}
+						</DialogFooter>
+					</DialogContent>
+				</Dialog>
 			</div>
 
 			{/* Error display for seen status toggle */}
-			{error && !showConfirm && (
+			{error && !dialogOpen && (
 				<div className="w-full max-w-[550px]">
 					<p className="p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20">
 						{error}

@@ -46,8 +46,8 @@ export function TweetFeed({ tweets, showActions = true }: TweetFeedProps) {
 		// Check immediately on mount
 		checkForUpdates();
 
-		// Set up polling interval (10 seconds)
-		const interval = setInterval(checkForUpdates, 10000);
+		// Set up polling interval (5 seconds)
+		const interval = setInterval(checkForUpdates, 5000);
 
 		// Cleanup on unmount
 		return () => clearInterval(interval);

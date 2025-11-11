@@ -263,9 +263,11 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 									/>
 									<Button
 										type="button"
+										size="sm"
 										variant="outline"
 										onClick={handleSaveSecret}
 										disabled={isSubmitting || !secret.trim()}
+										className="h-10"
 									>
 										Save Secret
 									</Button>

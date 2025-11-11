@@ -1,22 +1,28 @@
 /**
  * Tweet configuration
- * Hard-coded IDs for development
- * Replace with API call or database query in production
+ * Fetches tweet IDs from Redis storage
  */
 
-export const DEVELOPMENT_TWEET_IDS = ["1987941484176560364", "1987794603982938338", "1987940762143826419"]
+import { getTweetIdsFromStorage } from "./tweet-storage";
+import { DEVELOPMENT_TWEET_IDS } from "./development-tweets";
 
 /**
- * Get tweet IDs based on environment
- * In production, replace with:
- * - Database query
- * - API call
- * - External data source
+ * Get tweet IDs from Redis storage
+ * Returns empty array if storage is empty
+ * Falls back to development IDs only on error (e.g., Redis unavailable)
  */
 export async function getTweetIds(): Promise<string[]> {
-  // For production, implement like:
-  // const response = await fetch('/api/tweets');
-  // return response.json();
+	try {
+		const tweetIds = await getTweetIdsFromStorage();
 
-  return DEVELOPMENT_TWEET_IDS
+		if (tweetIds.length === 0) {
+			console.log("[Config] No tweets in storage");
+		}
+
+		return tweetIds;
+	} catch (error) {
+		console.error("[Config ERROR] Failed to fetch tweets from storage:", error);
+		// Fallback to development IDs only on error (e.g., Redis down)
+		return DEVELOPMENT_TWEET_IDS;
+	}
 }

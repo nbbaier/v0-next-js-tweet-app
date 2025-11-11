@@ -43,7 +43,6 @@ export function TweetList({
 					{showActions ? (
 						<TweetWithActions
 							tweetId={tweet.id}
-							apiSecret={apiSecret}
 							submittedBy={tweet.submittedBy}
 							seen={tweet.seen}
 						/>

@@ -8,7 +8,7 @@ import { getTweetMetadata } from "./tweet-storage";
 
 export interface TweetData {
 	id: string;
-	submittedBy?: string;
+	submittedBy: string;
 	seen?: boolean;
 	// Add other tweet metadata as needed
 }
@@ -26,7 +26,7 @@ export async function fetchTweetWithCache(tweetId: string): Promise<TweetData> {
 		if (metadata) {
 			return {
 				...cached,
-				submittedBy: metadata.submittedBy,
+				submittedBy: metadata.submittedBy || "Unknown",
 				seen: metadata.seen,
 			};
 		}
@@ -40,7 +40,7 @@ export async function fetchTweetWithCache(tweetId: string): Promise<TweetData> {
 	// In production, you might fetch additional metadata here
 	const tweetData: TweetData = {
 		id: tweetId,
-		submittedBy: metadata?.submittedBy,
+		submittedBy: metadata?.submittedBy || "Unknown",
 		seen: metadata?.seen,
 	};
 

@@ -9,7 +9,7 @@ export function UnseenTweetCounter({ tweets }: UnseenTweetCounterProps) {
 	const unseenCounts = tweets.reduce(
 		(acc, tweet) => {
 			// Only count if the tweet is explicitly marked as unseen (seen === false)
-			if (tweet.seen === false) {
+			if (tweet.seen !== true) {
 				const submitter = tweet.submittedBy || "Unknown";
 				acc[submitter] = (acc[submitter] || 0) + 1;
 			}
@@ -28,11 +28,8 @@ export function UnseenTweetCounter({ tweets }: UnseenTweetCounterProps) {
 	}
 
 	return (
-		<div className="w-full max-w-[550px] mx-auto mb-4">
-			<div className="bg-card border border-border rounded-lg p-4">
-				<h2 className="text-sm font-semibold mb-3 text-muted-foreground">
-					Unseen Tweets
-				</h2>
+		<div className="w-full max-w-[550px] mx-auto mb-0">
+			<div>
 				<div className="flex flex-wrap gap-3">
 					{peopleWithUnseen.map(([person, count]) => (
 						<div

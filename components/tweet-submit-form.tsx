@@ -155,7 +155,7 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 	};
 
 	return (
-		<div className="w-full max-w-2xl mx-auto border border-border rounded-md bg-card transition-all">
+		<div className="w-full max-w-[550px] mx-auto border border-border rounded-lg bg-card transition-all">
 			{/* Header with collapse toggle */}
 			<div className="flex justify-between items-center p-6 pb-0">
 				<div className="flex items-center gap-3">

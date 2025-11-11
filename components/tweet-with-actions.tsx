@@ -73,7 +73,7 @@ export function TweetWithActions({
 			</div>
 
 			{/* Action buttons below the tweet - constrained to tweet width */}
-			<div className="w-full max-w-[calc(550px+1rem)] flex justify-end px-2">
+			<div className="w-full max-w-[550px] flex justify-end">
 				{!showConfirm ? (
 					<Button
 						variant="destructive"

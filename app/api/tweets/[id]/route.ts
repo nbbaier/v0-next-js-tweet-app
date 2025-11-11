@@ -6,7 +6,10 @@
 import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
 import { isValidTweetId } from "@/lib/tweet-parser";
-import { removeTweetFromStorage } from "@/lib/tweet-storage";
+import {
+	removeTweetFromStorage,
+	updateTweetSeen,
+} from "@/lib/tweet-storage";
 
 /**
  * DELETE /api/tweets/[id]
@@ -61,6 +64,59 @@ export async function DELETE(
 		});
 	} catch (error) {
 		console.error("[API ERROR] Failed to delete tweet:", error);
+		return NextResponse.json(
+			{ error: "Internal server error" },
+			{ status: 500 },
+		);
+	}
+}
+
+/**
+ * PATCH /api/tweets/[id]
+ * Updates tweet metadata (e.g., seen status)
+ */
+export async function PATCH(
+	request: NextRequest,
+	context: { params: Promise<{ id: string }> },
+) {
+	try {
+		const { id: tweetId } = await context.params;
+
+		// Validate tweet ID format
+		if (!isValidTweetId(tweetId)) {
+			return NextResponse.json(
+				{ error: "Invalid tweet ID format" },
+				{ status: 400 },
+			);
+		}
+
+		// Parse request body
+		const body = await request.json();
+		const { seen } = body;
+
+		if (typeof seen !== "boolean") {
+			return NextResponse.json(
+				{ error: "Invalid 'seen' value. Must be a boolean." },
+				{ status: 400 },
+			);
+		}
+
+		// Update seen status
+		const updatedMetadata = await updateTweetSeen(tweetId, seen);
+
+		if (!updatedMetadata) {
+			return NextResponse.json({ error: "Tweet not found" }, { status: 404 });
+		}
+
+		// Revalidate the home page
+		revalidatePath("/");
+
+		return NextResponse.json({
+			success: true,
+			metadata: updatedMetadata,
+		});
+	} catch (error) {
+		console.error("[API ERROR] Failed to update tweet:", error);
 		return NextResponse.json(
 			{ error: "Internal server error" },
 			{ status: 500 },

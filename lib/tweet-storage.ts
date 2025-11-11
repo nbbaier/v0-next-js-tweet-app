@@ -26,6 +26,7 @@ export interface TweetMetadata {
 	submittedAt: number; // Unix timestamp
 	submittedBy?: string; // Optional: "user1" or "user2"
 	url: string;
+	seen?: boolean; // Optional: marks tweet as seen/minimized
 }
 
 /**
@@ -97,6 +98,40 @@ export async function getTweetMetadata(
 	} catch (error) {
 		console.error(
 			`[Storage ERROR] Failed to get metadata for ${tweetId}:`,
+			error,
+		);
+		return null;
+	}
+}
+
+/**
+ * Updates the seen status for a tweet
+ * @param tweetId - The tweet ID
+ * @param seen - The seen status to set
+ * @returns Updated metadata or null if not found
+ */
+export async function updateTweetSeen(
+	tweetId: string,
+	seen: boolean,
+): Promise<TweetMetadata | null> {
+	try {
+		const metadata = await getTweetMetadata(tweetId);
+		if (!metadata) {
+			console.error(`[Storage ERROR] Tweet ${tweetId} not found`);
+			return null;
+		}
+
+		const updatedMetadata: TweetMetadata = {
+			...metadata,
+			seen,
+		};
+
+		await redis.set(`${TWEET_METADATA_PREFIX}${tweetId}`, updatedMetadata);
+		console.log(`[Storage] Updated seen status for tweet ${tweetId} to ${seen}`);
+		return updatedMetadata;
+	} catch (error) {
+		console.error(
+			`[Storage ERROR] Failed to update seen status for ${tweetId}:`,
 			error,
 		);
 		return null;

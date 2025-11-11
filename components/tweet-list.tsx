@@ -45,6 +45,7 @@ export function TweetList({
 							tweetId={tweet.id}
 							submittedBy={tweet.submittedBy}
 							seen={tweet.seen}
+							apiSecret={apiSecret}
 						/>
 					) : (
 						<div className="tweet-container flex justify-center">

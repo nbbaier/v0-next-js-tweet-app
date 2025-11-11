@@ -1,6 +1,7 @@
 import { TweetFeed } from "@/components/tweet-feed";
 import { TweetFeedHeader } from "@/components/tweet-feed-header";
 import { TweetSubmitForm } from "@/components/tweet-submit-form";
+import { UnseenTweetCounter } from "@/components/unseen-tweet-counter";
 import { getTweetIds } from "@/lib/tweet-config";
 import { fetchTweetsWithCache } from "@/lib/tweet-service";
 
@@ -13,9 +14,11 @@ export default async function Home() {
 			<TweetFeedHeader />
 
 			<main className="flex-1 flex flex-col items-center py-0 gap-8 outline-red-500">
-				<section className="bg-card w-full max-w-2xl mt-8">
+				<section className="bg-card w-full max-w-2xl mt-2">
 					<TweetSubmitForm />
 				</section>
+
+				<UnseenTweetCounter tweets={tweets} />
 
 				<section
 					id="tweet-feed"

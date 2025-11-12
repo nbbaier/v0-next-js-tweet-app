@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { TweetData } from "@/lib/tweet-service";
@@ -12,10 +13,50 @@ interface FilterableTweetFeedProps {
 }
 
 export function FilterableTweetFeed({
-	tweets,
+	tweets: initialTweets,
 	showActions = true,
 }: FilterableTweetFeedProps) {
 	const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+	const [tweets, setTweets] = useState<TweetData[]>(initialTweets);
+	const router = useRouter();
+
+	// Handle optimistic tweet seen status update
+	const handleToggleSeen = useCallback(async (tweetId: string, currentSeenStatus: boolean) => {
+		// Optimistically update the UI
+		setTweets((prevTweets) =>
+			prevTweets.map((tweet) =>
+				tweet.id === tweetId ? { ...tweet, seen: !currentSeenStatus } : tweet
+			)
+		);
+
+		try {
+			const response = await fetch(`/api/tweets/${tweetId}`, {
+				method: "PATCH",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ seen: !currentSeenStatus }),
+			});
+
+			if (!response.ok) {
+				const data = await response.json();
+				throw new Error(data.error || "Failed to update seen status");
+			}
+
+			// Delay refresh to allow animation to complete
+			setTimeout(() => {
+				router.refresh();
+			}, 1000);
+		} catch (error) {
+			// Revert on error
+			setTweets((prevTweets) =>
+				prevTweets.map((tweet) =>
+					tweet.id === tweetId ? { ...tweet, seen: currentSeenStatus } : tweet
+				)
+			);
+			throw error;
+		}
+	}, [router]);
 
 	// Calculate unseen tweets per person
 	const unseenCounts = useMemo(() => {
@@ -106,7 +147,11 @@ export function FilterableTweetFeed({
 
 			{/* Tweet list */}
 			<div className="flex-1 px-4 py-6 w-full">
-				<TweetList tweets={filteredTweets} showActions={showActions} />
+				<TweetList
+					tweets={filteredTweets}
+					showActions={showActions}
+					onToggleSeen={handleToggleSeen}
+				/>
 			</div>
 		</div>
 	);

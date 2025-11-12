@@ -1,3 +1,4 @@
+import { motion, AnimatePresence } from "framer-motion";
 import type { TweetData } from "@/lib/tweet-service";
 import { TweetWithActions } from "./tweet-with-actions";
 import { Button } from "./ui/button";
@@ -9,6 +10,7 @@ interface TweetListProps {
 	isEmpty?: boolean;
 	showDevTweets?: boolean;
 	onToggleDevTweets?: () => void;
+	onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
 }
 
 export function TweetList({
@@ -18,6 +20,7 @@ export function TweetList({
 	isEmpty = false,
 	showDevTweets = false,
 	onToggleDevTweets,
+	onToggleSeen,
 }: TweetListProps) {
 	if (isEmpty && tweets.length === 0) {
 		return (
@@ -42,22 +45,41 @@ export function TweetList({
 
 	return (
 		<div className="flex flex-col gap-4 items-center w-full">
-			{tweets.map((tweet) => (
-				<div key={tweet.id} className="w-full max-w-2xl">
-					{showActions ? (
-						<TweetWithActions
-							tweetId={tweet.id}
-							submittedBy={tweet.submittedBy}
-							seen={tweet.seen}
-							apiSecret={apiSecret}
-						/>
-					) : (
-						<div className="flex justify-center tweet-container">
-							<Tweet id={tweet.id} />
-						</div>
-					)}
-				</div>
-			))}
+			<AnimatePresence mode="popLayout">
+				{tweets.map((tweet) => (
+					<motion.div
+						key={tweet.id}
+						layout
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, scale: 0.9 }}
+						transition={{
+							layout: {
+								type: "spring",
+								stiffness: 350,
+								damping: 30,
+							},
+							opacity: { duration: 0.2 },
+						}}
+						className="w-full max-w-2xl"
+					>
+						{showActions ? (
+							<TweetWithActions
+								tweetId={tweet.id}
+								submittedBy={tweet.submittedBy}
+								seen={tweet.seen}
+								apiSecret={apiSecret}
+								onToggleSeen={onToggleSeen}
+							/>
+						) : (
+							<div className="flex justify-center tweet-container">
+								{/* @ts-expect-error - React 19 compatibility issue with react-tweet */}
+								<Tweet id={tweet.id} />
+							</div>
+						)}
+					</motion.div>
+				))}
+			</AnimatePresence>
 		</div>
 	);
 }

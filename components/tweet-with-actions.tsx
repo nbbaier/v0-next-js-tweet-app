@@ -22,6 +22,7 @@ interface TweetWithActionsProps {
 	submittedBy: string;
 	seen?: boolean;
 	apiSecret?: string;
+	onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
 }
 
 export function TweetWithActions({
@@ -29,6 +30,7 @@ export function TweetWithActions({
 	submittedBy,
 	seen: initialSeen = false,
 	apiSecret,
+	onToggleSeen,
 }: TweetWithActionsProps) {
 	const [error, setError] = useState<string | null>(null);
 	const [isSeen, setIsSeen] = useState(initialSeen);
@@ -47,28 +49,39 @@ export function TweetWithActions({
 		}
 	}, []);
 
+	// Sync seen state with prop changes (for optimistic updates)
+	useEffect(() => {
+		setIsSeen(initialSeen);
+	}, [initialSeen]);
+
 	const handleToggleSeen = async () => {
 		setIsTogglingSeenStatus(true);
 		setError(null);
 
 		try {
-			const response = await fetch(`/api/tweets/${tweetId}`, {
-				method: "PATCH",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ seen: !isSeen }),
-			});
+			if (onToggleSeen) {
+				// Use the callback for optimistic updates with animation
+				await onToggleSeen(tweetId, isSeen);
+				setIsSeen(!isSeen);
+			} else {
+				// Fallback to original behavior
+				const response = await fetch(`/api/tweets/${tweetId}`, {
+					method: "PATCH",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ seen: !isSeen }),
+				});
 
-			const data = await response.json();
+				const data = await response.json();
 
-			if (!response.ok) {
-				throw new Error(data.error || "Failed to update seen status");
+				if (!response.ok) {
+					throw new Error(data.error || "Failed to update seen status");
+				}
+
+				setIsSeen(!isSeen);
+				router.refresh();
 			}
-
-			setIsSeen(!isSeen);
-			// Optionally refresh to ensure consistency
-			router.refresh();
 		} catch (error) {
 			setError(
 				error instanceof Error ? error.message : "Failed to update seen status",

@@ -22,6 +22,7 @@ interface TweetWithActionsProps {
 	submittedBy: string;
 	seen?: boolean;
 	apiSecret?: string;
+	onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
 }
 
 export function TweetWithActions({
@@ -29,6 +30,7 @@ export function TweetWithActions({
 	submittedBy,
 	seen: initialSeen = false,
 	apiSecret,
+	onToggleSeen,
 }: TweetWithActionsProps) {
 	const [error, setError] = useState<string | null>(null);
 	const [isSeen, setIsSeen] = useState(initialSeen);
@@ -47,28 +49,39 @@ export function TweetWithActions({
 		}
 	}, []);
 
+	// Sync seen state with prop changes (for optimistic updates)
+	useEffect(() => {
+		setIsSeen(initialSeen);
+	}, [initialSeen]);
+
 	const handleToggleSeen = async () => {
 		setIsTogglingSeenStatus(true);
 		setError(null);
 
 		try {
-			const response = await fetch(`/api/tweets/${tweetId}`, {
-				method: "PATCH",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ seen: !isSeen }),
-			});
+			if (onToggleSeen) {
+				// Use the callback for optimistic updates with animation
+				await onToggleSeen(tweetId, isSeen);
+				setIsSeen(!isSeen);
+			} else {
+				// Fallback to original behavior
+				const response = await fetch(`/api/tweets/${tweetId}`, {
+					method: "PATCH",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ seen: !isSeen }),
+				});
 
-			const data = await response.json();
+				const data = await response.json();
 
-			if (!response.ok) {
-				throw new Error(data.error || "Failed to update seen status");
+				if (!response.ok) {
+					throw new Error(data.error || "Failed to update seen status");
+				}
+
+				setIsSeen(!isSeen);
+				router.refresh();
 			}
-
-			setIsSeen(!isSeen);
-			// Optionally refresh to ensure consistency
-			router.refresh();
 		} catch (error) {
 			setError(
 				error instanceof Error ? error.message : "Failed to update seen status",
@@ -118,7 +131,7 @@ export function TweetWithActions({
 		<div className="flex flex-col items-center space-y-1 w-full">
 			{/* Submitter badge */}
 			<div className="w-full max-w-[550px] flex justify-start mb-1">
-				<span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
+				<span className="py-1 px-2 text-xs rounded-full bg-muted text-muted-foreground">
 					Saved by: {submittedBy.charAt(0).toUpperCase() + submittedBy.slice(1)}
 				</span>
 			</div>
@@ -131,7 +144,7 @@ export function TweetWithActions({
 			>
 				<Tweet id={tweetId} />
 				{isSeen && (
-					<div className="absolute inset-0 bg-gradient-to-b from-transparent to-background pointer-events-none" />
+					<div className="absolute inset-0 bg-gradient-to-b from-transparent pointer-events-none to-background" />
 				)}
 			</div>
 
@@ -164,7 +177,7 @@ export function TweetWithActions({
 							disabled={isDeleting}
 							onClick={() => setDialogOpen(true)}
 						>
-							<Trash2 className="h-4 w-4 text-destructive" />
+							<Trash2 className="w-4 h-4 text-destructive" />
 						</Button>
 					</AlertDialogTrigger>
 					<AlertDialogContent>

@@ -2,8 +2,6 @@
 
 import {
 	CheckCircle2,
-	ChevronDown,
-	ChevronUp,
 	Loader2,
 	XCircle,
 } from "lucide-react";
@@ -25,12 +23,13 @@ import {
 
 interface TweetSubmitFormProps {
 	apiSecret?: string;
+	onSuccess?: () => void;
 }
 
 const STORAGE_KEY = "tweet_api_secret";
 const NAME_STORAGE_KEY = "tweet_submitter_name";
 
-export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
+export function TweetSubmitForm({ apiSecret, onSuccess }: TweetSubmitFormProps) {
 	const [url, setUrl] = useState("");
 	const [secret, setSecret] = useState(apiSecret || "");
 	const [submittedBy, setSubmittedBy] = useState("");
@@ -39,7 +38,6 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 	const [hasStoredSecret, setHasStoredSecret] = useState(false);
 	const [isLoadingSecret, setIsLoadingSecret] = useState(true);
 	const [showSecretField, setShowSecretField] = useState(false);
-	const [isCollapsed, setIsCollapsed] = useState(true);
 	const [message, setMessage] = useState<{
 		type: "success" | "error";
 		text: string;
@@ -66,10 +64,6 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 		}
 		setIsLoadingSecret(false);
 	}, []);
-
-	const toggleCollapsed = () => {
-		setIsCollapsed(!isCollapsed);
-	};
 
 	// Handle keyboard shortcuts
 	const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -147,10 +141,18 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 			});
 			setUrl("");
 
-			// Refresh the page to show the new tweet
-			setTimeout(() => {
-				router.refresh();
-			}, 500);
+			// Call onSuccess callback if provided
+			if (onSuccess) {
+				setTimeout(() => {
+					onSuccess();
+					router.refresh();
+				}, 500);
+			} else {
+				// Refresh the page to show the new tweet
+				setTimeout(() => {
+					router.refresh();
+				}, 500);
+			}
 		} catch (error) {
 			setMessage({
 				type: "error",
@@ -162,29 +164,10 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 	};
 
 	return (
-		<div className="w-full max-w-[550px] mx-auto border border-border rounded-lg bg-card transition-all">
-			{/* Header with collapse toggle */}
-			<div className="flex justify-between items-center p-6 pb-0">
-				<div className="flex items-center gap-3">
-					<h2 className="text-xl font-semibold -mr-1.5">Add a Tweet</h2>
-					<Button
-						type="button"
-						variant="ghost"
-						size="icon-sm"
-						onClick={toggleCollapsed}
-						className="text-muted-foreground hover:text-foreground"
-						aria-label={isCollapsed ? "Expand form" : "Collapse form"}
-					>
-						{isCollapsed ? (
-							<ChevronDown className="h-4 w-4" />
-						) : (
-							<ChevronUp className="h-4 w-4" />
-						)}
-					</Button>
-				</div>
-
-				{/* API Secret Status */}
-				{!isLoadingSecret && (
+		<div className="w-full">
+			{/* API Secret Status */}
+			{!isLoadingSecret && (
+				<div className="mb-4">
 					<Badge
 						variant={hasStoredSecret ? "default" : "destructive"}
 						className={` ${
@@ -205,21 +188,23 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 							</>
 						)}
 					</Badge>
-				)}
-				{isLoadingSecret && (
+				</div>
+			)}
+			{isLoadingSecret && (
+				<div className="mb-4">
 					<Badge variant="outline" className="pt-[2px]">
 						<Loader2 className="animate-spin" />
 						Loading...
 					</Badge>
-				)}
-			</div>
+				</div>
+			)}
 
-			{/* Form content - conditionally rendered */}
-			{!isCollapsed && (
+			{/* Form content */}
+			{(
 				<form
 					onSubmit={handleSubmit}
 					onKeyDown={handleKeyDown}
-					className="space-y-6 p-6 pt-6"
+					className="space-y-6"
 				>
 					<Field>
 						<FieldLabel htmlFor="tweet-url" className="pl-1">
@@ -306,7 +291,7 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 								/>
 								<Label
 									htmlFor="remember-secret"
-									className="text-sm font-normal text-muted-foreground cursor-pointer"
+									className="text-sm font-normal cursor-pointer text-muted-foreground"
 								>
 									Remember secret in this browser (stored locally)
 								</Label>
@@ -321,7 +306,7 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 							variant="link"
 							size="sm"
 							onClick={() => setShowSecretField(true)}
-							className="h-auto p-0 pl-1"
+							className="p-0 pl-1 h-auto"
 						>
 							Change API secret
 						</Button>
@@ -344,9 +329,6 @@ export function TweetSubmitForm({ apiSecret }: TweetSubmitFormProps) {
 					</Button>
 				</form>
 			)}
-
-			{/* Add padding when collapsed */}
-			{isCollapsed && <div className="pb-6" />}
 		</div>
 	);
 }

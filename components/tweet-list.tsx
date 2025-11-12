@@ -1,3 +1,4 @@
+import { motion, AnimatePresence } from "framer-motion";
 import type { TweetData } from "@/lib/tweet-service";
 import { TweetWithActions } from "./tweet-with-actions";
 import { Button } from "./ui/button";
@@ -9,6 +10,7 @@ interface TweetListProps {
 	isEmpty?: boolean;
 	showDevTweets?: boolean;
 	onToggleDevTweets?: () => void;
+	onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
 }
 
 export function TweetList({
@@ -18,12 +20,13 @@ export function TweetList({
 	isEmpty = false,
 	showDevTweets = false,
 	onToggleDevTweets,
+	onToggleSeen,
 }: TweetListProps) {
 	if (isEmpty && tweets.length === 0) {
 		return (
-			<div className="flex flex-col items-center justify-center py-12 gap-4">
-				<p className="text-muted-foreground text-lg">No tweets to display</p>
-				<p className="text-sm text-muted-foreground max-w-md text-center">
+			<div className="flex flex-col gap-4 justify-center items-center py-12">
+				<p className="text-lg text-muted-foreground">No tweets to display</p>
+				<p className="max-w-md text-sm text-center text-muted-foreground">
 					Add your first tweet using the form above, or toggle development
 					tweets to see some examples.
 				</p>
@@ -41,24 +44,42 @@ export function TweetList({
 	}
 
 	return (
-		<div className="flex flex-col items-center w-full gap-4">
-			{tweets.map((tweet) => (
-				<div key={tweet.id} className="w-full max-w-2xl">
-					{showActions ? (
-						<TweetWithActions
-							tweetId={tweet.id}
-							submittedBy={tweet.submittedBy}
-							seen={tweet.seen}
-							apiSecret={apiSecret}
-						/>
-					) : (
-						<div className="tweet-container flex justify-center">
-							{/* @ts-expect-error - React 19 compatibility issue with react-tweet */}
-							<Tweet id={tweet.id} />
-						</div>
-					)}
-				</div>
-			))}
+		<div className="flex flex-col gap-4 items-center w-full">
+			<AnimatePresence mode="popLayout">
+				{tweets.map((tweet) => (
+					<motion.div
+						key={tweet.id}
+						layout
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, scale: 0.9 }}
+						transition={{
+							layout: {
+								type: "spring",
+								stiffness: 350,
+								damping: 30,
+							},
+							opacity: { duration: 0.2 },
+						}}
+						className="w-full max-w-2xl"
+					>
+						{showActions ? (
+							<TweetWithActions
+								tweetId={tweet.id}
+								submittedBy={tweet.submittedBy}
+								seen={tweet.seen}
+								apiSecret={apiSecret}
+								onToggleSeen={onToggleSeen}
+							/>
+						) : (
+							<div className="flex justify-center tweet-container">
+								{/* @ts-expect-error - React 19 compatibility issue with react-tweet */}
+								<Tweet id={tweet.id} />
+							</div>
+						)}
+					</motion.div>
+				))}
+			</AnimatePresence>
 		</div>
 	);
 }

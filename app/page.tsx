@@ -8,7 +8,7 @@ export default async function Home() {
 	const tweets = await fetchTweetsWithCache(tweetIds);
 
 	return (
-		<div className="min-h-screen flex flex-col">
+		<div className="min-h-screen flex flex-col px-4">
 			<TweetFeedHeader />
 
 			<main className="flex-1 flex flex-col items-center">

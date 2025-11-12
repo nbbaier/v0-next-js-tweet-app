@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { TweetData } from "@/lib/tweet-service";
 import { TweetList } from "./tweet-list";
 
@@ -65,40 +66,40 @@ export function FilterableTweetFeed({
 				<div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b py-3 px-4">
 					<div className="mx-auto max-w-[550px] flex flex-wrap gap-2">
 						{/* All badge */}
-						<button
-							type="button"
-							onClick={() => setSelectedFilter(null)}
-							className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary rounded-md"
+						<Badge
+							asChild
+							variant={selectedFilter === null ? "default" : "secondary"}
 						>
-							<Badge
-								variant={selectedFilter === null ? "default" : "outline"}
-								className="cursor-pointer hover:bg-primary/90 text-base py-2 px-4"
+							<Button
+								size="sm"
+								className="rounded-lg"
+								onClick={() => setSelectedFilter(null)}
 							>
-								<span className="font-semibold mr-2">All</span>
-								<span className="bg-background/90 text-foreground rounded-full px-2 py-0.5 text-sm font-bold">
+								<span className="text-xs font-medium">All</span>
+								<span className="text-primary-background text-xs font-bold">
 									{unseenCounts.total}
 								</span>
-							</Badge>
-						</button>
+							</Button>
+						</Badge>
 
 						{/* Individual submitter badges */}
 						{peopleWithUnseen.map(([person, count]) => (
-							<button
+							<Badge
+								asChild
 								key={person}
-								type="button"
-								onClick={() => setSelectedFilter(person)}
-								className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary rounded-md"
+								variant={selectedFilter === person ? "default" : "secondary"}
 							>
-								<Badge
-									variant={selectedFilter === person ? "default" : "outline"}
-									className="cursor-pointer hover:bg-primary/90 text-base py-2 px-4"
+								<Button
+									size="sm"
+									className="rounded-lg"
+									onClick={() => setSelectedFilter(person)}
 								>
-									<span className="font-semibold mr-2">{person}</span>
-									<span className="bg-background/90 text-foreground rounded-full px-2 py-0.5 text-sm font-bold">
+									<span className="text-xs font-medium">{person}</span>
+									<span className="text-primary-background text-xs font-bold">
 										{count}
 									</span>
-								</Badge>
-							</button>
+								</Button>
+							</Badge>
 						))}
 					</div>
 				</div>

@@ -82,11 +82,11 @@ export function ApiSecretDialog() {
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
 				<Button size="sm" variant="outline">
-					<Key className="h-4 w-4" />
+					<Key className="w-4 h-4" />
 					{hasStoredSecret ? (
-						<CheckCircle2 className="h-3 w-3 text-green-500" />
+						<CheckCircle2 className="w-3 h-3 text-green-500" />
 					) : (
-						<XCircle className="h-3 w-3 text-red-500" />
+						<XCircle className="w-3 h-3 text-red-500" />
 					)}
 				</Button>
 			</DialogTrigger>
@@ -99,7 +99,7 @@ export function ApiSecretDialog() {
 					</DialogDescription>
 				</DialogHeader>
 
-				<div className="space-y-4 pt-4">
+				<div className="pt-4 space-y-4">
 					<Field>
 						<FieldLabel htmlFor="api-secret">API Secret</FieldLabel>
 						<Input
@@ -122,7 +122,7 @@ export function ApiSecretDialog() {
 						/>
 						<Label
 							htmlFor="remember-secret"
-							className="text-sm font-normal text-muted-foreground cursor-pointer"
+							className="text-sm font-normal cursor-pointer text-muted-foreground"
 						>
 							Remember secret in this browser (stored locally)
 						</Label>

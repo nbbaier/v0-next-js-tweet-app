@@ -8,10 +8,10 @@ export default async function Home() {
 	const tweets = await fetchTweetsWithCache(tweetIds);
 
 	return (
-		<div className="min-h-screen flex flex-col px-4">
+		<div className="flex flex-col min-h-screen">
 			<TweetFeedHeader />
 
-			<main className="flex-1 flex flex-col items-center">
+			<main className="flex flex-col flex-1 items-center">
 				<FilterableTweetFeed tweets={tweets} showActions={true} />
 			</main>
 		</div>

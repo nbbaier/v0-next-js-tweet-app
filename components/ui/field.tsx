@@ -172,7 +172,7 @@ function FieldSeparator({
 			<Separator className="absolute inset-0 top-1/2" />
 			{children && (
 				<span
-					className="bg-background text-muted-foreground relative mx-auto block w-fit px-2"
+					className="block relative px-2 mx-auto bg-background text-muted-foreground w-fit"
 					data-slot="field-separator-content"
 				>
 					{children}
@@ -208,7 +208,7 @@ function FieldError({
 		}
 
 		return (
-			<ul className="ml-4 flex list-disc flex-col gap-1">
+			<ul className="flex flex-col gap-1 ml-4 list-disc">
 				{uniqueErrors.map(
 					(error, index) =>
 						error?.message && <li key={index}>{error.message}</li>,

@@ -21,9 +21,9 @@ export function TweetList({
 }: TweetListProps) {
 	if (isEmpty && tweets.length === 0) {
 		return (
-			<div className="flex flex-col items-center justify-center py-12 gap-4">
-				<p className="text-muted-foreground text-lg">No tweets to display</p>
-				<p className="text-sm text-muted-foreground max-w-md text-center">
+			<div className="flex flex-col gap-4 justify-center items-center py-12">
+				<p className="text-lg text-muted-foreground">No tweets to display</p>
+				<p className="max-w-md text-sm text-center text-muted-foreground">
 					Add your first tweet using the form above, or toggle development
 					tweets to see some examples.
 				</p>
@@ -41,7 +41,7 @@ export function TweetList({
 	}
 
 	return (
-		<div className="flex flex-col items-center w-full gap-4">
+		<div className="flex flex-col gap-4 items-center w-full">
 			{tweets.map((tweet) => (
 				<div key={tweet.id} className="w-full max-w-2xl">
 					{showActions ? (
@@ -52,8 +52,7 @@ export function TweetList({
 							apiSecret={apiSecret}
 						/>
 					) : (
-						<div className="tweet-container flex justify-center">
-							{/* @ts-expect-error - React 19 compatibility issue with react-tweet */}
+						<div className="flex justify-center tweet-container">
 							<Tweet id={tweet.id} />
 						</div>
 					)}

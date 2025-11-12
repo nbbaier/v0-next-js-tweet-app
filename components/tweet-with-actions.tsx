@@ -118,7 +118,7 @@ export function TweetWithActions({
 		<div className="flex flex-col items-center space-y-1 w-full">
 			{/* Submitter badge */}
 			<div className="w-full max-w-[550px] flex justify-start mb-1">
-				<span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground">
+				<span className="py-1 px-2 text-xs rounded-full bg-muted text-muted-foreground">
 					Saved by: {submittedBy.charAt(0).toUpperCase() + submittedBy.slice(1)}
 				</span>
 			</div>
@@ -131,7 +131,7 @@ export function TweetWithActions({
 			>
 				<Tweet id={tweetId} />
 				{isSeen && (
-					<div className="absolute inset-0 bg-gradient-to-b from-transparent to-background pointer-events-none" />
+					<div className="absolute inset-0 bg-gradient-to-b from-transparent pointer-events-none to-background" />
 				)}
 			</div>
 
@@ -164,7 +164,7 @@ export function TweetWithActions({
 							disabled={isDeleting}
 							onClick={() => setDialogOpen(true)}
 						>
-							<Trash2 className="h-4 w-4 text-destructive" />
+							<Trash2 className="w-4 h-4 text-destructive" />
 						</Button>
 					</AlertDialogTrigger>
 					<AlertDialogContent>

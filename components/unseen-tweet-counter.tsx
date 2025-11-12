@@ -35,7 +35,7 @@ export function UnseenTweetCounter({ tweets }: UnseenTweetCounterProps) {
 					{peopleWithUnseen.map(([person, count]) => (
 						<Badge key={person} variant="secondary">
 							<span className="text-xs font-medium">{person}</span>
-							<span className="text-primary-background text-xs font-bold">
+							<span className="text-xs font-bold text-primary-background">
 								{count}
 							</span>
 						</Badge>

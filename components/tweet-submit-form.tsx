@@ -291,7 +291,7 @@ export function TweetSubmitForm({ apiSecret, onSuccess }: TweetSubmitFormProps) 
 								/>
 								<Label
 									htmlFor="remember-secret"
-									className="text-sm font-normal text-muted-foreground cursor-pointer"
+									className="text-sm font-normal cursor-pointer text-muted-foreground"
 								>
 									Remember secret in this browser (stored locally)
 								</Label>
@@ -306,7 +306,7 @@ export function TweetSubmitForm({ apiSecret, onSuccess }: TweetSubmitFormProps) 
 							variant="link"
 							size="sm"
 							onClick={() => setShowSecretField(true)}
-							className="h-auto p-0 pl-1"
+							className="p-0 pl-1 h-auto"
 						>
 							Change API secret
 						</Button>

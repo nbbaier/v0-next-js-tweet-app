@@ -19,7 +19,7 @@ export function AddTweetDialog() {
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
 				<Button size="sm" variant="default">
-					<Plus className="h-4 w-4" />
+					<Plus className="w-4 h-4" />
 					Add Tweet
 				</Button>
 			</DialogTrigger>

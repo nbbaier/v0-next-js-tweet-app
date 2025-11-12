@@ -21,7 +21,6 @@ export function FilterableTweetFeed({
 	const unseenCounts = useMemo(() => {
 		return tweets.reduce(
 			(acc, tweet) => {
-				// Only count if the tweet is explicitly marked as unseen (seen !== true)
 				if (tweet.seen !== true) {
 					const submitter = tweet.submittedBy || "Unknown";
 					acc[submitter] = (acc[submitter] || 0) + 1;
@@ -60,7 +59,7 @@ export function FilterableTweetFeed({
 	}, [sortedTweets, selectedFilter]);
 
 	return (
-		<div className="w-full flex flex-col">
+		<div className="flex flex-col w-full">
 			{/* Sticky filter badges */}
 			{unseenCounts.total > 0 && (
 				<div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b py-3 px-4">
@@ -76,7 +75,7 @@ export function FilterableTweetFeed({
 								onClick={() => setSelectedFilter(null)}
 							>
 								<span className="text-xs font-medium">All</span>
-								<span className="text-primary-background text-xs font-bold">
+								<span className="text-xs font-bold text-primary-background">
 									{unseenCounts.total}
 								</span>
 							</Button>
@@ -95,7 +94,7 @@ export function FilterableTweetFeed({
 									onClick={() => setSelectedFilter(person)}
 								>
 									<span className="text-xs font-medium">{person}</span>
-									<span className="text-primary-background text-xs font-bold">
+									<span className="text-xs font-bold text-primary-background">
 										{count}
 									</span>
 								</Button>
@@ -106,7 +105,7 @@ export function FilterableTweetFeed({
 			)}
 
 			{/* Tweet list */}
-			<div className="flex-1 w-full py-6 px-4">
+			<div className="flex-1 px-4 py-6 w-full">
 				<TweetList tweets={filteredTweets} showActions={showActions} />
 			</div>
 		</div>

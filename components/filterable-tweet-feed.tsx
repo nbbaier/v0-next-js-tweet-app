@@ -12,6 +12,33 @@ interface FilterableTweetFeedProps {
 	showActions?: boolean;
 }
 
+function FilterBadge({
+	variant,
+	label,
+	count,
+	withoutCount = false,
+	onClick,
+}: {
+	variant: "default" | "secondary";
+	label: string;
+	count: number;
+	withoutCount?: boolean;
+	onClick: () => void;
+}) {
+	return (
+		<Badge asChild variant={variant}>
+			<Button
+				size="sm"
+				className="rounded-lg hover:text-primary-foreground"
+				onClick={onClick}
+			>
+				<span className="text-xs font-medium">{label}</span>
+				{!withoutCount && <span className="text-xs font-bold">{count}</span>}
+			</Button>
+		</Badge>
+	);
+}
+
 export function FilterableTweetFeed({
 	tweets: initialTweets,
 	showActions = true,
@@ -45,12 +72,10 @@ export function FilterableTweetFeed({
 					throw new Error(data.error || "Failed to update seen status");
 				}
 
-				// Delay refresh to allow animation to complete
 				setTimeout(() => {
 					router.refresh();
 				}, 1000);
 			} catch (error) {
-				// Revert on error
 				setTweets((prevTweets) =>
 					prevTweets.map((tweet) =>
 						tweet.id === tweetId
@@ -126,62 +151,33 @@ export function FilterableTweetFeed({
 
 	return (
 		<div className="flex flex-col w-full">
-			{/* Sticky filter badges */}
 			{unseenCounts.total > 0 && (
 				<div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b py-3 px-4">
 					<div className="mx-auto max-w-[550px] flex flex-wrap gap-2">
-						{/* All badge */}
-						<Badge
-							asChild
+						<FilterBadge
 							variant={selectedFilter === null ? "default" : "secondary"}
-						>
-							<Button
-								size="sm"
-								className="rounded-lg [&>span]:hover:text-inherit"
-								onClick={() => setSelectedFilter(null)}
-							>
-								<span className="text-xs font-medium">All</span>
-								<span className="text-xs font-bold text-primary-background">
-									{unseenCounts.total}
-								</span>
-							</Button>
-						</Badge>
+							label="All"
+							count={unseenCounts.total}
+							onClick={() => setSelectedFilter(null)}
+						/>
 
-						{/* Individual submitter badges */}
 						{peopleWithUnseen.map(([person, count]) => (
-							<Badge
-								asChild
+							<FilterBadge
 								key={person}
 								variant={selectedFilter === person ? "default" : "secondary"}
-							>
-								<Button
-									size="sm"
-									className="rounded-lg [&>span]:hover:text-inherit"
-									onClick={() => setSelectedFilter(person)}
-								>
-									<span className="text-xs font-medium">{person}</span>
-									<span className="text-xs font-bold text-primary-background">
-										{count}
-									</span>
-								</Button>
-							</Badge>
+								label={person}
+								count={count}
+								onClick={() => setSelectedFilter(person)}
+							/>
 						))}
 
-						{/* Hide seen tweets toggle */}
-						<Badge
-							asChild
+						<FilterBadge
 							variant={hideSeenTweets ? "default" : "secondary"}
-						>
-							<Button
-								size="sm"
-								className="rounded-lg [&>span]:hover:text-inherit"
-								onClick={() => setHideSeenTweets(!hideSeenTweets)}
-							>
-								<span className="text-xs font-medium">
-									{hideSeenTweets ? "Show All" : "Hide Seen"}
-								</span>
-							</Button>
-						</Badge>
+							label={hideSeenTweets ? "Show All" : "Hide Seen"}
+							count={0}
+							withoutCount={true}
+							onClick={() => setHideSeenTweets(!hideSeenTweets)}
+						/>
 					</div>
 				</div>
 			)}

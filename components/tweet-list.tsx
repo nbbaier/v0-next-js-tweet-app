@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import type { TweetData } from "@/lib/tweet-service";
 import { TweetWithActions } from "./tweet-with-actions";
 import { Button } from "./ui/button";

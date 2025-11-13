@@ -11,8 +11,11 @@ export function UnseenTweetCounter({ tweets }: UnseenTweetCounterProps) {
 		(acc, tweet) => {
 			// Only count if the tweet is explicitly marked as unseen (seen === false)
 			if (tweet.seen !== true) {
-				const submitter = tweet.submittedBy || "Unknown";
-				acc[submitter] = (acc[submitter] || 0) + 1;
+				const posters =
+					tweet.submittedBy.length > 0 ? tweet.submittedBy : ["Unknown"];
+				for (const poster of posters) {
+					acc[poster] = (acc[poster] || 0) + 1;
+				}
 			}
 			return acc;
 		},

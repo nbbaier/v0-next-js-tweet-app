@@ -1,10 +1,6 @@
 "use client";
 
-import {
-	CheckCircle2,
-	Loader2,
-	XCircle,
-} from "lucide-react";
+import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +25,10 @@ interface TweetSubmitFormProps {
 const STORAGE_KEY = "tweet_api_secret";
 const NAME_STORAGE_KEY = "tweet_submitter_name";
 
-export function TweetSubmitForm({ apiSecret, onSuccess }: TweetSubmitFormProps) {
+export function TweetSubmitForm({
+	apiSecret,
+	onSuccess,
+}: TweetSubmitFormProps) {
 	const [url, setUrl] = useState("");
 	const [secret, setSecret] = useState(apiSecret || "");
 	const [submittedBy, setSubmittedBy] = useState("");
@@ -200,7 +199,7 @@ export function TweetSubmitForm({ apiSecret, onSuccess }: TweetSubmitFormProps) 
 			)}
 
 			{/* Form content */}
-			{(
+			{
 				<form
 					onSubmit={handleSubmit}
 					onKeyDown={handleKeyDown}
@@ -328,7 +327,7 @@ export function TweetSubmitForm({ apiSecret, onSuccess }: TweetSubmitFormProps) 
 						{isSubmitting ? "Adding..." : "Add Tweet"}
 					</Button>
 				</form>
-			)}
+			}
 		</div>
 	);
 }

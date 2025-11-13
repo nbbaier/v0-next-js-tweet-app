@@ -17,6 +17,7 @@ export function FilterableTweetFeed({
 	showActions = true,
 }: FilterableTweetFeedProps) {
 	const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+	const [hideSeenTweets, setHideSeenTweets] = useState(false);
 	const [tweets, setTweets] = useState<TweetData[]>(initialTweets);
 	const router = useRouter();
 
@@ -102,15 +103,26 @@ export function FilterableTweetFeed({
 		});
 	}, [tweets]);
 
-	// Filter tweets based on selected filter
+	// Filter tweets based on selected filter and hide seen toggle
 	const filteredTweets = useMemo(() => {
-		if (!selectedFilter) return sortedTweets;
-		return sortedTweets.filter(
-			(tweet) =>
-				tweet.submittedBy.includes(selectedFilter) ||
-				(tweet.submittedBy.length === 0 && selectedFilter === "Unknown"),
-		);
-	}, [sortedTweets, selectedFilter]);
+		let result = sortedTweets;
+
+		// Filter by selected person
+		if (selectedFilter) {
+			result = result.filter(
+				(tweet) =>
+					tweet.submittedBy.includes(selectedFilter) ||
+					(tweet.submittedBy.length === 0 && selectedFilter === "Unknown"),
+			);
+		}
+
+		// Filter out seen tweets if hideSeenTweets is enabled
+		if (hideSeenTweets) {
+			result = result.filter((tweet) => tweet.seen !== true);
+		}
+
+		return result;
+	}, [sortedTweets, selectedFilter, hideSeenTweets]);
 
 	return (
 		<div className="flex flex-col w-full">
@@ -154,6 +166,22 @@ export function FilterableTweetFeed({
 								</Button>
 							</Badge>
 						))}
+
+						{/* Hide seen tweets toggle */}
+						<Badge
+							asChild
+							variant={hideSeenTweets ? "default" : "secondary"}
+						>
+							<Button
+								size="sm"
+								className="rounded-lg"
+								onClick={() => setHideSeenTweets(!hideSeenTweets)}
+							>
+								<span className="text-xs font-medium">
+									{hideSeenTweets ? "Show All" : "Hide Seen"}
+								</span>
+							</Button>
+						</Badge>
 					</div>
 				</div>
 			)}

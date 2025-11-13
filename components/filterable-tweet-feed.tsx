@@ -137,7 +137,7 @@ export function FilterableTweetFeed({
 						>
 							<Button
 								size="sm"
-								className="rounded-lg"
+								className="rounded-lg [&>span]:hover:text-inherit"
 								onClick={() => setSelectedFilter(null)}
 							>
 								<span className="text-xs font-medium">All</span>
@@ -156,7 +156,7 @@ export function FilterableTweetFeed({
 							>
 								<Button
 									size="sm"
-									className="rounded-lg"
+									className="rounded-lg [&>span]:hover:text-inherit"
 									onClick={() => setSelectedFilter(person)}
 								>
 									<span className="text-xs font-medium">{person}</span>
@@ -174,7 +174,7 @@ export function FilterableTweetFeed({
 						>
 							<Button
 								size="sm"
-								className="rounded-lg"
+								className="rounded-lg [&>span]:hover:text-inherit"
 								onClick={() => setHideSeenTweets(!hideSeenTweets)}
 							>
 								<span className="text-xs font-medium">

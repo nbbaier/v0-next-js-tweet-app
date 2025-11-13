@@ -7,11 +7,7 @@
 import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
 import { parseTweetUrl } from "@/lib/tweet-parser";
-import {
-	addTweetToStorage,
-	getTweetIdsFromStorage,
-	tweetExistsInStorage,
-} from "@/lib/tweet-storage";
+import { addTweetToStorage, getTweetIdsFromStorage } from "@/lib/tweet-storage";
 
 /**
  * POST /api/tweets
@@ -55,16 +51,7 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		// Check if tweet already exists
-		const exists = await tweetExistsInStorage(parsed.id);
-		if (exists) {
-			return NextResponse.json(
-				{ error: "Tweet already exists", tweetId: parsed.id },
-				{ status: 409 },
-			);
-		}
-
-		// Add to storage
+		// Add to storage (will add new tweet or append poster to existing tweet)
 		const metadata = await addTweetToStorage(parsed.id, submittedBy);
 
 		// Revalidate the home page to show new tweet

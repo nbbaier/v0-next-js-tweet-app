@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useCallback, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { TweetData } from "@/lib/tweet-service";
@@ -21,50 +21,59 @@ export function FilterableTweetFeed({
 	const router = useRouter();
 
 	// Handle optimistic tweet seen status update
-	const handleToggleSeen = useCallback(async (tweetId: string, currentSeenStatus: boolean) => {
-		// Optimistically update the UI
-		setTweets((prevTweets) =>
-			prevTweets.map((tweet) =>
-				tweet.id === tweetId ? { ...tweet, seen: !currentSeenStatus } : tweet
-			)
-		);
-
-		try {
-			const response = await fetch(`/api/tweets/${tweetId}`, {
-				method: "PATCH",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ seen: !currentSeenStatus }),
-			});
-
-			if (!response.ok) {
-				const data = await response.json();
-				throw new Error(data.error || "Failed to update seen status");
-			}
-
-			// Delay refresh to allow animation to complete
-			setTimeout(() => {
-				router.refresh();
-			}, 1000);
-		} catch (error) {
-			// Revert on error
+	const handleToggleSeen = useCallback(
+		async (tweetId: string, currentSeenStatus: boolean) => {
+			// Optimistically update the UI
 			setTweets((prevTweets) =>
 				prevTweets.map((tweet) =>
-					tweet.id === tweetId ? { ...tweet, seen: currentSeenStatus } : tweet
-				)
+					tweet.id === tweetId ? { ...tweet, seen: !currentSeenStatus } : tweet,
+				),
 			);
-			throw error;
-		}
-	}, [router]);
+
+			try {
+				const response = await fetch(`/api/tweets/${tweetId}`, {
+					method: "PATCH",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ seen: !currentSeenStatus }),
+				});
+
+				if (!response.ok) {
+					const data = await response.json();
+					throw new Error(data.error || "Failed to update seen status");
+				}
+
+				// Delay refresh to allow animation to complete
+				setTimeout(() => {
+					router.refresh();
+				}, 1000);
+			} catch (error) {
+				// Revert on error
+				setTweets((prevTweets) =>
+					prevTweets.map((tweet) =>
+						tweet.id === tweetId
+							? { ...tweet, seen: currentSeenStatus }
+							: tweet,
+					),
+				);
+				throw error;
+			}
+		},
+		[router],
+	);
 
 	// Calculate unseen tweets per person
 	const unseenCounts = useMemo(() => {
 		return tweets.reduce(
 			(acc, tweet) => {
 				if (tweet.seen !== true) {
-					const submitter = tweet.submittedBy || "Unknown";
-					acc[submitter] = (acc[submitter] || 0) + 1;
+					// Count this tweet for each poster
+					const posters =
+						tweet.submittedBy.length > 0 ? tweet.submittedBy : ["Unknown"];
+					for (const poster of posters) {
+						acc[poster] = (acc[poster] || 0) + 1;
+					}
 					acc.total = (acc.total || 0) + 1;
 				}
 				return acc;
@@ -96,7 +105,11 @@ export function FilterableTweetFeed({
 	// Filter tweets based on selected filter
 	const filteredTweets = useMemo(() => {
 		if (!selectedFilter) return sortedTweets;
-		return sortedTweets.filter((tweet) => tweet.submittedBy === selectedFilter);
+		return sortedTweets.filter(
+			(tweet) =>
+				tweet.submittedBy.includes(selectedFilter) ||
+				(tweet.submittedBy.length === 0 && selectedFilter === "Unknown"),
+		);
 	}, [sortedTweets, selectedFilter]);
 
 	return (

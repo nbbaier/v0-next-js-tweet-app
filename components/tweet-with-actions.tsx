@@ -19,7 +19,7 @@ import { Button } from "./ui/button";
 
 interface TweetWithActionsProps {
 	tweetId: string;
-	submittedBy: string;
+	submittedBy: string[]; // Array of poster names
 	seen?: boolean;
 	apiSecret?: string;
 	onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
@@ -129,11 +129,22 @@ export function TweetWithActions({
 
 	return (
 		<div className="flex flex-col items-center space-y-1 w-full">
-			{/* Submitter badge */}
-			<div className="w-full max-w-[550px] flex justify-start mb-1">
-				<span className="py-1 px-2 text-xs rounded-full bg-muted text-muted-foreground">
-					Saved by: {submittedBy.charAt(0).toUpperCase() + submittedBy.slice(1)}
-				</span>
+			{/* Submitter badges */}
+			<div className="w-full max-w-[550px] flex flex-wrap gap-2 justify-start mb-1">
+				{submittedBy.length > 0 ? (
+					submittedBy.map((poster) => (
+						<span
+							key={poster}
+							className="py-1 px-2 text-xs rounded-full bg-muted text-muted-foreground"
+						>
+							Saved by: {poster.charAt(0).toUpperCase() + poster.slice(1)}
+						</span>
+					))
+				) : (
+					<span className="py-1 px-2 text-xs rounded-full bg-muted text-muted-foreground">
+						Saved by: Unknown
+					</span>
+				)}
 			</div>
 
 			{/* Tweet display with conditional styling for seen tweets */}

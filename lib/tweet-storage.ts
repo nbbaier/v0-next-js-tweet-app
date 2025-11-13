@@ -21,33 +21,72 @@ const redis = new Redis({
 const TWEETS_LIST_KEY = "tweets:list";
 const TWEET_METADATA_PREFIX = "tweet:meta:";
 
+export interface Poster {
+	name: string;
+	submittedAt: number; // Unix timestamp when this poster submitted the tweet
+}
+
 export interface TweetMetadata {
 	id: string;
-	submittedAt: number; // Unix timestamp
-	submittedBy?: string; // Optional: "user1" or "user2"
+	submittedAt: number; // Unix timestamp of first submission
+	posters: Poster[]; // Array of all users who submitted this tweet
 	url: string;
 	seen?: boolean; // Optional: marks tweet as seen/minimized
 }
 
 /**
- * Adds a tweet ID to the persistent storage
+ * Adds a tweet ID to the persistent storage or adds a poster to an existing tweet
  * @param tweetId - The tweet ID to store
  * @param submittedBy - Optional identifier for who submitted it
- * @returns The metadata object created
+ * @returns The metadata object created or updated
  */
 export async function addTweetToStorage(
 	tweetId: string,
 	submittedBy?: string,
 ): Promise<TweetMetadata> {
 	const timestamp = Date.now();
-	const metadata: TweetMetadata = {
-		id: tweetId,
-		submittedAt: timestamp,
-		submittedBy,
-		url: `https://twitter.com/i/status/${tweetId}`,
-	};
 
 	try {
+		// Check if tweet already exists
+		const existingMetadata = await getTweetMetadata(tweetId);
+
+		if (existingMetadata) {
+			// Tweet exists, add the new poster if not already in the list
+			const posterName = submittedBy || "Unknown";
+			const existingPosterNames = existingMetadata.posters.map((p) => p.name);
+
+			if (!existingPosterNames.includes(posterName)) {
+				const updatedMetadata: TweetMetadata = {
+					...existingMetadata,
+					posters: [
+						...existingMetadata.posters,
+						{ name: posterName, submittedAt: timestamp },
+					],
+				};
+
+				await redis.set(`${TWEET_METADATA_PREFIX}${tweetId}`, updatedMetadata);
+				console.log(
+					`[Storage] Added poster ${posterName} to existing tweet ${tweetId}`,
+				);
+				return updatedMetadata;
+			}
+
+			console.log(
+				`[Storage] Poster ${posterName} already exists for tweet ${tweetId}`,
+			);
+			return existingMetadata;
+		}
+
+		// New tweet, create metadata
+		const metadata: TweetMetadata = {
+			id: tweetId,
+			submittedAt: timestamp,
+			posters: submittedBy
+				? [{ name: submittedBy, submittedAt: timestamp }]
+				: [],
+			url: `https://twitter.com/i/status/${tweetId}`,
+		};
+
 		// Add to sorted set (score = timestamp for chronological ordering)
 		await redis.zadd(TWEETS_LIST_KEY, {
 			score: timestamp,
@@ -57,7 +96,7 @@ export async function addTweetToStorage(
 		// Store metadata separately
 		await redis.set(`${TWEET_METADATA_PREFIX}${tweetId}`, metadata);
 
-		console.log(`[Storage] Added tweet ${tweetId}`);
+		console.log(`[Storage] Added new tweet ${tweetId}`);
 		return metadata;
 	} catch (error) {
 		console.error(`[Storage ERROR] Failed to add tweet ${tweetId}:`, error);
@@ -85,6 +124,39 @@ export async function getTweetIdsFromStorage(): Promise<string[]> {
 }
 
 /**
+ * Legacy metadata format for backwards compatibility
+ */
+interface LegacyTweetMetadata {
+	id: string;
+	submittedAt: number;
+	submittedBy?: string;
+	url: string;
+	seen?: boolean;
+}
+
+/**
+ * Normalizes legacy metadata to the new format
+ */
+function normalizeTweetMetadata(
+	metadata: TweetMetadata | LegacyTweetMetadata,
+): TweetMetadata {
+	// Check if it's legacy format (has submittedBy instead of posters)
+	if ("submittedBy" in metadata && !("posters" in metadata)) {
+		const legacy = metadata as LegacyTweetMetadata;
+		return {
+			id: legacy.id,
+			submittedAt: legacy.submittedAt,
+			posters: legacy.submittedBy
+				? [{ name: legacy.submittedBy, submittedAt: legacy.submittedAt }]
+				: [],
+			url: legacy.url,
+			seen: legacy.seen,
+		};
+	}
+	return metadata as TweetMetadata;
+}
+
+/**
  * Retrieves metadata for a specific tweet
  * @param tweetId - The tweet ID
  * @returns Metadata object or null if not found
@@ -94,7 +166,25 @@ export async function getTweetMetadata(
 ): Promise<TweetMetadata | null> {
 	try {
 		const metadata = await redis.get(`${TWEET_METADATA_PREFIX}${tweetId}`);
-		return metadata as TweetMetadata | null;
+		if (!metadata) return null;
+
+		// Normalize to handle both old and new formats
+		const normalized = normalizeTweetMetadata(
+			metadata as TweetMetadata | LegacyTweetMetadata,
+		);
+
+		// If we normalized from legacy format, update the stored version
+		if (
+			typeof metadata === "object" &&
+			metadata !== null &&
+			"submittedBy" in metadata &&
+			!("posters" in metadata)
+		) {
+			await redis.set(`${TWEET_METADATA_PREFIX}${tweetId}`, normalized);
+			console.log(`[Storage] Migrated legacy metadata for tweet ${tweetId}`);
+		}
+
+		return normalized;
 	} catch (error) {
 		console.error(
 			`[Storage ERROR] Failed to get metadata for ${tweetId}:`,

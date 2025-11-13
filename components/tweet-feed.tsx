@@ -19,7 +19,7 @@ export function TweetFeed({ tweets, showActions = true }: TweetFeedProps) {
 			? DEVELOPMENT_TWEET_IDS.map((id) => ({
 					id,
 					type: "tweet" as const,
-					submittedBy: "dev",
+					submittedBy: ["dev"],
 				}))
 			: tweets;
 

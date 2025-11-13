@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl https://nbbaier--0e81ebd4c05211f0ac2f42dde27851f2.web.val.run"
+          }
+        ]
+      }
+    ]
+  }
+}

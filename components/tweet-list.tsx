@@ -11,6 +11,7 @@ interface TweetListProps {
 	showDevTweets?: boolean;
 	onToggleDevTweets?: () => void;
 	onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
+	onDelete?: (tweetId: string) => Promise<void>;
 }
 
 export function TweetList({
@@ -21,6 +22,7 @@ export function TweetList({
 	showDevTweets = false,
 	onToggleDevTweets,
 	onToggleSeen,
+	onDelete,
 }: TweetListProps) {
 	if (isEmpty && tweets.length === 0) {
 		return (
@@ -70,6 +72,7 @@ export function TweetList({
 								seen={tweet.seen}
 								apiSecret={apiSecret}
 								onToggleSeen={onToggleSeen}
+								onDelete={onDelete}
 							/>
 						) : (
 							<div className="flex justify-center tweet-container">

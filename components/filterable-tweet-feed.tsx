@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { useRealtimeTweets } from "@/hooks/use-realtime-tweets";
 import type { TweetData } from "@/lib/tweet-service";
 import { TweetList } from "./tweet-list";
@@ -230,7 +231,7 @@ export function FilterableTweetFeed({
 
 	return (
 		<div className="flex flex-col w-full">
-			<div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b py-3 -mx-4 px-4">
+			<div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 py-3 -mx-4 px-4">
 				<div className="flex flex-wrap gap-2">
 					{unseenCounts.total > 0 ? (
 						<>
@@ -268,6 +269,9 @@ export function FilterableTweetFeed({
 							onClick={() => setHideSeenTweets(!hideSeenTweets)}
 						/>
 					)}
+				</div>
+				<div className="absolute left-[calc(-50vw+50%)] right-[calc(-50vw+50%)] bottom-0 w-screen">
+					<Separator />
 				</div>
 			</div>
 

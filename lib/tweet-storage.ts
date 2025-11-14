@@ -68,7 +68,11 @@ export async function addTweetToStorage(
 					submittedBy: updatedMetadata.posters.map((p) => p.name),
 					seen: updatedMetadata.seen,
 				};
-				await publishTweetUpdated(updatedTweetData);
+				try {
+					await publishTweetUpdated(updatedTweetData);
+				} catch (publishError) {
+					console.error('[Storage] Failed to publish update event but metadata was stored:', publishError);
+				}
 
 				return updatedMetadata;
 			}
@@ -110,8 +114,12 @@ export async function addTweetToStorage(
 			`[Storage] About to publish tweet:added for ${tweetId}`,
 			tweetData,
 		);
-		await publishTweetAdded(tweetData);
-		console.log(`[Storage] Completed publishing tweet:added for ${tweetId}`);
+		try {
+			await publishTweetAdded(tweetData);
+			console.log(`[Storage] Completed publishing tweet:added for ${tweetId}`);
+		} catch (publishError) {
+			console.error('[Storage] Failed to publish event but tweet was stored:', publishError);
+		}
 
 		return metadata;
 	} catch (error) {

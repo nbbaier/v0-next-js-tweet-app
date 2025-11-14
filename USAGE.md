@@ -259,11 +259,11 @@ The app uses **Upstash Realtime** to provide instant updates across all connecte
 -  **Channel**: Single global feed channel (`tweets`)
 -  **Schema**: Defined in `lib/realtime.ts` with Zod validation
 -  **Events**:
-   -  `tweet:added` - New tweet added to feed
-   -  `tweet:updated` - Tweet metadata updated (e.g., new poster added)
-   -  `tweet:removed` - Tweet deleted from feed
-   -  `tweet:reorder` - Tweet order changed
-   -  `tweet:seen` - Tweet seen status changed
+   -  `tweet.added` - New tweet added to feed
+   -  `tweet.updated` - Tweet metadata updated (e.g., new poster added)
+   -  `tweet.removed` - Tweet deleted from feed
+   -  `tweet.reorder` - Tweet order changed
+   -  `tweet.seen` - Tweet seen status changed
 -  **Client Hook**: `useRealtimeTweets` in `hooks/use-realtime-tweets.ts` uses `@upstash/realtime/client`
 -  **Server Endpoint**: `/api/realtime` handles SSE connections via `@upstash/realtime` handler
 

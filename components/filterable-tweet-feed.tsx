@@ -49,7 +49,7 @@ export function FilterableTweetFeed({
 	const router = useRouter();
 
 	// Use real-time tweets hook
-	const { tweets, isConnected } = useRealtimeTweets(initialTweets, {
+	const { tweets } = useRealtimeTweets(initialTweets, {
 		enabled: true,
 		onError: (error) => {
 			console.error("[FilterableTweetFeed] Real-time error:", error);

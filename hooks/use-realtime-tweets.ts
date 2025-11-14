@@ -75,12 +75,12 @@ export function useRealtimeTweets(
 		event: "tweet.reorder",
 		onData: (data) => {
 			console.log("[Realtime Hook] ✅ Received tweet.reorder event:", data);
-			const tweetMap = new Map(tweets.map((t) => [t.id, t]));
-			setTweets(
-				data.tweetIds
+			setTweets((prev) => {
+				const tweetMap = new Map(prev.map((t) => [t.id, t]));
+				return data.tweetIds
 					.map((id: string) => tweetMap.get(id))
-					.filter((t): t is TweetData => t !== undefined),
-			);
+					.filter((t): t is TweetData => t !== undefined);
+			});
 			console.log("[Realtime] Tweets reordered");
 		},
 	});

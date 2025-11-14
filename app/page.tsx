@@ -11,8 +11,10 @@ export default async function Home() {
 		<div className="flex flex-col min-h-screen">
 			<TweetFeedHeader />
 
-			<main className="flex flex-col flex-1 items-center">
-				<FilterableTweetFeed tweets={tweets} showActions={true} />
+			<main className="flex flex-col flex-1 items-center w-full">
+				<div className="w-full max-w-[550px] px-4">
+					<FilterableTweetFeed tweets={tweets} showActions={true} />
+				</div>
 			</main>
 		</div>
 	);

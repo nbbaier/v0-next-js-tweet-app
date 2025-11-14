@@ -152,8 +152,8 @@ export function FilterableTweetFeed({
 	return (
 		<div className="flex flex-col w-full">
 			{unseenCounts.total > 0 && (
-				<div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b py-3 px-4">
-					<div className="mx-auto max-w-[550px] flex flex-wrap gap-2">
+				<div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b py-3 -mx-4 px-4">
+					<div className="flex flex-wrap gap-2">
 						<FilterBadge
 							variant={selectedFilter === null ? "default" : "secondary"}
 							label="All"
@@ -183,7 +183,7 @@ export function FilterableTweetFeed({
 			)}
 
 			{/* Tweet list */}
-			<div className="flex-1 px-4 py-6 w-full">
+			<div className="flex-1 py-6 w-full">
 				<TweetList
 					tweets={filteredTweets}
 					showActions={showActions}

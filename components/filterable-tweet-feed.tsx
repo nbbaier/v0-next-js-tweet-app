@@ -74,6 +74,8 @@ export function FilterableTweetFeed({
 				Math.random() * COMPLETION_MESSAGES.length,
 			);
 			setCompletionMessage(COMPLETION_MESSAGES[randomIndex]);
+		} else if (!allSeen && completionMessage) {
+			setCompletionMessage("");
 		}
 	}, [tweets, completionMessage]);
 

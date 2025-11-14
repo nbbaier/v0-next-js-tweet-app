@@ -99,7 +99,9 @@ export function FilterableTweetFeed({
 					: null;
 
 			if (!storedSecret) {
-				throw new Error("No API secret found. Please set it in the form above.");
+				throw new Error(
+					"No API secret found. Please set it in the form above.",
+				);
 			}
 
 			// Store the tweet for potential rollback

@@ -11,6 +11,7 @@ interface TweetListProps {
 	showDevTweets?: boolean;
 	onToggleDevTweets?: () => void;
 	onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
+	completionMessage?: string;
 }
 
 export function TweetList({
@@ -21,7 +22,20 @@ export function TweetList({
 	showDevTweets = false,
 	onToggleDevTweets,
 	onToggleSeen,
+	completionMessage,
 }: TweetListProps) {
+	// Show completion message when all tweets are seen and filtered out
+	if (completionMessage) {
+		return (
+			<div className="flex flex-col gap-4 justify-center items-center py-12">
+				<div className="text-6xl mb-4">🎉</div>
+				<p className="text-xl font-medium text-center max-w-md">
+					{completionMessage}
+				</p>
+			</div>
+		);
+	}
+
 	if (isEmpty && tweets.length === 0) {
 		return (
 			<div className="flex flex-col gap-4 justify-center items-center py-12">

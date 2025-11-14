@@ -12,6 +12,7 @@ interface TweetListProps {
 	onToggleDevTweets?: () => void;
 	onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
 	completionMessage?: string;
+	onDelete?: (tweetId: string) => Promise<void>;
 }
 
 export function TweetList({
@@ -23,6 +24,7 @@ export function TweetList({
 	onToggleDevTweets,
 	onToggleSeen,
 	completionMessage,
+	onDelete,
 }: TweetListProps) {
 	// Show completion message when all tweets are seen and filtered out
 	if (completionMessage) {
@@ -84,6 +86,7 @@ export function TweetList({
 								seen={tweet.seen}
 								apiSecret={apiSecret}
 								onToggleSeen={onToggleSeen}
+								onDelete={onDelete}
 							/>
 						) : (
 							<div className="flex justify-center tweet-container">

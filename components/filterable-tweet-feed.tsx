@@ -120,6 +120,57 @@ export function FilterableTweetFeed({
 		[router],
 	);
 
+	// Handle optimistic tweet deletion
+	const handleDelete = useCallback(
+		async (tweetId: string) => {
+			// Get the API secret from localStorage
+			const storedSecret =
+				typeof window !== "undefined"
+					? localStorage.getItem("tweet_api_secret")
+					: null;
+
+			if (!storedSecret) {
+				throw new Error(
+					"No API secret found. Please set it in the form above.",
+				);
+			}
+
+			// Store the tweet for potential rollback
+			const deletedTweet = tweets.find((tweet) => tweet.id === tweetId);
+
+			// Optimistically remove the tweet from the UI
+			setTweets((prevTweets) =>
+				prevTweets.filter((tweet) => tweet.id !== tweetId),
+			);
+
+			try {
+				const response = await fetch(`/api/tweets/${tweetId}`, {
+					method: "DELETE",
+					headers: {
+						"x-api-secret": storedSecret,
+					},
+				});
+
+				if (!response.ok) {
+					const data = await response.json();
+					throw new Error(data.error || "Failed to delete tweet");
+				}
+
+				// Refresh after a short delay to ensure server state is updated
+				setTimeout(() => {
+					router.refresh();
+				}, 1000);
+			} catch (error) {
+				// Rollback on error - add the tweet back
+				if (deletedTweet) {
+					setTweets((prevTweets) => [...prevTweets, deletedTweet]);
+				}
+				throw error;
+			}
+		},
+		[tweets, router],
+	);
+
 	// Calculate unseen tweets per person
 	const unseenCounts = useMemo(() => {
 		return tweets.reduce(
@@ -235,6 +286,7 @@ export function FilterableTweetFeed({
 					completionMessage={
 						showCompletionMessage ? completionMessage : undefined
 					}
+					onDelete={handleDelete}
 				/>
 			</div>
 		</div>

@@ -5,7 +5,7 @@
 "use client";
 
 import { useRealtime } from "@upstash/realtime/client";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { RealtimeEvents } from "@/lib/realtime";
 import type { TweetData } from "@/lib/tweet-service";
 
@@ -93,7 +93,9 @@ export function useRealtimeTweets(
 		onData: (data) => {
 			console.log("[Realtime Hook] ✅ Received tweet.seen event:", data);
 			setTweets((prev) =>
-				prev.map((t) => (t.id === data.tweetId ? { ...t, seen: data.seen } : t)),
+				prev.map((t) =>
+					t.id === data.tweetId ? { ...t, seen: data.seen } : t,
+				),
 			);
 			console.log(
 				"[Realtime] Tweet seen status updated:",

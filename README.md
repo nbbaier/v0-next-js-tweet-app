@@ -280,6 +280,14 @@ The tweet is already in your feed - check the existing tweets.
 -  Check browser console for errors
 -  Try refreshing the page
 
+### Features
+
+- **Tweet Management**: Add and view tweets with a clean, responsive UI
+- **Multi-user Support**: Track who submitted each tweet
+- **Auto-cleanup**: Tweets are automatically deleted after 3 days
+- **Redis Storage**: Fast, reliable storage with Upstash Redis
+- **Daily Cron Job**: Automatic cleanup runs at midnight (UTC)
+
 ## Deployment
 
 ### Vercel (Recommended)

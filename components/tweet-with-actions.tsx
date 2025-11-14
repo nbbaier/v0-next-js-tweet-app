@@ -23,6 +23,7 @@ interface TweetWithActionsProps {
 	seen?: boolean;
 	apiSecret?: string;
 	onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
+	onDelete?: (tweetId: string) => Promise<void>;
 }
 
 export function TweetWithActions({
@@ -31,6 +32,7 @@ export function TweetWithActions({
 	seen: initialSeen = false,
 	apiSecret,
 	onToggleSeen,
+	onDelete,
 }: TweetWithActionsProps) {
 	const [error, setError] = useState<string | null>(null);
 	const [isSeen, setIsSeen] = useState(initialSeen);
@@ -103,22 +105,30 @@ export function TweetWithActions({
 		setError(null);
 
 		try {
-			const response = await fetch(`/api/tweets/${tweetId}`, {
-				method: "DELETE",
-				headers: {
-					"x-api-secret": secretToUse,
-				},
-			});
+			if (onDelete) {
+				// Use the callback for optimistic updates with animation
+				await onDelete(tweetId);
+				setDialogOpen(false);
+				setError(null);
+			} else {
+				// Fallback to original behavior
+				const response = await fetch(`/api/tweets/${tweetId}`, {
+					method: "DELETE",
+					headers: {
+						"x-api-secret": secretToUse,
+					},
+				});
 
-			const data = await response.json();
+				const data = await response.json();
 
-			if (!response.ok) {
-				throw new Error(data.error || "Failed to delete tweet");
+				if (!response.ok) {
+					throw new Error(data.error || "Failed to delete tweet");
+				}
+
+				setDialogOpen(false);
+				setError(null);
+				router.refresh();
 			}
-
-			setDialogOpen(false);
-			setError(null);
-			router.refresh();
 		} catch (error) {
 			setError(
 				error instanceof Error ? error.message : "Failed to delete tweet",

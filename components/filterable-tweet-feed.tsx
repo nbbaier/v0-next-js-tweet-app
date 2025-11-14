@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { TweetData } from "@/lib/tweet-service";
@@ -12,6 +12,22 @@ interface FilterableTweetFeedProps {
 	tweets: TweetData[];
 	showActions?: boolean;
 }
+
+// Fun completion messages to display when all tweets are seen
+const COMPLETION_MESSAGES = [
+	"You're all caught up! Time to touch some grass. 🌱",
+	"Inbox zero vibes! You've conquered the feed!",
+	"Nothing left to see here. Maybe go make a sandwich?",
+	"Feed fully digested! Your brain thanks you.",
+	"All done! Now you can finally do that thing you've been avoiding.",
+	"Achievement unlocked: Tweet Master! 🏆",
+	"The feed is clean. The timeline is yours. What now?",
+	"You've reached the end of the internet (this part of it, anyway).",
+	"Congratulations! You've successfully procrastinated through all tweets.",
+	"Feed: cleared. Conscience: clear. Couch: calling your name.",
+	"No more tweets! Time to create your own content maybe?",
+	"You've seen everything. The void stares back... lovingly.",
+];
 
 function FilterBadge({
 	variant,
@@ -63,6 +79,25 @@ export function FilterableTweetFeed({
 	});
 
 	// Handle tweet seen status update
+	const [tweets, setTweets] = useState<TweetData[]>(initialTweets);
+	const [completionMessage, setCompletionMessage] = useState<string>("");
+	const router = useRouter();
+
+	// Select a random completion message when all tweets are seen
+	useEffect(() => {
+		const allSeen =
+			tweets.length > 0 && tweets.every((tweet) => tweet.seen === true);
+		if (allSeen && !completionMessage) {
+			const randomIndex = Math.floor(
+				Math.random() * COMPLETION_MESSAGES.length,
+			);
+			setCompletionMessage(COMPLETION_MESSAGES[randomIndex]);
+		} else if (!allSeen && completionMessage) {
+			setCompletionMessage("");
+		}
+	}, [tweets, completionMessage]);
+
+	// Handle optimistic tweet seen status update
 	const handleToggleSeen = useCallback(
 		async (tweetId: string, currentSeenStatus: boolean) => {
 			try {
@@ -90,6 +125,57 @@ export function FilterableTweetFeed({
 			}
 		},
 		[router],
+	);
+
+	// Handle optimistic tweet deletion
+	const handleDelete = useCallback(
+		async (tweetId: string) => {
+			// Get the API secret from localStorage
+			const storedSecret =
+				typeof window !== "undefined"
+					? localStorage.getItem("tweet_api_secret")
+					: null;
+
+			if (!storedSecret) {
+				throw new Error(
+					"No API secret found. Please set it in the form above.",
+				);
+			}
+
+			// Store the tweet for potential rollback
+			const deletedTweet = tweets.find((tweet) => tweet.id === tweetId);
+
+			// Optimistically remove the tweet from the UI
+			setTweets((prevTweets) =>
+				prevTweets.filter((tweet) => tweet.id !== tweetId),
+			);
+
+			try {
+				const response = await fetch(`/api/tweets/${tweetId}`, {
+					method: "DELETE",
+					headers: {
+						"x-api-secret": storedSecret,
+					},
+				});
+
+				if (!response.ok) {
+					const data = await response.json();
+					throw new Error(data.error || "Failed to delete tweet");
+				}
+
+				// Refresh after a short delay to ensure server state is updated
+				setTimeout(() => {
+					router.refresh();
+				}, 1000);
+			} catch (error) {
+				// Rollback on error - add the tweet back
+				if (deletedTweet) {
+					setTweets((prevTweets) => [...prevTweets, deletedTweet]);
+				}
+				throw error;
+			}
+		},
+		[tweets, router],
 	);
 
 	// Calculate unseen tweets per person
@@ -152,38 +238,51 @@ export function FilterableTweetFeed({
 		return result;
 	}, [sortedTweets, selectedFilter, hideSeenTweets]);
 
+	const allTweetsSeen = unseenCounts.total === 0 && tweets.length > 0;
+	const showCompletionMessage = allTweetsSeen && hideSeenTweets;
+
 	return (
 		<div className="flex flex-col w-full">
-			{unseenCounts.total > 0 && (
-				<div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b py-3 -mx-4 px-4">
-					<div className="flex flex-wrap gap-2">
-						<FilterBadge
-							variant={selectedFilter === null ? "default" : "secondary"}
-							label="All"
-							count={unseenCounts.total}
-							onClick={() => setSelectedFilter(null)}
-						/>
-
-						{peopleWithUnseen.map(([person, count]) => (
+			<div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b py-3 -mx-4 px-4">
+				<div className="flex flex-wrap gap-2">
+					{unseenCounts.total > 0 ? (
+						<>
 							<FilterBadge
-								key={person}
-								variant={selectedFilter === person ? "default" : "secondary"}
-								label={person}
-								count={count}
-								onClick={() => setSelectedFilter(person)}
+								variant={selectedFilter === null ? "default" : "secondary"}
+								label="All"
+								count={unseenCounts.total}
+								onClick={() => setSelectedFilter(null)}
 							/>
-						))}
 
+							{peopleWithUnseen.map(([person, count]) => (
+								<FilterBadge
+									key={person}
+									variant={selectedFilter === person ? "default" : "secondary"}
+									label={person}
+									count={count}
+									onClick={() => setSelectedFilter(person)}
+								/>
+							))}
+
+							<FilterBadge
+								variant={hideSeenTweets ? "default" : "secondary"}
+								label={hideSeenTweets ? "Show All" : "Hide Seen"}
+								count={0}
+								withoutCount={true}
+								onClick={() => setHideSeenTweets(!hideSeenTweets)}
+							/>
+						</>
+					) : (
 						<FilterBadge
 							variant={hideSeenTweets ? "default" : "secondary"}
-							label={hideSeenTweets ? "Show All" : "Hide Seen"}
+							label={hideSeenTweets ? "Show Seen" : "Hide Seen"}
 							count={0}
 							withoutCount={true}
 							onClick={() => setHideSeenTweets(!hideSeenTweets)}
 						/>
-					</div>
+					)}
 				</div>
-			)}
+			</div>
 
 			{/* Tweet list */}
 			<div className="flex-1 py-6 w-full">
@@ -191,6 +290,10 @@ export function FilterableTweetFeed({
 					tweets={filteredTweets}
 					showActions={showActions}
 					onToggleSeen={handleToggleSeen}
+					completionMessage={
+						showCompletionMessage ? completionMessage : undefined
+					}
+					onDelete={handleDelete}
 				/>
 			</div>
 		</div>

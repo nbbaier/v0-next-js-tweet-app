@@ -28,7 +28,7 @@ export async function getCachedTweet(
 		const cached = await redis.get<TweetData>(`tweet:${tweetId}`);
 
 		if (cached) {
-			console.log(`[Cache HIT] Tweet ${tweetId}`);
+			// console.log(`[Cache HIT] Tweet ${tweetId}`);
 			return cached;
 		}
 
@@ -46,7 +46,7 @@ export async function setCachedTweet(
 ): Promise<void> {
 	try {
 		await redis.set(`tweet:${tweetId}`, data, { ex: CACHE_TTL });
-		console.log(`[Cache SET] Tweet ${tweetId}`);
+		// console.log(`[Cache SET] Tweet ${tweetId}`);
 	} catch (error) {
 		console.error(`[Cache ERROR] Failed to set tweet ${tweetId}:`, error);
 	}

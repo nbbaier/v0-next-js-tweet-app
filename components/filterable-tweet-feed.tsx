@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useRealtimeTweets } from "@/hooks/use-realtime-tweets";
 import type { TweetData } from "@/lib/tweet-service";
 import { TweetList } from "./tweet-list";
 
@@ -61,9 +62,23 @@ export function FilterableTweetFeed({
 }: FilterableTweetFeedProps) {
 	const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
 	const [hideSeenTweets, setHideSeenTweets] = useState(false);
-	const [tweets, setTweets] = useState<TweetData[]>(initialTweets);
-	const [completionMessage, setCompletionMessage] = useState<string>("");
 	const router = useRouter();
+
+	const [completionMessage, setCompletionMessage] = useState<string>("");
+
+	// Use real-time tweets hook
+	const { tweets } = useRealtimeTweets(initialTweets, {
+		enabled: true,
+		onError: (error) => {
+			console.error("[FilterableTweetFeed] Real-time error:", error);
+		},
+		onConnected: () => {
+			console.log("[FilterableTweetFeed] Connected to real-time updates");
+		},
+		onDisconnected: () => {
+			console.log("[FilterableTweetFeed] Disconnected from real-time updates");
+		},
+	});
 
 	// Select a random completion message when all tweets are seen
 	useEffect(() => {
@@ -82,13 +97,6 @@ export function FilterableTweetFeed({
 	// Handle optimistic tweet seen status update
 	const handleToggleSeen = useCallback(
 		async (tweetId: string, currentSeenStatus: boolean) => {
-			// Optimistically update the UI
-			setTweets((prevTweets) =>
-				prevTweets.map((tweet) =>
-					tweet.id === tweetId ? { ...tweet, seen: !currentSeenStatus } : tweet,
-				),
-			);
-
 			try {
 				const response = await fetch(`/api/tweets/${tweetId}`, {
 					method: "PATCH",
@@ -103,24 +111,20 @@ export function FilterableTweetFeed({
 					throw new Error(data.error || "Failed to update seen status");
 				}
 
+				// Real-time updates will handle the UI update via SSE
+				// But also trigger a refresh as backup
 				setTimeout(() => {
 					router.refresh();
 				}, 1000);
 			} catch (error) {
-				setTweets((prevTweets) =>
-					prevTweets.map((tweet) =>
-						tweet.id === tweetId
-							? { ...tweet, seen: currentSeenStatus }
-							: tweet,
-					),
-				);
+				console.error("Failed to update seen status:", error);
 				throw error;
 			}
 		},
 		[router],
 	);
 
-	// Handle optimistic tweet deletion
+	// Handle tweet deletion
 	const handleDelete = useCallback(
 		async (tweetId: string) => {
 			// Get the API secret from localStorage
@@ -135,14 +139,6 @@ export function FilterableTweetFeed({
 				);
 			}
 
-			// Store the tweet for potential rollback
-			const deletedTweet = tweets.find((tweet) => tweet.id === tweetId);
-
-			// Optimistically remove the tweet from the UI
-			setTweets((prevTweets) =>
-				prevTweets.filter((tweet) => tweet.id !== tweetId),
-			);
-
 			try {
 				const response = await fetch(`/api/tweets/${tweetId}`, {
 					method: "DELETE",
@@ -156,19 +152,17 @@ export function FilterableTweetFeed({
 					throw new Error(data.error || "Failed to delete tweet");
 				}
 
-				// Refresh after a short delay to ensure server state is updated
+				// Real-time updates will handle the UI update via SSE
+				// But also trigger a refresh as backup
 				setTimeout(() => {
 					router.refresh();
 				}, 1000);
 			} catch (error) {
-				// Rollback on error - add the tweet back
-				if (deletedTweet) {
-					setTweets((prevTweets) => [...prevTweets, deletedTweet]);
-				}
+				console.error("Failed to delete tweet:", error);
 				throw error;
 			}
 		},
-		[tweets, router],
+		[router],
 	);
 
 	// Calculate unseen tweets per person

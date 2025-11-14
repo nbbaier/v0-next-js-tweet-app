@@ -2,21 +2,14 @@
  * Tweet storage layer - Manages persistent storage of tweet IDs in Redis
  */
 
-import { Redis } from "@upstash/redis";
-
-if (
-	!process.env.UPSTASH_KV_KV_REST_API_URL ||
-	!process.env.UPSTASH_KV_KV_REST_API_TOKEN
-) {
-	throw new Error(
-		"UPSTASH_KV_KV_REST_API_URL and UPSTASH_KV_KV_REST_API_TOKEN must be set",
-	);
-}
-
-const redis = new Redis({
-	url: process.env.UPSTASH_KV_KV_REST_API_URL,
-	token: process.env.UPSTASH_KV_KV_REST_API_TOKEN,
-});
+import { redis } from "./redis";
+import {
+	publishTweetAdded,
+	publishTweetRemoved,
+	publishTweetSeen,
+	publishTweetUpdated,
+} from "./tweet-realtime";
+import type { TweetData } from "./tweet-service";
 
 const TWEETS_LIST_KEY = "tweets:list";
 const TWEET_METADATA_PREFIX = "tweet:meta:";
@@ -68,6 +61,19 @@ export async function addTweetToStorage(
 				console.log(
 					`[Storage] Added poster ${posterName} to existing tweet ${tweetId}`,
 				);
+
+				// Publish real-time update
+				const updatedTweetData: TweetData = {
+					id: tweetId,
+					submittedBy: updatedMetadata.posters.map((p) => p.name),
+					seen: updatedMetadata.seen,
+				};
+				try {
+					await publishTweetUpdated(updatedTweetData);
+				} catch (publishError) {
+					console.error('[Storage] Failed to publish update event but metadata was stored:', publishError);
+				}
+
 				return updatedMetadata;
 			}
 
@@ -97,6 +103,24 @@ export async function addTweetToStorage(
 		await redis.set(`${TWEET_METADATA_PREFIX}${tweetId}`, metadata);
 
 		console.log(`[Storage] Added new tweet ${tweetId}`);
+
+		// Publish real-time update
+		const tweetData: TweetData = {
+			id: tweetId,
+			submittedBy: metadata.posters.map((p) => p.name),
+			seen: metadata.seen,
+		};
+		console.log(
+			`[Storage] About to publish tweet:added for ${tweetId}`,
+			tweetData,
+		);
+		try {
+			await publishTweetAdded(tweetData);
+			console.log(`[Storage] Completed publishing tweet:added for ${tweetId}`);
+		} catch (publishError) {
+			console.error('[Storage] Failed to publish event but tweet was stored:', publishError);
+		}
+
 		return metadata;
 	} catch (error) {
 		console.error(`[Storage ERROR] Failed to add tweet ${tweetId}:`, error);
@@ -220,6 +244,10 @@ export async function updateTweetSeen(
 		console.log(
 			`[Storage] Updated seen status for tweet ${tweetId} to ${seen}`,
 		);
+
+		// Publish real-time update
+		await publishTweetSeen(tweetId, seen);
+
 		return updatedMetadata;
 	} catch (error) {
 		console.error(
@@ -246,6 +274,12 @@ export async function removeTweetFromStorage(
 		await redis.del(`${TWEET_METADATA_PREFIX}${tweetId}`);
 
 		console.log(`[Storage] Removed tweet ${tweetId}`);
+
+		// Publish real-time update
+		if (removed > 0) {
+			await publishTweetRemoved(tweetId);
+		}
+
 		return removed > 0;
 	} catch (error) {
 		console.error(`[Storage ERROR] Failed to remove tweet ${tweetId}:`, error);

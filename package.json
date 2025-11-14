@@ -16,6 +16,7 @@
 		"@radix-ui/react-select": "^2.2.6",
 		"@radix-ui/react-separator": "latest",
 		"@radix-ui/react-slot": "latest",
+		"@upstash/realtime": "^0.3.0",
 		"@upstash/redis": "latest",
 		"@vercel/analytics": "latest",
 		"class-variance-authority": "^0.7.1",
@@ -27,7 +28,8 @@
 		"react": "19.2.0",
 		"react-dom": "19.2.0",
 		"react-tweet": "latest",
-		"tailwind-merge": "^2.5.5"
+		"tailwind-merge": "^2.5.5",
+		"zod": "^4.1.12"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.4",

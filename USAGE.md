@@ -102,7 +102,8 @@ The tweet will be removed from the feed immediately.
 
 -  All tweets are displayed in reverse chronological order (newest first)
 -  Tweets are cached for 1 hour to improve performance
--  The feed automatically refreshes when you add or delete tweets
+-  The feed automatically updates in real-time when tweets are added, updated, or removed
+-  Real-time updates use Upstash Realtime with a single global tweet feed channel (`tweets`)
 
 ### Auto-Delete (3-Day Retention)
 
@@ -322,6 +323,23 @@ x-api-secret: your-secret-here
 -  Cache TTL: 1 hour
 -  **Auto-deletion: Tweets older than 3 days are automatically removed**
 -  A daily cron job runs at midnight (UTC) to perform cleanup
+
+## Real-time Updates
+
+The app uses **Upstash Realtime** to provide instant updates across all connected clients:
+
+-  **Channel**: Single global feed channel (`tweets`)
+-  **Schema**: Defined in `lib/realtime.ts` with Zod validation
+-  **Events**:
+   -  `tweet.added` - New tweet added to feed
+   -  `tweet.updated` - Tweet metadata updated (e.g., new poster added)
+   -  `tweet.removed` - Tweet deleted from feed
+   -  `tweet.reorder` - Tweet order changed
+   -  `tweet.seen` - Tweet seen status changed
+-  **Client Hook**: `useRealtimeTweets` in `hooks/use-realtime-tweets.ts` uses `@upstash/realtime/client`
+-  **Server Endpoint**: `/api/realtime` handles SSE connections via `@upstash/realtime` handler
+
+The realtime system automatically handles reconnection and connection management, ensuring reliable real-time updates without manual polling.
 
 ## Security
 

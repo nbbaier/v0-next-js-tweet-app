@@ -77,7 +77,7 @@ export function FilterableTweetFeed({
 		} else if (!allSeen && completionMessage) {
 			setCompletionMessage("");
 		}
-	}, [tweets, completionMessage]);
+	}, [tweets]);
 
 	// Handle optimistic tweet seen status update
 	const handleToggleSeen = useCallback(

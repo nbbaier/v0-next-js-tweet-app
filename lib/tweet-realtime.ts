@@ -1,97 +1,82 @@
-/**
- * Real-time tweet updates using Upstash Redis Pub/Sub
- */
+import { realtime } from "./realtime";
+import type { TweetData } from "./tweet-service";
 
-import { Redis } from "@upstash/redis";
+const TWEETS_CHANNEL = "tweets";
 
-if (
-	!process.env.UPSTASH_KV_KV_REST_API_URL ||
-	!process.env.UPSTASH_KV_KV_REST_API_TOKEN
-) {
-	throw new Error(
-		"UPSTASH_KV_KV_REST_API_URL and UPSTASH_KV_KV_REST_API_TOKEN must be set",
-	);
-}
+type RealtimeChannel = ReturnType<typeof realtime.channel>;
+type TweetChannel = RealtimeChannel & {
+	tweet: {
+		added: { emit: (data: { tweet: TweetData }) => Promise<void> };
+		updated: { emit: (data: { tweet: TweetData }) => Promise<void> };
+		removed: { emit: (data: { id: string }) => Promise<void> };
+		reorder: { emit: (data: { tweetIds: string[] }) => Promise<void> };
+		seen: { emit: (data: { tweetId: string; seen: boolean }) => Promise<void> };
+	};
+};
 
-const redis = new Redis({
-	url: process.env.UPSTASH_KV_KV_REST_API_URL,
-	token: process.env.UPSTASH_KV_KV_REST_API_TOKEN,
-});
-
-// Channel for real-time tweet updates
-const TWEET_UPDATES_CHANNEL = "tweets:updates";
-
-// Event types
-export type TweetEventType =
-	| "tweet:added"
-	| "tweet:updated"
-	| "tweet:removed"
-	| "tweet:seen";
-
-export interface TweetEvent {
-	type: TweetEventType;
-	tweetId: string;
-	timestamp: number;
-	data?: Record<string, unknown>;
-}
-
-/**
- * Publishes a tweet update event to the Redis Pub/Sub channel
- * @param event - The tweet event to publish
- */
-export async function publishTweetUpdate(event: TweetEvent): Promise<void> {
-	try {
-		await redis.publish(TWEET_UPDATES_CHANNEL, JSON.stringify(event));
-		console.log(`[Realtime] Published event: ${event.type} for ${event.tweetId}`);
-	} catch (error) {
-		console.error("[Realtime ERROR] Failed to publish event:", error);
-		// Don't throw - real-time is not critical for app functionality
-	}
-}
+const getTweetChannel = (): TweetChannel => {
+	return realtime.channel(TWEETS_CHANNEL) as unknown as TweetChannel;
+};
 
 /**
  * Helper function to publish a tweet added event
  */
-export async function publishTweetAdded(tweetId: string, data?: Record<string, unknown>): Promise<void> {
-	await publishTweetUpdate({
-		type: "tweet:added",
-		tweetId,
-		timestamp: Date.now(),
-		data,
-	});
+export async function publishTweetAdded(tweet: TweetData): Promise<void> {
+	try {
+		await getTweetChannel().tweet.added.emit({ tweet });
+		console.log(`[Realtime] Published tweet:added for ${tweet.id}`);
+	} catch (error) {
+		console.error("[Realtime ERROR] Failed to publish tweet:added:", error);
+	}
 }
 
 /**
  * Helper function to publish a tweet updated event
  */
-export async function publishTweetUpdated(tweetId: string, data?: Record<string, unknown>): Promise<void> {
-	await publishTweetUpdate({
-		type: "tweet:updated",
-		tweetId,
-		timestamp: Date.now(),
-		data,
-	});
+export async function publishTweetUpdated(tweet: TweetData): Promise<void> {
+	try {
+		await getTweetChannel().tweet.updated.emit({ tweet });
+		console.log(`[Realtime] Published tweet:updated for ${tweet.id}`);
+	} catch (error) {
+		console.error("[Realtime ERROR] Failed to publish tweet:updated:", error);
+	}
 }
 
 /**
  * Helper function to publish a tweet removed event
  */
 export async function publishTweetRemoved(tweetId: string): Promise<void> {
-	await publishTweetUpdate({
-		type: "tweet:removed",
-		tweetId,
-		timestamp: Date.now(),
-	});
+	try {
+		await getTweetChannel().tweet.removed.emit({ id: tweetId });
+		console.log(`[Realtime] Published tweet:removed for ${tweetId}`);
+	} catch (error) {
+		console.error("[Realtime ERROR] Failed to publish tweet:removed:", error);
+	}
 }
 
 /**
  * Helper function to publish a tweet seen status change event
  */
-export async function publishTweetSeen(tweetId: string, seen: boolean): Promise<void> {
-	await publishTweetUpdate({
-		type: "tweet:seen",
-		tweetId,
-		timestamp: Date.now(),
-		data: { seen },
-	});
+export async function publishTweetSeen(
+	tweetId: string,
+	seen: boolean,
+): Promise<void> {
+	try {
+		await getTweetChannel().tweet.seen.emit({ tweetId, seen });
+		console.log(`[Realtime] Published tweet:seen for ${tweetId}`);
+	} catch (error) {
+		console.error("[Realtime ERROR] Failed to publish tweet:seen:", error);
+	}
+}
+
+/**
+ * Helper function to publish a tweet reorder event
+ */
+export async function publishTweetReorder(tweetIds: string[]): Promise<void> {
+	try {
+		await getTweetChannel().tweet.reorder.emit({ tweetIds });
+		console.log(`[Realtime] Published tweet:reorder`);
+	} catch (error) {
+		console.error("[Realtime ERROR] Failed to publish tweet:reorder:", error);
+	}
 }

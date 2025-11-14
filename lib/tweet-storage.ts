@@ -2,27 +2,14 @@
  * Tweet storage layer - Manages persistent storage of tweet IDs in Redis
  */
 
-import { Redis } from "@upstash/redis";
+import { redis } from "./redis";
 import {
 	publishTweetAdded,
 	publishTweetRemoved,
 	publishTweetSeen,
 	publishTweetUpdated,
 } from "./tweet-realtime";
-
-if (
-	!process.env.UPSTASH_KV_KV_REST_API_URL ||
-	!process.env.UPSTASH_KV_KV_REST_API_TOKEN
-) {
-	throw new Error(
-		"UPSTASH_KV_KV_REST_API_URL and UPSTASH_KV_KV_REST_API_TOKEN must be set",
-	);
-}
-
-const redis = new Redis({
-	url: process.env.UPSTASH_KV_KV_REST_API_URL,
-	token: process.env.UPSTASH_KV_KV_REST_API_TOKEN,
-});
+import type { TweetData } from "./tweet-service";
 
 const TWEETS_LIST_KEY = "tweets:list";
 const TWEET_METADATA_PREFIX = "tweet:meta:";
@@ -76,7 +63,12 @@ export async function addTweetToStorage(
 				);
 
 				// Publish real-time update
-				await publishTweetUpdated(tweetId, { posterAdded: posterName });
+				const updatedTweetData: TweetData = {
+					id: tweetId,
+					submittedBy: updatedMetadata.posters.map((p) => p.name),
+					seen: updatedMetadata.seen,
+				};
+				await publishTweetUpdated(updatedTweetData);
 
 				return updatedMetadata;
 			}
@@ -109,9 +101,12 @@ export async function addTweetToStorage(
 		console.log(`[Storage] Added new tweet ${tweetId}`);
 
 		// Publish real-time update
-		await publishTweetAdded(tweetId, {
+		const tweetData: TweetData = {
+			id: tweetId,
 			submittedBy: metadata.posters.map((p) => p.name),
-		});
+			seen: metadata.seen,
+		};
+		await publishTweetAdded(tweetData);
 
 		return metadata;
 	} catch (error) {

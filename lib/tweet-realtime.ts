@@ -4,24 +4,21 @@ import type { TweetData } from "./tweet-service";
 const TWEETS_CHANNEL = "tweets";
 
 /**
+ * Gets a typed channel for publishing events.
+ * Using the realtime.channel() method provides proper type safety
+ * for event names and payloads based on the schema.
+ */
+function getChannel() {
+	return realtime.channel(TWEETS_CHANNEL);
+}
+
+/**
  * Helper function to publish a tweet added event
  */
 export async function publishTweetAdded(tweet: TweetData): Promise<void> {
 	try {
-		const channel = realtime.channel(TWEETS_CHANNEL) as any;
-
-		if (channel.emit && typeof channel.emit === "function") {
-			console.log(`[Realtime] Trying channel.emit('tweet.added', ...)`);
-			await channel.emit("tweet.added", { tweet });
-		} else if (channel.tweet?.added?.emit) {
-			console.log(`[Realtime] Trying channel.tweet.added.emit(...)`);
-			await channel.tweet.added.emit({ tweet });
-		} else {
-			throw new Error(
-				`Channel doesn't have expected emit methods. Keys: ${Object.keys(channel).join(", ")}`,
-			);
-		}
-
+		const channel = getChannel();
+		await channel.emit("tweet.added", { tweet });
 		console.log(
 			`[Realtime] Successfully published tweet:added for ${tweet.id}`,
 		);
@@ -40,11 +37,12 @@ export async function publishTweetAdded(tweet: TweetData): Promise<void> {
  */
 export async function publishTweetUpdated(tweet: TweetData): Promise<void> {
 	try {
-		const channel = realtime.channel(TWEETS_CHANNEL) as any;
+		const channel = getChannel();
 		await channel.emit("tweet.updated", { tweet });
 		console.log(`[Realtime] Published tweet:updated for ${tweet.id}`);
 	} catch (error) {
 		console.error("[Realtime ERROR] Failed to publish tweet:updated:", error);
+		throw error;
 	}
 }
 
@@ -53,11 +51,12 @@ export async function publishTweetUpdated(tweet: TweetData): Promise<void> {
  */
 export async function publishTweetRemoved(tweetId: string): Promise<void> {
 	try {
-		const channel = realtime.channel(TWEETS_CHANNEL) as any;
+		const channel = getChannel();
 		await channel.emit("tweet.removed", { id: tweetId });
 		console.log(`[Realtime] Published tweet:removed for ${tweetId}`);
 	} catch (error) {
 		console.error("[Realtime ERROR] Failed to publish tweet:removed:", error);
+		throw error;
 	}
 }
 
@@ -69,11 +68,12 @@ export async function publishTweetSeen(
 	seen: boolean,
 ): Promise<void> {
 	try {
-		const channel = realtime.channel(TWEETS_CHANNEL) as any;
+		const channel = getChannel();
 		await channel.emit("tweet.seen", { tweetId, seen });
 		console.log(`[Realtime] Published tweet:seen for ${tweetId}`);
 	} catch (error) {
 		console.error("[Realtime ERROR] Failed to publish tweet:seen:", error);
+		throw error;
 	}
 }
 
@@ -82,10 +82,11 @@ export async function publishTweetSeen(
  */
 export async function publishTweetReorder(tweetIds: string[]): Promise<void> {
 	try {
-		const channel = realtime.channel(TWEETS_CHANNEL) as any;
+		const channel = getChannel();
 		await channel.emit("tweet.reorder", { tweetIds });
 		console.log(`[Realtime] Published tweet:reorder`);
 	} catch (error) {
 		console.error("[Realtime ERROR] Failed to publish tweet:reorder:", error);
+		throw error;
 	}
 }

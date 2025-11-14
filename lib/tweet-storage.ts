@@ -3,6 +3,12 @@
  */
 
 import { Redis } from "@upstash/redis";
+import {
+	publishTweetAdded,
+	publishTweetRemoved,
+	publishTweetSeen,
+	publishTweetUpdated,
+} from "./tweet-realtime";
 
 if (
 	!process.env.UPSTASH_KV_KV_REST_API_URL ||
@@ -68,6 +74,10 @@ export async function addTweetToStorage(
 				console.log(
 					`[Storage] Added poster ${posterName} to existing tweet ${tweetId}`,
 				);
+
+				// Publish real-time update
+				await publishTweetUpdated(tweetId, { posterAdded: posterName });
+
 				return updatedMetadata;
 			}
 
@@ -97,6 +107,12 @@ export async function addTweetToStorage(
 		await redis.set(`${TWEET_METADATA_PREFIX}${tweetId}`, metadata);
 
 		console.log(`[Storage] Added new tweet ${tweetId}`);
+
+		// Publish real-time update
+		await publishTweetAdded(tweetId, {
+			submittedBy: metadata.posters.map((p) => p.name),
+		});
+
 		return metadata;
 	} catch (error) {
 		console.error(`[Storage ERROR] Failed to add tweet ${tweetId}:`, error);
@@ -220,6 +236,10 @@ export async function updateTweetSeen(
 		console.log(
 			`[Storage] Updated seen status for tweet ${tweetId} to ${seen}`,
 		);
+
+		// Publish real-time update
+		await publishTweetSeen(tweetId, seen);
+
 		return updatedMetadata;
 	} catch (error) {
 		console.error(
@@ -246,6 +266,12 @@ export async function removeTweetFromStorage(
 		await redis.del(`${TWEET_METADATA_PREFIX}${tweetId}`);
 
 		console.log(`[Storage] Removed tweet ${tweetId}`);
+
+		// Publish real-time update
+		if (removed > 0) {
+			await publishTweetRemoved(tweetId);
+		}
+
 		return removed > 0;
 	} catch (error) {
 		console.error(`[Storage ERROR] Failed to remove tweet ${tweetId}:`, error);

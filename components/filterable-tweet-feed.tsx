@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { TweetData } from "@/lib/tweet-service";
 import { TweetList } from "./tweet-list";
+import { useRealtimeTweets } from "@/hooks/use-realtime-tweets";
 
 interface FilterableTweetFeedProps {
 	tweets: TweetData[];
@@ -45,19 +46,25 @@ export function FilterableTweetFeed({
 }: FilterableTweetFeedProps) {
 	const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
 	const [hideSeenTweets, setHideSeenTweets] = useState(false);
-	const [tweets, setTweets] = useState<TweetData[]>(initialTweets);
 	const router = useRouter();
 
-	// Handle optimistic tweet seen status update
+	// Use real-time tweets hook
+	const { tweets, isConnected } = useRealtimeTweets(initialTweets, {
+		enabled: true,
+		onError: (error) => {
+			console.error("[FilterableTweetFeed] Real-time error:", error);
+		},
+		onConnected: () => {
+			console.log("[FilterableTweetFeed] Connected to real-time updates");
+		},
+		onDisconnected: () => {
+			console.log("[FilterableTweetFeed] Disconnected from real-time updates");
+		},
+	});
+
+	// Handle tweet seen status update
 	const handleToggleSeen = useCallback(
 		async (tweetId: string, currentSeenStatus: boolean) => {
-			// Optimistically update the UI
-			setTweets((prevTweets) =>
-				prevTweets.map((tweet) =>
-					tweet.id === tweetId ? { ...tweet, seen: !currentSeenStatus } : tweet,
-				),
-			);
-
 			try {
 				const response = await fetch(`/api/tweets/${tweetId}`, {
 					method: "PATCH",
@@ -72,17 +79,13 @@ export function FilterableTweetFeed({
 					throw new Error(data.error || "Failed to update seen status");
 				}
 
+				// Real-time updates will handle the UI update via SSE
+				// But also trigger a refresh as backup
 				setTimeout(() => {
 					router.refresh();
 				}, 1000);
 			} catch (error) {
-				setTweets((prevTweets) =>
-					prevTweets.map((tweet) =>
-						tweet.id === tweetId
-							? { ...tweet, seen: currentSeenStatus }
-							: tweet,
-					),
-				);
+				console.error("Failed to update seen status:", error);
 				throw error;
 			}
 		},

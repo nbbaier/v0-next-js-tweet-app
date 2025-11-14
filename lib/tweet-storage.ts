@@ -106,7 +106,12 @@ export async function addTweetToStorage(
 			submittedBy: metadata.posters.map((p) => p.name),
 			seen: metadata.seen,
 		};
+		console.log(
+			`[Storage] About to publish tweet:added for ${tweetId}`,
+			tweetData,
+		);
 		await publishTweetAdded(tweetData);
+		console.log(`[Storage] Completed publishing tweet:added for ${tweetId}`);
 
 		return metadata;
 	} catch (error) {

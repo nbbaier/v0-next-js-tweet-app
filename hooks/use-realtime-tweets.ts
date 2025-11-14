@@ -6,13 +6,7 @@
 
 import { useRealtime } from "@upstash/realtime/client";
 import { useCallback, useEffect, useState } from "react";
-import type {
-	TweetAddedEvent,
-	TweetRemovedEvent,
-	TweetReorderEvent,
-	TweetSeenEvent,
-	TweetUpdatedEvent,
-} from "@/lib/realtime";
+import type { RealtimeEvents } from "@/lib/realtime";
 import type { TweetData } from "@/lib/tweet-service";
 
 interface UseRealtimeTweetsOptions {
@@ -29,76 +23,101 @@ export function useRealtimeTweets(
 	const { enabled = true, onError, onConnected, onDisconnected } = options;
 	const [tweets, setTweets] = useState<TweetData[]>(initialTweets);
 
-	const handleTweetAdded = useCallback((data: TweetAddedEvent) => {
-		const tweet = data.tweet;
-		setTweets((prev) => {
-			if (prev.some((t) => t.id === tweet.id)) {
-				return prev.map((t) => (t.id === tweet.id ? tweet : t));
-			}
-			return [tweet, ...prev];
-		});
-		console.log("[Realtime] Tweet added:", tweet.id);
-	}, []);
-
-	const handleTweetRemoved = useCallback((data: TweetRemovedEvent) => {
-		setTweets((prev) => prev.filter((t) => t.id !== data.id));
-		console.log("[Realtime] Tweet removed:", data.id);
-	}, []);
-
-	const handleTweetUpdated = useCallback((data: TweetUpdatedEvent) => {
-		const tweet = data.tweet;
-		setTweets((prev) =>
-			prev.map((t) => (t.id === tweet.id ? { ...t, ...tweet } : t)),
-		);
-		console.log("[Realtime] Tweet updated:", tweet.id);
-	}, []);
-
-	const handleReorder = useCallback((data: TweetReorderEvent) => {
-		setTweets((prev) => {
-			const tweetMap = new Map(prev.map((t) => [t.id, t]));
-			return data.tweetIds
-				.map((id: string) => tweetMap.get(id))
-				.filter((t): t is TweetData => t !== undefined);
-		});
-		console.log("[Realtime] Tweets reordered");
-	}, []);
-
-	const handleTweetSeen = useCallback((data: TweetSeenEvent) => {
-		setTweets((prev) =>
-			prev.map((t) => (t.id === data.tweetId ? { ...t, seen: data.seen } : t)),
-		);
-		console.log(
-			"[Realtime] Tweet seen status updated:",
-			data.tweetId,
-			data.seen,
-		);
-	}, []);
-
-	const { status } = useRealtime({
+	// Tweet added handler
+	const { status: statusAdded } = useRealtime<RealtimeEvents>({
 		enabled,
 		channels: ["tweets"],
-		events: {
-			tweet: {
-				added: handleTweetAdded,
-				removed: handleTweetRemoved,
-				updated: handleTweetUpdated,
-				reorder: handleReorder,
-				seen: handleTweetSeen,
-			},
+		event: "tweet.added",
+		onData: (data) => {
+			console.log("[Realtime Hook] ✅ Received tweet.added event:", data);
+			const tweet = data.tweet;
+			setTweets((prev) => {
+				if (prev.some((t) => t.id === tweet.id)) {
+					return prev.map((t) => (t.id === tweet.id ? tweet : t));
+				}
+				return [tweet, ...prev];
+			});
+			console.log("[Realtime] Tweet added:", tweet.id);
 		},
-	} as Parameters<typeof useRealtime>[0]);
+	});
 
-	const isConnected = status === "connected";
+	// Tweet removed handler
+	useRealtime<RealtimeEvents>({
+		enabled,
+		channels: ["tweets"],
+		event: "tweet.removed",
+		onData: (data) => {
+			console.log("[Realtime Hook] ✅ Received tweet.removed event:", data);
+			setTweets((prev) => prev.filter((t) => t.id !== data.id));
+			console.log("[Realtime] Tweet removed:", data.id);
+		},
+	});
+
+	// Tweet updated handler
+	useRealtime<RealtimeEvents>({
+		enabled,
+		channels: ["tweets"],
+		event: "tweet.updated",
+		onData: (data) => {
+			console.log("[Realtime Hook] ✅ Received tweet.updated event:", data);
+			const tweet = data.tweet;
+			setTweets((prev) =>
+				prev.map((t) => (t.id === tweet.id ? { ...t, ...tweet } : t)),
+			);
+			console.log("[Realtime] Tweet updated:", tweet.id);
+		},
+	});
+
+	// Tweet reorder handler
+	useRealtime<RealtimeEvents>({
+		enabled,
+		channels: ["tweets"],
+		event: "tweet.reorder",
+		onData: (data) => {
+			console.log("[Realtime Hook] ✅ Received tweet.reorder event:", data);
+			const tweetMap = new Map(tweets.map((t) => [t.id, t]));
+			setTweets(
+				data.tweetIds
+					.map((id: string) => tweetMap.get(id))
+					.filter((t): t is TweetData => t !== undefined),
+			);
+			console.log("[Realtime] Tweets reordered");
+		},
+	});
+
+	// Tweet seen handler
+	useRealtime<RealtimeEvents>({
+		enabled,
+		channels: ["tweets"],
+		event: "tweet.seen",
+		onData: (data) => {
+			console.log("[Realtime Hook] ✅ Received tweet.seen event:", data);
+			setTweets((prev) =>
+				prev.map((t) => (t.id === data.tweetId ? { ...t, seen: data.seen } : t)),
+			);
+			console.log(
+				"[Realtime] Tweet seen status updated:",
+				data.tweetId,
+				data.seen,
+			);
+		},
+	});
+
+	const isConnected = statusAdded === "connected";
 
 	useEffect(() => {
+		console.log("[Realtime Hook] Status changed to:", statusAdded);
 		if (isConnected) {
+			console.log(
+				"[Realtime Hook] ✅ Connected! Listening for events on channels: ['tweets']",
+			);
 			onConnected?.();
-		} else if (status === "disconnected") {
+		} else if (statusAdded === "disconnected") {
 			onDisconnected?.();
-		} else if (status === "error") {
+		} else if (statusAdded === "error") {
 			onError?.(new Error("Realtime connection error"));
 		}
-	}, [status, isConnected, onConnected, onDisconnected, onError]);
+	}, [statusAdded, isConnected, onConnected, onDisconnected, onError]);
 
 	useEffect(() => {
 		setTweets(initialTweets);

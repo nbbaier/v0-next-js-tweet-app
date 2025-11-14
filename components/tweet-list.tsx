@@ -73,7 +73,6 @@ export function TweetList({
 							/>
 						) : (
 							<div className="flex justify-center tweet-container">
-								{/* @ts-expect-error - React 19 compatibility issue with react-tweet */}
 								<Tweet id={tweet.id} />
 							</div>
 						)}

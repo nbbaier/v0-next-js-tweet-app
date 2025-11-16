@@ -185,6 +185,13 @@ export function FilterableTweetFeed({
 		);
 	}, [tweets]);
 
+	// Auto-hide seen tweets when unread count reaches zero
+	useEffect(() => {
+		if (unseenCounts.total === 0 && tweets.length > 0 && !hideSeenTweets) {
+			setHideSeenTweets(true);
+		}
+	}, [unseenCounts.total, tweets.length, hideSeenTweets]);
+
 	// Get list of people with unseen tweets
 	const peopleWithUnseen = useMemo(() => {
 		return Object.entries(unseenCounts)

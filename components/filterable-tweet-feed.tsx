@@ -186,17 +186,18 @@ export function FilterableTweetFeed({
 		);
 	}, [tweets]);
 
-	// Auto-hide seen tweets when unread count transitions to zero
+	// Auto-hide seen tweets when unread count transitions to zero or on initial load with no unseen
 	useEffect(() => {
 		const prevCount = prevUnseenCountRef.current;
 		const currentCount = unseenCounts.total;
 
-		// Only auto-toggle when transitioning from having unseen tweets to zero
+		// Auto-toggle in two cases:
+		// 1. Initial page load with no unseen tweets (prevCount === null && currentCount === 0)
+		// 2. Transition from having unseen tweets to zero (prevCount > 0 && currentCount === 0)
 		if (
-			prevCount !== null &&
-			prevCount > 0 &&
 			currentCount === 0 &&
-			tweets.length > 0
+			tweets.length > 0 &&
+			(prevCount === null || prevCount > 0)
 		) {
 			setHideSeenTweets(true);
 		}

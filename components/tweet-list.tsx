@@ -1,5 +1,8 @@
+"use client";
+
 import { AnimatePresence, motion } from "framer-motion";
 import type { TweetData } from "@/lib/tweet-service";
+import { Confetti } from "./confetti";
 import { TweetWithActions } from "./tweet-with-actions";
 import { Button } from "./ui/button";
 
@@ -29,12 +32,15 @@ export function TweetList({
 	// Show completion message when all tweets are seen and filtered out
 	if (completionMessage) {
 		return (
-			<div className="flex flex-col gap-4 justify-center items-center py-12">
-				<div className="text-6xl mb-4">🎉</div>
-				<p className="text-xl font-medium text-center max-w-md">
-					{completionMessage}
-				</p>
-			</div>
+			<>
+				<Confetti trigger={true} />
+				<div className="flex flex-col gap-4 justify-center items-center py-12">
+					<div className="text-6xl mb-4">🎉</div>
+					<p className="text-xl font-medium text-center max-w-md">
+						{completionMessage}
+					</p>
+				</div>
+			</>
 		);
 	}
 

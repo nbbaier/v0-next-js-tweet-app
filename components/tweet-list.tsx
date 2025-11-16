@@ -33,7 +33,7 @@ export function TweetList({
 	if (completionMessage) {
 		return (
 			<>
-				<Confetti trigger={true} />
+				<Confetti />
 				<div className="flex flex-col gap-4 justify-center items-center py-12">
 					<div className="text-6xl mb-4">🎉</div>
 					<p className="text-xl font-medium text-center max-w-md">

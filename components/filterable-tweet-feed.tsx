@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -66,6 +66,7 @@ export function FilterableTweetFeed({
 	const router = useRouter();
 
 	const [completionMessage, setCompletionMessage] = useState<string>("");
+	const prevUnseenCountRef = useRef<number | null>(null);
 
 	// Use real-time tweets hook
 	const { tweets } = useRealtimeTweets(initialTweets, {
@@ -184,6 +185,26 @@ export function FilterableTweetFeed({
 			{ total: 0 } as Record<string, number>,
 		);
 	}, [tweets]);
+
+	// Auto-hide seen tweets when unread count transitions to zero or on initial load with no unseen
+	useEffect(() => {
+		const prevCount = prevUnseenCountRef.current;
+		const currentCount = unseenCounts.total;
+
+		// Auto-toggle in two cases:
+		// 1. Initial page load with no unseen tweets (prevCount === null && currentCount === 0)
+		// 2. Transition from having unseen tweets to zero (prevCount > 0 && currentCount === 0)
+		if (
+			currentCount === 0 &&
+			tweets.length > 0 &&
+			(prevCount === null || prevCount > 0)
+		) {
+			setHideSeenTweets(true);
+		}
+
+		// Update the ref with current count
+		prevUnseenCountRef.current = currentCount;
+	}, [unseenCounts.total, tweets.length]);
 
 	// Get list of people with unseen tweets
 	const peopleWithUnseen = useMemo(() => {

@@ -1,6 +1,7 @@
 /**
  * Tweet cleanup utility
  * Handles automatic deletion of tweets older than specified retention period
+ * Only deletes tweets that are both old AND marked as seen
  */
 
 import {
@@ -19,7 +20,8 @@ export interface CleanupResult {
 }
 
 /**
- * Removes tweets older than the retention period (3 days)
+ * Removes tweets older than the retention period (3 days) that have been marked as seen
+ * Unseen tweets are preserved regardless of age
  * @returns Object containing cleanup statistics
  */
 export async function cleanupOldTweets(): Promise<CleanupResult> {
@@ -42,7 +44,7 @@ export async function cleanupOldTweets(): Promise<CleanupResult> {
 		const now = Date.now();
 		const cutoffTime = now - RETENTION_PERIOD_MS;
 
-		// Check each tweet and delete if older than retention period
+		// Check each tweet and delete if older than retention period AND marked as seen
 		for (const tweetId of tweetIds) {
 			try {
 				const metadata = await getTweetMetadata(tweetId);
@@ -52,17 +54,21 @@ export async function cleanupOldTweets(): Promise<CleanupResult> {
 					continue;
 				}
 
-				// Check if tweet is older than retention period
-				if (metadata.submittedAt < cutoffTime) {
+				// Check if tweet is older than retention period AND has been seen
+				if (metadata.submittedAt < cutoffTime && metadata.seen === true) {
 					const ageInDays =
 						(now - metadata.submittedAt) / (24 * 60 * 60 * 1000);
 					console.log(
-						`[Cleanup] Deleting tweet ${tweetId} (age: ${ageInDays.toFixed(1)} days)`,
+						`[Cleanup] Deleting tweet ${tweetId} (age: ${ageInDays.toFixed(1)} days, seen: true)`,
 					);
 
 					await removeTweetFromStorage(tweetId);
 					result.deletedCount++;
 					result.deletedTweetIds.push(tweetId);
+				} else if (metadata.submittedAt < cutoffTime && !metadata.seen) {
+					console.log(
+						`[Cleanup] Skipping unseen tweet ${tweetId} (age: ${((now - metadata.submittedAt) / (24 * 60 * 60 * 1000)).toFixed(1)} days)`,
+					);
 				}
 			} catch (error) {
 				console.error(
@@ -89,9 +95,10 @@ export async function cleanupOldTweets(): Promise<CleanupResult> {
 /**
  * Gets tweets that will be deleted in the next cleanup
  * (for preview/debugging purposes)
+ * Only includes tweets that are both old AND seen
  */
 export async function getExpiredTweets(): Promise<
-	Array<{ id: string; submittedAt: number; ageInDays: number }>
+	Array<{ id: string; submittedAt: number; ageInDays: number; seen: boolean }>
 > {
 	try {
 		const tweetIds = await getTweetIdsFromStorage();
@@ -102,12 +109,17 @@ export async function getExpiredTweets(): Promise<
 		for (const tweetId of tweetIds) {
 			const metadata = await getTweetMetadata(tweetId);
 
-			if (metadata && metadata.submittedAt < cutoffTime) {
+			if (
+				metadata &&
+				metadata.submittedAt < cutoffTime &&
+				metadata.seen === true
+			) {
 				const ageInDays = (now - metadata.submittedAt) / (24 * 60 * 60 * 1000);
 				expiredTweets.push({
 					id: tweetId,
 					submittedAt: metadata.submittedAt,
 					ageInDays,
+					seen: metadata.seen,
 				});
 			}
 		}

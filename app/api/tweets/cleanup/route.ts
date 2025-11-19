@@ -1,7 +1,7 @@
 /**
  * API route for cleaning up old tweets
- * GET /api/tweets/cleanup - Removes tweets older than 3 days (used by Vercel cron)
- * DELETE /api/tweets/cleanup - Removes tweets older than 3 days (with auth)
+ * GET /api/tweets/cleanup - Removes tweets older than 3 days that have been marked as seen (used by Vercel cron)
+ * DELETE /api/tweets/cleanup - Removes tweets older than 3 days that have been marked as seen (with auth)
  */
 
 import { revalidatePath } from "next/cache";
@@ -33,7 +33,7 @@ function isAuthorized(request: NextRequest): boolean {
 
 /**
  * GET /api/tweets/cleanup
- * Removes tweets older than 3 days (used by Vercel cron)
+ * Removes tweets older than 3 days that have been marked as seen (used by Vercel cron)
  * Also shows preview of expired tweets when called with ?preview=true
  */
 export async function GET(request: NextRequest) {
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * DELETE /api/tweets/cleanup
- * Removes tweets older than 3 days (with auth)
+ * Removes tweets older than 3 days that have been marked as seen (with auth)
  */
 export async function DELETE(request: NextRequest) {
 	try {

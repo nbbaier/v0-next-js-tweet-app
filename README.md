@@ -132,6 +132,18 @@ Add a new tweet to the feed.
 }
 ```
 
+**Example:**
+
+```bash
+curl -X POST https://your-app.vercel.app/api/tweets \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://twitter.com/user/status/1234567890",
+    "secret": "your-api-secret",
+    "submittedBy": "Partner 1"
+  }'
+```
+
 ### DELETE `/api/tweets/[id]`
 
 Remove a tweet from the feed.
@@ -152,6 +164,13 @@ x-api-secret: your-secret-here
 }
 ```
 
+**Example:**
+
+```bash
+curl -X DELETE https://your-app.vercel.app/api/tweets/1234567890 \
+  -H "x-api-secret: your-api-secret"
+```
+
 ### GET `/api/tweets`
 
 Get all tweet IDs (requires authentication).
@@ -170,6 +189,13 @@ x-api-secret: your-secret-here
    "tweetIds": ["id1", "id2", "id3"],
    "count": 3
 }
+```
+
+**Example:**
+
+```bash
+curl -X GET https://your-app.vercel.app/api/tweets \
+  -H "x-api-secret: your-api-secret"
 ```
 
 ### PATCH `/api/tweets/[id]`
@@ -198,6 +224,14 @@ Update tweet metadata (e.g., seen status).
 }
 ```
 
+**Example:**
+
+```bash
+curl -X PATCH https://your-app.vercel.app/api/tweets/1234567890 \
+  -H "Content-Type: application/json" \
+  -d '{"seen": true}'
+```
+
 ### GET `/api/realtime`
 
 Server-Sent Events endpoint for real-time updates.
@@ -206,6 +240,12 @@ Server-Sent Events endpoint for real-time updates.
 
 ```
 channels=tweets
+```
+
+**Example:**
+
+```bash
+curl -X GET "https://your-app.vercel.app/api/realtime?channels=tweets"
 ```
 
 ### GET `/api/tweets/cleanup`
@@ -252,9 +292,51 @@ authorization: Bearer your-cron-secret-here
 }
 ```
 
+**Example (Cleanup):**
+
+```bash
+curl -X GET https://your-app.vercel.app/api/tweets/cleanup \
+  -H "x-api-secret: your-api-secret"
+```
+
+**Example (Preview):**
+
+```bash
+curl -X GET "https://your-app.vercel.app/api/tweets/cleanup?preview=true" \
+  -H "x-api-secret: your-api-secret"
+```
+
+**Example (Vercel Cron):**
+
+```bash
+curl -X GET https://your-app.vercel.app/api/tweets/cleanup \
+  -H "authorization: Bearer your-cron-secret"
+```
+
 ### DELETE `/api/tweets/cleanup`
 
 Same as GET `/api/tweets/cleanup` - removes old tweets. Supports preview mode with `?preview=true`.
+
+**Example (Cleanup):**
+
+```bash
+curl -X DELETE https://your-app.vercel.app/api/tweets/cleanup \
+  -H "x-api-secret: your-api-secret"
+```
+
+**Example (Preview):**
+
+```bash
+curl -X DELETE "https://your-app.vercel.app/api/tweets/cleanup?preview=true" \
+  -H "x-api-secret: your-api-secret"
+```
+
+**Example (Vercel Cron):**
+
+```bash
+curl -X DELETE https://your-app.vercel.app/api/tweets/cleanup \
+  -H "authorization: Bearer your-cron-secret"
+```
 
 ## Architecture
 

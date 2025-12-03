@@ -43,6 +43,9 @@ UPSTASH_KV_KV_REST_API_TOKEN=your-token-here
 
 # Generate with: openssl rand -base64 32
 TWEET_API_SECRET=your-secret-here
+
+# Optional: For Vercel cron job authentication (generate with: openssl rand -base64 32)
+CRON_SECRET=your-cron-secret-here
 ```
 
 ### 3. Run Development Server
@@ -169,6 +172,32 @@ x-api-secret: your-secret-here
 }
 ```
 
+### PATCH `/api/tweets/[id]`
+
+Update tweet metadata (e.g., seen status).
+
+**Request:**
+
+```json
+{
+   "seen": true
+}
+```
+
+**Response (200):**
+
+```json
+{
+   "success": true,
+   "metadata": {
+      "id": "1234567890",
+      "submittedAt": 1699999999999,
+      "submittedBy": "Partner 1",
+      "seen": true
+   }
+}
+```
+
 ### GET `/api/realtime`
 
 Server-Sent Events endpoint for real-time updates.
@@ -179,6 +208,54 @@ Server-Sent Events endpoint for real-time updates.
 channels=tweets
 ```
 
+### GET `/api/tweets/cleanup`
+
+Clean up old tweets (removes tweets older than 3 days that have been marked as seen). Used by Vercel cron job.
+
+**Headers:**
+
+```
+x-api-secret: your-secret-here
+# OR for Vercel cron:
+authorization: Bearer your-cron-secret-here
+```
+
+**Query Parameters:**
+
+-  `preview=true` - Preview which tweets will be deleted without actually deleting them
+
+**Response (200):**
+
+```json
+{
+   "success": true,
+   "deletedCount": 5,
+   "deletedTweetIds": ["id1", "id2", "id3", "id4", "id5"],
+   "errors": []
+}
+```
+
+**Preview Response (200):**
+
+```json
+{
+   "success": true,
+   "expiredTweets": [
+      {
+         "id": "1234567890",
+         "submittedAt": 1699999999999,
+         "ageInDays": 3.5,
+         "seen": true
+      }
+   ],
+   "count": 1
+}
+```
+
+### DELETE `/api/tweets/cleanup`
+
+Same as GET `/api/tweets/cleanup` - removes old tweets. Supports preview mode with `?preview=true`.
+
 ## Architecture
 
 ### Project Structure
@@ -188,6 +265,8 @@ channels=tweets
 ├── app/                    # Next.js App Router
 │   ├── api/               # API routes
 │   │   ├── tweets/       # Tweet CRUD endpoints
+│   │   │   ├── [id]/     # Individual tweet operations
+│   │   │   └── cleanup/  # Cleanup endpoint
 │   │   └── realtime/     # SSE endpoint
 │   ├── layout.tsx        # Root layout with theme
 │   └── page.tsx          # Home page
@@ -274,19 +353,27 @@ The tweet is already in your feed - check the existing tweets.
 -  Verify Network tab shows `/api/realtime?channels=tweets` connection
 -  Check browser console for `[Realtime Hook]` connection status
 
+### Cleanup not running
+
+-  Verify `CRON_SECRET` is set in Vercel environment variables
+-  Check Vercel cron job logs in the dashboard
+-  Test manually: `GET /api/tweets/cleanup?preview=true` to see what would be deleted
+-  Ensure tweets are marked as seen before they can be cleaned up (unseen tweets are preserved)
+
 ### Tweets not displaying
 
 -  Verify Upstash Redis instance is active
 -  Check browser console for errors
 -  Try refreshing the page
 
-### Features
+### Auto-cleanup Feature
 
-- **Tweet Management**: Add and view tweets with a clean, responsive UI
-- **Multi-user Support**: Track who submitted each tweet
-- **Auto-cleanup**: Tweets are automatically deleted after 3 days
-- **Redis Storage**: Fast, reliable storage with Upstash Redis
-- **Daily Cron Job**: Automatic cleanup runs at midnight (UTC)
+-  **Retention Period**: Tweets older than 3 days are automatically deleted
+-  **Smart Cleanup**: Only deletes tweets that are both old AND marked as seen
+-  **Unseen Protection**: Unseen tweets are preserved regardless of age
+-  **Cron Job**: Automatic cleanup runs daily at midnight UTC via Vercel cron
+-  **Manual Cleanup**: Can be triggered manually via `/api/tweets/cleanup` endpoint
+-  **Preview Mode**: Use `?preview=true` to see which tweets will be deleted without actually deleting them
 
 ## Deployment
 
@@ -306,6 +393,11 @@ Required in Vercel project settings:
 -  `UPSTASH_KV_KV_REST_API_URL`
 -  `UPSTASH_KV_KV_REST_API_TOKEN`
 -  `TWEET_API_SECRET`
+-  `CRON_SECRET` (optional, for cron job authentication)
+
+**Cron Configuration:**
+
+The cleanup cron job is configured in `vercel.json` to run daily at midnight UTC. Make sure to set the `CRON_SECRET` environment variable in Vercel for secure cron execution.
 
 ## Security
 

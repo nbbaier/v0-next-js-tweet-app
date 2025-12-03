@@ -85,9 +85,27 @@ export async function GET(request: NextRequest) {
 /**
  * DELETE /api/tweets/cleanup
  * Removes tweets older than 3 days that have been marked as seen (with auth)
+ * Also shows preview of expired tweets when called with ?preview=true
  */
 export async function DELETE(request: NextRequest) {
 	try {
+		// Check if this is a preview request
+		const isPreview = request.nextUrl.searchParams.get("preview") === "true";
+
+		if (isPreview) {
+			// Validate auth for preview
+			if (!isAuthorized(request)) {
+				return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+			}
+
+			const expiredTweets = await getExpiredTweets();
+			return NextResponse.json({
+				success: true,
+				expiredTweets,
+				count: expiredTweets.length,
+			});
+		}
+
 		// Validate authorization
 		if (!isAuthorized(request)) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

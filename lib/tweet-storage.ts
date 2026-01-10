@@ -71,7 +71,10 @@ export async function addTweetToStorage(
 				try {
 					await publishTweetUpdated(updatedTweetData);
 				} catch (publishError) {
-					console.error('[Storage] Failed to publish update event but metadata was stored:', publishError);
+					console.error(
+						"[Storage] Failed to publish update event but metadata was stored:",
+						publishError,
+					);
 				}
 
 				return updatedMetadata;
@@ -118,7 +121,10 @@ export async function addTweetToStorage(
 			await publishTweetAdded(tweetData);
 			console.log(`[Storage] Completed publishing tweet:added for ${tweetId}`);
 		} catch (publishError) {
-			console.error('[Storage] Failed to publish event but tweet was stored:', publishError);
+			console.error(
+				"[Storage] Failed to publish event but tweet was stored:",
+				publishError,
+			);
 		}
 
 		return metadata;
@@ -215,6 +221,70 @@ export async function getTweetMetadata(
 			error,
 		);
 		return null;
+	}
+}
+
+/**
+ * Retrieves metadata for multiple tweets
+ * @param tweetIds - The tweet IDs
+ * @returns Array of Metadata objects or null if not found
+ */
+export async function getTweetMetadatas(
+	tweetIds: string[],
+): Promise<(TweetMetadata | null)[]> {
+	if (tweetIds.length === 0) {
+		return [];
+	}
+
+	try {
+		const keys = tweetIds.map((id) => `${TWEET_METADATA_PREFIX}${id}`);
+		const metadatas = await redis.mget<
+			(TweetMetadata | LegacyTweetMetadata | null)[]
+		>(...keys);
+
+		// Normalize and potentially migrate legacy ones.
+		const results = await Promise.all(
+			metadatas.map(async (metadata, index) => {
+				if (!metadata) return null;
+
+				// Normalize to handle both old and new formats
+				const normalized = normalizeTweetMetadata(
+					metadata as TweetMetadata | LegacyTweetMetadata,
+				);
+
+				// If we normalized from legacy format, update the stored version
+				if (
+					typeof metadata === "object" &&
+					metadata !== null &&
+					"submittedBy" in metadata &&
+					!("posters" in metadata)
+				) {
+					// We fire and forget this update to keep reads fast, or we could await it.
+					// Since this is a "read" optimization, we can just fire it.
+					// But for safety let's await it since it's a migration.
+					try {
+						await redis.set(
+							`${TWEET_METADATA_PREFIX}${tweetIds[index]}`,
+							normalized,
+						);
+						console.log(
+							`[Storage] Migrated legacy metadata for tweet ${tweetIds[index]}`,
+						);
+					} catch (e) {
+						console.error(
+							`[Storage] Failed to migrate legacy metadata for tweet ${tweetIds[index]}`,
+							e,
+						);
+					}
+				}
+				return normalized;
+			}),
+		);
+
+		return results;
+	} catch (error) {
+		console.error(`[Storage ERROR] Failed to get metadatas:`, error);
+		return new Array(tweetIds.length).fill(null);
 	}
 }
 

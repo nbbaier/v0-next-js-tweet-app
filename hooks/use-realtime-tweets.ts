@@ -24,13 +24,13 @@ export function useRealtimeTweets(
 	const [tweets, setTweets] = useState<TweetData[]>(initialTweets);
 
 	// Tweet added handler
-	const { status: statusAdded } = useRealtime<RealtimeEvents>({
+	const { status: statusAdded } = useRealtime<RealtimeEvents, "tweet.added">({
 		enabled,
 		channels: ["tweets"],
-		event: "tweet.added",
+		events: ["tweet.added"],
 		onData: (data) => {
 			console.log("[Realtime Hook] ✅ Received tweet.added event:", data);
-			const tweet = data.tweet;
+			const tweet = data.data.tweet;
 			setTweets((prev) => {
 				if (prev.some((t) => t.id === tweet.id)) {
 					return prev.map((t) => (t.id === tweet.id ? tweet : t));
@@ -42,25 +42,25 @@ export function useRealtimeTweets(
 	});
 
 	// Tweet removed handler
-	useRealtime<RealtimeEvents>({
+	useRealtime<RealtimeEvents, "tweet.removed">({
 		enabled,
 		channels: ["tweets"],
-		event: "tweet.removed",
+		events: ["tweet.removed"],
 		onData: (data) => {
 			console.log("[Realtime Hook] ✅ Received tweet.removed event:", data);
-			setTweets((prev) => prev.filter((t) => t.id !== data.id));
-			console.log("[Realtime] Tweet removed:", data.id);
+			setTweets((prev) => prev.filter((t) => t.id !== data.data.id));
+			console.log("[Realtime] Tweet removed:", data.data.id);
 		},
 	});
 
 	// Tweet updated handler
-	useRealtime<RealtimeEvents>({
+	useRealtime<RealtimeEvents, "tweet.updated">({
 		enabled,
 		channels: ["tweets"],
-		event: "tweet.updated",
+		events: ["tweet.updated"],
 		onData: (data) => {
 			console.log("[Realtime Hook] ✅ Received tweet.updated event:", data);
-			const tweet = data.tweet;
+			const tweet = data.data.tweet;
 			setTweets((prev) =>
 				prev.map((t) => (t.id === tweet.id ? { ...t, ...tweet } : t)),
 			);
@@ -69,15 +69,15 @@ export function useRealtimeTweets(
 	});
 
 	// Tweet reorder handler
-	useRealtime<RealtimeEvents>({
+	useRealtime<RealtimeEvents, "tweet.reorder">({
 		enabled,
 		channels: ["tweets"],
-		event: "tweet.reorder",
+		events: ["tweet.reorder"],
 		onData: (data) => {
 			console.log("[Realtime Hook] ✅ Received tweet.reorder event:", data);
 			setTweets((prev) => {
 				const tweetMap = new Map(prev.map((t) => [t.id, t]));
-				return data.tweetIds
+				return data.data.tweetIds
 					.map((id: string) => tweetMap.get(id))
 					.filter((t): t is TweetData => t !== undefined);
 			});
@@ -86,21 +86,21 @@ export function useRealtimeTweets(
 	});
 
 	// Tweet seen handler
-	useRealtime<RealtimeEvents>({
+	useRealtime<RealtimeEvents, "tweet.seen">({
 		enabled,
 		channels: ["tweets"],
-		event: "tweet.seen",
+		events: ["tweet.seen"],
 		onData: (data) => {
 			console.log("[Realtime Hook] ✅ Received tweet.seen event:", data);
 			setTweets((prev) =>
 				prev.map((t) =>
-					t.id === data.tweetId ? { ...t, seen: data.seen } : t,
+					t.id === data.data.tweetId ? { ...t, seen: data.data.seen } : t,
 				),
 			);
 			console.log(
 				"[Realtime] Tweet seen status updated:",
-				data.tweetId,
-				data.seen,
+				data.data.tweetId,
+				data.data.seen,
 			);
 		},
 	});

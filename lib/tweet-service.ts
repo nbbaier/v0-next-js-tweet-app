@@ -3,8 +3,8 @@
  * Handles fetching and caching logic with clean separation
  */
 
-import { getCachedTweet, setCachedTweet } from "./tweet-cache";
-import { getTweetMetadata } from "./tweet-storage";
+import { getCachedTweet, getCachedTweets, setCachedTweet } from "./tweet-cache";
+import { getTweetMetadata, getTweetMetadatas } from "./tweet-storage";
 
 export interface TweetData {
 	id: string;
@@ -56,9 +56,50 @@ export async function fetchTweetWithCache(tweetId: string): Promise<TweetData> {
 export async function fetchTweetsWithCache(
 	tweetIds: string[],
 ): Promise<TweetData[]> {
-	const tweets = await Promise.all(
-		tweetIds.map((id) => fetchTweetWithCache(id)),
-	);
+	// Optimization: Use bulk fetch for cache and metadata to reduce Redis round-trips
+	// This reduces 2N calls to 2 calls (+ writes on miss)
 
-	return tweets;
+	// 1. Bulk get cache
+	const cachedTweets = await getCachedTweets(tweetIds);
+	// 2. Bulk get metadata
+	const metadatas = await getTweetMetadatas(tweetIds);
+
+	const updates: Promise<void>[] = [];
+	const results: TweetData[] = [];
+
+	for (let i = 0; i < tweetIds.length; i++) {
+		const id = tweetIds[i];
+		const cached = cachedTweets[i];
+		const metadata = metadatas[i];
+
+		if (cached) {
+			if (metadata) {
+				results.push({
+					...cached,
+					submittedBy: metadata.posters.map((p) => p.name),
+					seen: metadata.seen,
+				});
+			} else {
+				results.push(cached);
+			}
+			continue;
+		}
+
+		// Cache miss
+		const tweetData: TweetData = {
+			id,
+			submittedBy: metadata?.posters.map((p) => p.name) || [],
+			seen: metadata?.seen,
+		};
+
+		updates.push(setCachedTweet(id, tweetData));
+		results.push(tweetData);
+	}
+
+	// Wait for any cache updates to complete
+	if (updates.length > 0) {
+		await Promise.all(updates);
+	}
+
+	return results;
 }

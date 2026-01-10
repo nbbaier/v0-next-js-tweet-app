@@ -40,6 +40,25 @@ export async function getCachedTweet(
 	}
 }
 
+export async function getCachedTweets(
+	tweetIds: string[],
+): Promise<(TweetData | null)[]> {
+	if (tweetIds.length === 0) {
+		return [];
+	}
+
+	try {
+		const keys = tweetIds.map((id) => `tweet:${id}`);
+		const cached = await redis.mget<TweetData[]>(...keys);
+
+		// Log hit/miss stats? Maybe too noisy for bulk.
+		return cached;
+	} catch (error) {
+		console.error(`[Cache ERROR] Failed to mget tweets:`, error);
+		return new Array(tweetIds.length).fill(null);
+	}
+}
+
 export async function setCachedTweet(
 	tweetId: string,
 	data: TweetData,

@@ -37,7 +37,13 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en" suppressHydrationWarning>
-			<body className={`font-sans antialiased`}>
+			<body className="font-sans antialiased">
+				<a
+					href="#main-content"
+					className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-foreground focus:shadow"
+				>
+					Skip to main content
+				</a>
 				<Providers>
 					{children}
 					<Analytics />

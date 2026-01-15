@@ -81,12 +81,12 @@ export function ApiSecretDialog() {
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button size="sm" variant="outline">
-					<Key className="w-4 h-4" />
+				<Button size="sm" variant="outline" aria-label="Manage API secret">
+					<Key className="w-4 h-4" aria-hidden="true" />
 					{hasStoredSecret ? (
-						<CheckCircle2 className="w-3 h-3 text-green-500" />
+						<CheckCircle2 className="w-3 h-3 text-green-500" aria-hidden="true" />
 					) : (
-						<XCircle className="w-3 h-3 text-red-500" />
+						<XCircle className="w-3 h-3 text-red-500" aria-hidden="true" />
 					)}
 				</Button>
 			</DialogTrigger>
@@ -104,10 +104,12 @@ export function ApiSecretDialog() {
 						<FieldLabel htmlFor="api-secret">API Secret</FieldLabel>
 						<Input
 							id="api-secret"
+							name="api-secret"
 							type="password"
+							autoComplete="off"
 							value={secret}
 							onChange={(e) => setSecret(e.target.value)}
-							placeholder="Enter your API secret"
+							placeholder="Enter your API secret…"
 						/>
 						<FieldDescription>
 							The shared secret to authenticate your submission
@@ -135,6 +137,8 @@ export function ApiSecretDialog() {
 									? "bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-400"
 									: "bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-400"
 							}`}
+							role="status"
+							aria-live="polite"
 						>
 							{message.text}
 						</div>

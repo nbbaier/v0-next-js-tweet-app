@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { TweetData } from "@/lib/tweet-service";
 import { Confetti } from "./confetti";
 import { TweetWithActions } from "./tweet-with-actions";
@@ -29,6 +29,8 @@ export function TweetList({
 	completionMessage,
 	onDelete,
 }: TweetListProps) {
+	const shouldReduceMotion = useReducedMotion();
+
 	// Show completion message when all tweets are seen and filtered out
 	if (completionMessage) {
 		return (
@@ -71,18 +73,24 @@ export function TweetList({
 				{tweets.map((tweet) => (
 					<motion.div
 						key={tweet.id}
-						layout
-						initial={{ opacity: 0, y: 20 }}
+						layout={!shouldReduceMotion}
+						initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
-						exit={{ opacity: 0, scale: 0.9 }}
-						transition={{
-							layout: {
-								type: "spring",
-								stiffness: 350,
-								damping: 30,
-							},
-							opacity: { duration: 0.2 },
-						}}
+						exit={
+							shouldReduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.9 }
+						}
+						transition={
+							shouldReduceMotion
+								? { duration: 0 }
+								: {
+										layout: {
+											type: "spring",
+											stiffness: 350,
+											damping: 30,
+										},
+										opacity: { duration: 0.2 },
+									}
+						}
 						className="w-full max-w-2xl"
 					>
 						{showActions ? (

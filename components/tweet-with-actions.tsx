@@ -159,7 +159,7 @@ export function TweetWithActions({
 
 			{/* Tweet display with conditional styling for seen tweets */}
 			<div
-				className={`flex justify-center w-full tweet-container transition-all ${
+				className={`flex justify-center w-full tweet-container transition-[max-height] duration-300 ${
 					isSeen ? "max-h-24 overflow-hidden relative" : ""
 				}`}
 			>
@@ -178,7 +178,7 @@ export function TweetWithActions({
 					disabled={isTogglingSeenStatus}
 				>
 					{isTogglingSeenStatus
-						? "Updating..."
+						? "Updating…"
 						: isSeen
 							? "Mark as Unseen"
 							: "Mark as Seen"}
@@ -197,8 +197,9 @@ export function TweetWithActions({
 							size="icon-sm"
 							disabled={isDeleting}
 							onClick={() => setDialogOpen(true)}
+							aria-label="Delete tweet"
 						>
-							<Trash2 className="w-4 h-4 text-destructive" />
+							<Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
 						</Button>
 					</AlertDialogTrigger>
 					<AlertDialogContent>
@@ -210,7 +211,11 @@ export function TweetWithActions({
 							</AlertDialogDescription>
 						</AlertDialogHeader>
 						{error && (
-							<div className="p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20">
+							<div
+								className="p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20"
+								role="status"
+								aria-live="polite"
+							>
 								{error}
 							</div>
 						)}
@@ -231,7 +236,7 @@ export function TweetWithActions({
 								aria-label="Delete tweet"
 								className="bg-destructive text-white hover:bg-destructive/90"
 							>
-								{isDeleting ? "Deleting..." : "Delete"}
+								{isDeleting ? "Deleting…" : "Delete"}
 							</AlertDialogAction>
 						</AlertDialogFooter>
 					</AlertDialogContent>
@@ -241,7 +246,11 @@ export function TweetWithActions({
 			{/* Error display for seen status toggle */}
 			{error && !dialogOpen && (
 				<div className="w-full max-w-[550px]">
-					<p className="p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20">
+					<p
+						className="p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20"
+						role="status"
+						aria-live="polite"
+					>
 						{error}
 					</p>
 				</div>

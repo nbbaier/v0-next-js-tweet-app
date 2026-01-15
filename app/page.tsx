@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { FilterableTweetFeed } from "@/components/filterable-tweet-feed";
 import { TweetFeedHeader } from "@/components/tweet-feed-header";
 import { getTweetIds } from "@/lib/tweet-config";
@@ -17,7 +18,9 @@ export default async function Home() {
 				className="flex flex-col flex-1 items-center w-full"
 			>
 				<div className="w-full max-w-[550px] px-4">
-					<FilterableTweetFeed tweets={tweets} showActions={true} />
+					<Suspense fallback={null}>
+						<FilterableTweetFeed tweets={tweets} showActions={true} />
+					</Suspense>
 				</div>
 			</main>
 		</div>

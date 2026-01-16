@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { memo } from "react";
 import type { TweetData } from "@/lib/tweet-service";
 import { Confetti } from "./confetti";
 import { TweetWithActions } from "./tweet-with-actions";
@@ -18,7 +19,7 @@ interface TweetListProps {
 	onDelete?: (tweetId: string) => Promise<void>;
 }
 
-export function TweetList({
+export const TweetList = memo(function TweetList({
 	tweets,
 	showActions = true,
 	apiSecret,
@@ -112,7 +113,7 @@ export function TweetList({
 			</AnimatePresence>
 		</div>
 	);
-}
+});
 
 // Re-export Tweet for backwards compatibility if needed
 import { Tweet } from "react-tweet";

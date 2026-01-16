@@ -2,8 +2,8 @@
 
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Tweet, EmbeddedTweet } from "react-tweet";
+import { memo, useEffect, useState } from "react";
+import { EmbeddedTweet, Tweet } from "react-tweet";
 import type { Tweet as TweetType } from "react-tweet/api";
 import {
 	AlertDialog,
@@ -28,7 +28,7 @@ interface TweetWithActionsProps {
 	onDelete?: (tweetId: string) => Promise<void>;
 }
 
-export function TweetWithActions({
+function TweetWithActionsComponent({
 	tweetId,
 	submittedBy,
 	seen: initialSeen = false,
@@ -214,13 +214,12 @@ export function TweetWithActions({
 							</AlertDialogDescription>
 						</AlertDialogHeader>
 						{error && (
-							<div
-								className="p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20"
-								role="status"
+							<output
+								className="block p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20"
 								aria-live="polite"
 							>
 								{error}
-							</div>
+							</output>
 						)}
 						<AlertDialogFooter>
 							<AlertDialogCancel
@@ -249,15 +248,47 @@ export function TweetWithActions({
 			{/* Error display for seen status toggle */}
 			{error && !dialogOpen && (
 				<div className="w-full max-w-[550px]">
-					<p
-						className="p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20"
-						role="status"
+					<output
+						className="block p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20"
 						aria-live="polite"
 					>
 						{error}
-					</p>
+					</output>
 				</div>
 			)}
 		</div>
 	);
 }
+
+function arePropsEqual(
+	prevProps: TweetWithActionsProps,
+	nextProps: TweetWithActionsProps,
+) {
+	if (prevProps.tweetId !== nextProps.tweetId) return false;
+	if (prevProps.seen !== nextProps.seen) return false;
+	if (prevProps.apiSecret !== nextProps.apiSecret) return false;
+	// Functions are stable if using useCallback properly, but we check them anyway
+	if (prevProps.onToggleSeen !== nextProps.onToggleSeen) return false;
+	if (prevProps.onDelete !== nextProps.onDelete) return false;
+
+	if (prevProps.content !== nextProps.content) {
+		if (!prevProps.content || !nextProps.content) return false;
+		if (prevProps.content.id_str !== nextProps.content.id_str) return false;
+	}
+
+	// Deep compare submittedBy array content
+	if (prevProps.submittedBy === nextProps.submittedBy) return true;
+	if (prevProps.submittedBy.length !== nextProps.submittedBy.length)
+		return false;
+
+	for (let i = 0; i < prevProps.submittedBy.length; i++) {
+		if (prevProps.submittedBy[i] !== nextProps.submittedBy[i]) return false;
+	}
+
+	return true;
+}
+
+// Add display name for debugging
+TweetWithActionsComponent.displayName = "TweetWithActions";
+
+export const TweetWithActions = memo(TweetWithActionsComponent, arePropsEqual);

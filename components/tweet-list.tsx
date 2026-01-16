@@ -90,13 +90,18 @@ export function TweetList({
 								tweetId={tweet.id}
 								submittedBy={tweet.submittedBy}
 								seen={tweet.seen}
+								content={tweet.content}
 								apiSecret={apiSecret}
 								onToggleSeen={onToggleSeen}
 								onDelete={onDelete}
 							/>
 						) : (
 							<div className="flex justify-center tweet-container">
-								<Tweet id={tweet.id} />
+								{tweet.content ? (
+									<EmbeddedTweet tweet={tweet.content} />
+								) : (
+									<Tweet id={tweet.id} />
+								)}
 							</div>
 						)}
 					</motion.div>
@@ -107,5 +112,5 @@ export function TweetList({
 }
 
 // Re-export Tweet for backwards compatibility if needed
-import { Tweet } from "react-tweet";
+import { Tweet, EmbeddedTweet } from "react-tweet";
 export { Tweet };

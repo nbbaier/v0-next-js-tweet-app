@@ -1,8 +1,9 @@
 "use client";
 
+import { useInView } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Tweet } from "react-tweet";
 import {
 	AlertDialog,
@@ -41,6 +42,10 @@ export function TweetWithActions({
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [storedSecret, setStoredSecret] = useState<string>("");
 	const router = useRouter();
+
+	// Performance optimization: Lazy load tweets as they come into view
+	const ref = useRef(null);
+	const isInView = useInView(ref, { once: true, margin: "400px" });
 
 	useEffect(() => {
 		if (typeof window !== "undefined") {
@@ -138,112 +143,123 @@ export function TweetWithActions({
 	};
 
 	return (
-		<div className="flex flex-col items-center space-y-1 w-full">
-			{/* Submitter badges */}
-			<div className="w-full max-w-[550px] flex flex-wrap gap-2 justify-start mb-1">
-				{submittedBy.length > 0 ? (
-					submittedBy.map((poster) => (
-						<span
-							key={poster}
-							className="py-1 px-2 text-xs rounded-full bg-muted text-muted-foreground"
-						>
-							Saved by: {poster.charAt(0).toUpperCase() + poster.slice(1)}
-						</span>
-					))
-				) : (
-					<span className="py-1 px-2 text-xs rounded-full bg-muted text-muted-foreground">
-						Saved by: Unknown
-					</span>
-				)}
-			</div>
+		<div
+			ref={ref}
+			className="flex flex-col items-center space-y-1 w-full min-h-[150px]"
+		>
+			{isInView ? (
+				<>
+					{/* Submitter badges */}
+					<div className="w-full max-w-[550px] flex flex-wrap gap-2 justify-start mb-1">
+						{submittedBy.length > 0 ? (
+							submittedBy.map((poster) => (
+								<span
+									key={poster}
+									className="py-1 px-2 text-xs rounded-full bg-muted text-muted-foreground"
+								>
+									Saved by: {poster.charAt(0).toUpperCase() + poster.slice(1)}
+								</span>
+							))
+						) : (
+							<span className="py-1 px-2 text-xs rounded-full bg-muted text-muted-foreground">
+								Saved by: Unknown
+							</span>
+						)}
+					</div>
 
-			{/* Tweet display with conditional styling for seen tweets */}
-			<div
-				className={`flex justify-center w-full tweet-container transition-all ${
-					isSeen ? "max-h-24 overflow-hidden relative" : ""
-				}`}
-			>
-				<Tweet id={tweetId} />
-				{isSeen && (
-					<div className="absolute inset-0 bg-gradient-to-b from-transparent pointer-events-none to-background" />
-				)}
-			</div>
+					{/* Tweet display with conditional styling for seen tweets */}
+					<div
+						className={`flex justify-center w-full tweet-container transition-all ${
+							isSeen ? "max-h-24 overflow-hidden relative" : ""
+						}`}
+					>
+						<Tweet id={tweetId} />
+						{isSeen && (
+							<div className="absolute inset-0 bg-gradient-to-b from-transparent pointer-events-none to-background" />
+						)}
+					</div>
 
-			{/* Action buttons below the tweet - constrained to tweet width */}
-			<div className="w-full max-w-[550px] flex justify-end gap-2">
-				<Button
-					variant="outline"
-					size="sm"
-					onClick={handleToggleSeen}
-					disabled={isTogglingSeenStatus}
-				>
-					{isTogglingSeenStatus
-						? "Updating..."
-						: isSeen
-							? "Mark as Unseen"
-							: "Mark as Seen"}
-				</Button>
-
-				<AlertDialog
-					open={dialogOpen}
-					onOpenChange={(open) => {
-						setDialogOpen(open);
-						if (!open) setError(null);
-					}}
-				>
-					<AlertDialogTrigger asChild>
+					{/* Action buttons below the tweet - constrained to tweet width */}
+					<div className="w-full max-w-[550px] flex justify-end gap-2">
 						<Button
 							variant="outline"
-							size="icon-sm"
-							disabled={isDeleting}
-							onClick={() => setDialogOpen(true)}
+							size="sm"
+							onClick={handleToggleSeen}
+							disabled={isTogglingSeenStatus}
 						>
-							<Trash2 className="w-4 h-4 text-destructive" />
+							{isTogglingSeenStatus
+								? "Updating..."
+								: isSeen
+									? "Mark as Unseen"
+									: "Mark as Seen"}
 						</Button>
-					</AlertDialogTrigger>
-					<AlertDialogContent>
-						<AlertDialogHeader>
-							<AlertDialogTitle>Delete Tweet</AlertDialogTitle>
-							<AlertDialogDescription>
-								Are you sure you want to delete this tweet? This action cannot
-								be undone.
-							</AlertDialogDescription>
-						</AlertDialogHeader>
-						{error && (
-							<div className="p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20">
-								{error}
-							</div>
-						)}
-						<AlertDialogFooter>
-							<AlertDialogCancel
-								onClick={() => {
-									setDialogOpen(false);
-									setError(null);
-								}}
-								disabled={isDeleting}
-							>
-								Cancel
-							</AlertDialogCancel>
-							<AlertDialogAction
-								onClick={handleDelete}
-								disabled={isDeleting}
-								type="button"
-								aria-label="Delete tweet"
-								className="bg-destructive text-white hover:bg-destructive/90"
-							>
-								{isDeleting ? "Deleting..." : "Delete"}
-							</AlertDialogAction>
-						</AlertDialogFooter>
-					</AlertDialogContent>
-				</AlertDialog>
-			</div>
 
-			{/* Error display for seen status toggle */}
-			{error && !dialogOpen && (
-				<div className="w-full max-w-[550px]">
-					<p className="p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20">
-						{error}
-					</p>
+						<AlertDialog
+							open={dialogOpen}
+							onOpenChange={(open) => {
+								setDialogOpen(open);
+								if (!open) setError(null);
+							}}
+						>
+							<AlertDialogTrigger asChild>
+								<Button
+									variant="outline"
+									size="icon-sm"
+									disabled={isDeleting}
+									onClick={() => setDialogOpen(true)}
+								>
+									<Trash2 className="w-4 h-4 text-destructive" />
+								</Button>
+							</AlertDialogTrigger>
+							<AlertDialogContent>
+								<AlertDialogHeader>
+									<AlertDialogTitle>Delete Tweet</AlertDialogTitle>
+									<AlertDialogDescription>
+										Are you sure you want to delete this tweet? This action
+										cannot be undone.
+									</AlertDialogDescription>
+								</AlertDialogHeader>
+								{error && (
+									<div className="p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20">
+										{error}
+									</div>
+								)}
+								<AlertDialogFooter>
+									<AlertDialogCancel
+										onClick={() => {
+											setDialogOpen(false);
+											setError(null);
+										}}
+										disabled={isDeleting}
+									>
+										Cancel
+									</AlertDialogCancel>
+									<AlertDialogAction
+										onClick={handleDelete}
+										disabled={isDeleting}
+										type="button"
+										aria-label="Delete tweet"
+										className="bg-destructive text-white hover:bg-destructive/90"
+									>
+										{isDeleting ? "Deleting..." : "Delete"}
+									</AlertDialogAction>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
+					</div>
+
+					{/* Error display for seen status toggle */}
+					{error && !dialogOpen && (
+						<div className="w-full max-w-[550px]">
+							<p className="p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20">
+								{error}
+							</p>
+						</div>
+					)}
+				</>
+			) : (
+				<div className="h-40 w-full flex items-center justify-center text-muted-foreground animate-pulse">
+					Loading tweet...
 				</div>
 			)}
 		</div>

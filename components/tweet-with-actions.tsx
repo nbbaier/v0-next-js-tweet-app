@@ -1,8 +1,9 @@
 "use client";
 
+import { useInView } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Tweet } from "react-tweet";
 import {
 	AlertDialog,
@@ -41,6 +42,13 @@ export function TweetWithActions({
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [storedSecret, setStoredSecret] = useState<string>("");
 	const router = useRouter();
+
+	const tweetContainerRef = useRef<HTMLDivElement>(null);
+	// Lazy load: start fetching when within 400px of viewport
+	const isInView = useInView(tweetContainerRef, {
+		once: true,
+		margin: "400px 0px",
+	});
 
 	useEffect(() => {
 		if (typeof window !== "undefined") {
@@ -159,11 +167,19 @@ export function TweetWithActions({
 
 			{/* Tweet display with conditional styling for seen tweets */}
 			<div
+				ref={tweetContainerRef}
 				className={`flex justify-center w-full tweet-container transition-all ${
 					isSeen ? "max-h-24 overflow-hidden relative" : ""
 				}`}
 			>
-				<Tweet id={tweetId} />
+				{isInView ? (
+					<Tweet id={tweetId} />
+				) : (
+					// Placeholder while lazy loading
+					<div className="w-full min-h-[250px] flex items-center justify-center bg-muted/5 rounded-xl border border-muted/20">
+						<div className="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+					</div>
+				)}
 				{isSeen && (
 					<div className="absolute inset-0 bg-gradient-to-b from-transparent pointer-events-none to-background" />
 				)}

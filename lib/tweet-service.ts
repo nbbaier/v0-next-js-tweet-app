@@ -3,6 +3,7 @@
  * Handles fetching and caching logic with clean separation
  */
 
+import { getTweet, type Tweet } from "react-tweet/api";
 import { getCachedTweet, getCachedTweets, setCachedTweet } from "./tweet-cache";
 import { getTweetMetadata, getTweetMetadatas } from "./tweet-storage";
 
@@ -10,6 +11,7 @@ export interface TweetData {
 	id: string;
 	submittedBy: string[]; // Array of poster names
 	seen?: boolean;
+	content?: Tweet;
 	// Add other tweet metadata as needed
 }
 
@@ -20,7 +22,7 @@ export interface TweetData {
 export async function fetchTweetWithCache(tweetId: string): Promise<TweetData> {
 	// Check cache first
 	const cached = await getCachedTweet(tweetId);
-	if (cached) {
+	if (cached?.content) {
 		// Also fetch fresh metadata to ensure seen status is up to date
 		const metadata = await getTweetMetadata(tweetId);
 		if (metadata) {
@@ -36,15 +38,26 @@ export async function fetchTweetWithCache(tweetId: string): Promise<TweetData> {
 	// Fetch metadata from storage
 	const metadata = await getTweetMetadata(tweetId);
 
-	// Simulate API fetch (react-tweet handles actual fetching)
-	// In production, you might fetch additional metadata here
+	// Fetch content
+	let content: Tweet | undefined;
+	try {
+		content = await getTweet(tweetId);
+	} catch (e) {
+		console.error(`Failed to fetch tweet ${tweetId}`, e);
+	}
+
 	const tweetData: TweetData = {
 		id: tweetId,
 		submittedBy: metadata?.posters.map((p) => p.name) || [],
 		seen: metadata?.seen,
+		content,
 	};
 
 	// Store in cache
+	// Only cache if we got content? Or cache null content?
+	// If fetch failed, maybe don't cache content so we retry?
+	// But we might want to cache metadata.
+	// Let's cache what we have.
 	await setCachedTweet(tweetId, tweetData);
 
 	return tweetData;
@@ -66,34 +79,75 @@ export async function fetchTweetsWithCache(
 
 	const updates: Promise<void>[] = [];
 	const results: TweetData[] = [];
+	const missIndices: number[] = [];
+	const contentFetches: Promise<Tweet | undefined>[] = [];
 
 	for (let i = 0; i < tweetIds.length; i++) {
-		const id = tweetIds[i];
 		const cached = cachedTweets[i];
-		const metadata = metadatas[i];
 
-		if (cached) {
+		if (cached?.content) {
+			// Cache hit with content
+			const metadata = metadatas[i];
+
 			if (metadata) {
-				results.push({
+				results[i] = {
 					...cached,
 					submittedBy: metadata.posters.map((p) => p.name),
 					seen: metadata.seen,
-				});
+				};
 			} else {
-				results.push(cached);
+				results[i] = cached;
 			}
-			continue;
+		} else {
+			// Cache miss or partial miss (missing content)
+			missIndices.push(i);
+			contentFetches.push(
+				getTweet(tweetIds[i]).catch((e) => {
+					console.error(`Failed to fetch tweet ${tweetIds[i]}`, e);
+					return undefined;
+				}),
+			);
+			// Placeholder for now
+			results[i] = null as any;
 		}
+	}
 
-		// Cache miss
-		const tweetData: TweetData = {
-			id,
-			submittedBy: metadata?.posters.map((p) => p.name) || [],
-			seen: metadata?.seen,
-		};
+	// Process misses
+	if (missIndices.length > 0) {
+		const contents = await Promise.all(contentFetches);
 
-		updates.push(setCachedTweet(id, tweetData));
-		results.push(tweetData);
+		for (let j = 0; j < missIndices.length; j++) {
+			const i = missIndices[j];
+			const id = tweetIds[i];
+			const content = contents[j];
+			const metadata = metadatas[i];
+			const cached = cachedTweets[i];
+
+			// Construct tweet data
+			// If cached existed but no content, merge.
+			let tweetData: TweetData;
+
+			if (cached) {
+				tweetData = {
+					...cached,
+					submittedBy: metadata
+						? metadata.posters.map((p) => p.name)
+						: cached.submittedBy,
+					seen: metadata ? metadata.seen : cached.seen,
+					content,
+				};
+			} else {
+				tweetData = {
+					id,
+					submittedBy: metadata?.posters.map((p) => p.name) || [],
+					seen: metadata?.seen,
+					content,
+				};
+			}
+
+			results[i] = tweetData;
+			updates.push(setCachedTweet(id, tweetData));
+		}
 	}
 
 	// Wait for any cache updates to complete

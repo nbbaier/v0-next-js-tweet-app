@@ -90,6 +90,7 @@ export function TweetList({
 								tweetId={tweet.id}
 								submittedBy={tweet.submittedBy}
 								seen={tweet.seen}
+								content={tweet.content}
 								apiSecret={apiSecret}
 								onToggleSeen={onToggleSeen}
 								onDelete={onDelete}

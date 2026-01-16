@@ -177,12 +177,12 @@ export function TweetSubmitForm({
 					>
 						{hasStoredSecret ? (
 							<>
-								<CheckCircle2 />
+								<CheckCircle2 aria-hidden="true" />
 								API Secret stored
 							</>
 						) : (
 							<>
-								<XCircle />
+								<XCircle aria-hidden="true" />
 								API Secret not stored
 							</>
 						)}
@@ -192,8 +192,8 @@ export function TweetSubmitForm({
 			{isLoadingSecret && (
 				<div className="mb-4">
 					<Badge variant="outline" className="pt-[2px]">
-						<Loader2 className="animate-spin" />
-						Loading...
+						<Loader2 className="animate-spin" aria-hidden="true" />
+						Loading…
 					</Badge>
 				</div>
 			)}
@@ -207,14 +207,17 @@ export function TweetSubmitForm({
 				>
 					<Field>
 						<FieldLabel htmlFor="tweet-url" className="pl-1">
-							Tweet URL or ID
+							Tweet URL
 						</FieldLabel>
 						<Input
 							id="tweet-url"
-							type="text"
+							name="tweet-url"
+							type="url"
+							inputMode="url"
+							autoComplete="off"
 							value={url}
 							onChange={(e) => setUrl(e.target.value)}
-							placeholder="Paste a full Twitter/X URL or just the tweet ID"
+							placeholder="Paste a full Twitter/X URL (e.g., https://x.com/user/status/123)…"
 							required
 							disabled={isSubmitting}
 						/>
@@ -225,6 +228,7 @@ export function TweetSubmitForm({
 							Your Name
 						</FieldLabel>
 						<Select
+							name="submitted-by"
 							value={submittedBy || undefined}
 							onValueChange={(value) => {
 								setSubmittedBy(value);
@@ -235,8 +239,8 @@ export function TweetSubmitForm({
 							required
 							disabled={isSubmitting}
 						>
-							<SelectTrigger>
-								<SelectValue placeholder="Select a name" />
+							<SelectTrigger id="submitted-by">
+								<SelectValue placeholder="Select a name…" />
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value="Nico">Nico</SelectItem>
@@ -255,10 +259,12 @@ export function TweetSubmitForm({
 								<div className="flex gap-2">
 									<Input
 										id="api-secret"
+										name="api-secret"
 										type="password"
+										autoComplete="off"
 										value={secret}
 										onChange={(e) => setSecret(e.target.value)}
-										placeholder="Enter your API secret"
+										placeholder="Enter your API secret…"
 										required
 										disabled={isSubmitting}
 										className="flex-1"
@@ -318,13 +324,15 @@ export function TweetSubmitForm({
 									? "bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-400"
 									: "bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-400"
 							}`}
+							role="status"
+							aria-live="polite"
 						>
 							{message.text}
 						</div>
 					)}
 
 					<Button type="submit" disabled={isSubmitting} className="w-full">
-						{isSubmitting ? "Adding..." : "Add Tweet"}
+						{isSubmitting ? "Adding…" : "Add Tweet"}
 					</Button>
 				</form>
 			}

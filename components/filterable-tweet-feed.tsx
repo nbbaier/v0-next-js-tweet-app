@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ const COMPLETION_MESSAGES = [
 	"Congratulations! You've successfully procrastinated through all tweets.",
 	"Feed: cleared. Conscience: clear. Couch: calling your name.",
 	"No more tweets! Time to create your own content maybe?",
-	"You've seen everything. The void stares back... lovingly.",
+	"You've seen everything. The void stares back… lovingly.",
 ];
 
 function FilterBadge({
@@ -61,12 +61,68 @@ export function FilterableTweetFeed({
 	tweets: initialTweets,
 	showActions = true,
 }: FilterableTweetFeedProps) {
-	const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
-	const [hideSeenTweets, setHideSeenTweets] = useState(false);
 	const router = useRouter();
+	const searchParams = useSearchParams();
+	const pathname = usePathname();
+	const [selectedFilter, setSelectedFilter] = useState<string | null>(
+		() => searchParams.get("filter"),
+	);
+	const [hideSeenTweets, setHideSeenTweets] = useState(() => {
+		return searchParams.get("hideSeen") === "true";
+	});
 
 	const [completionMessage, setCompletionMessage] = useState<string>("");
 	const prevUnseenCountRef = useRef<number | null>(null);
+	const filterParam = searchParams.get("filter");
+	const hideSeenParam = searchParams.get("hideSeen") === "true";
+
+	const updateUrl = useCallback(
+		(nextFilter: string | null, nextHideSeen: boolean) => {
+			const params = new URLSearchParams(searchParams);
+
+			if (nextFilter) {
+				params.set("filter", nextFilter);
+			} else {
+				params.delete("filter");
+			}
+
+			if (nextHideSeen) {
+				params.set("hideSeen", "true");
+			} else {
+				params.delete("hideSeen");
+			}
+
+			const queryString = params.toString();
+			router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+				scroll: false,
+			});
+		},
+		[pathname, router, searchParams],
+	);
+
+	useEffect(() => {
+		if (filterParam !== selectedFilter) {
+			setSelectedFilter(filterParam);
+		}
+
+		if (hideSeenParam !== hideSeenTweets) {
+			setHideSeenTweets(hideSeenParam);
+		}
+	}, [filterParam, hideSeenParam, selectedFilter, hideSeenTweets]);
+
+	const handleSelectFilter = useCallback(
+		(filter: string | null) => {
+			setSelectedFilter(filter);
+			updateUrl(filter, hideSeenTweets);
+		},
+		[hideSeenTweets, updateUrl],
+	);
+
+	const handleToggleHideSeen = useCallback(() => {
+		const nextHideSeen = !hideSeenTweets;
+		setHideSeenTweets(nextHideSeen);
+		updateUrl(selectedFilter, nextHideSeen);
+	}, [hideSeenTweets, selectedFilter, updateUrl]);
 
 	// Use real-time tweets hook
 	const { tweets } = useRealtimeTweets(initialTweets, {
@@ -197,14 +253,16 @@ export function FilterableTweetFeed({
 		if (
 			currentCount === 0 &&
 			tweets.length > 0 &&
-			(prevCount === null || prevCount > 0)
+			(prevCount === null || prevCount > 0) &&
+			!hideSeenTweets
 		) {
 			setHideSeenTweets(true);
+			updateUrl(selectedFilter, true);
 		}
 
 		// Update the ref with current count
 		prevUnseenCountRef.current = currentCount;
-	}, [unseenCounts.total, tweets.length]);
+	}, [hideSeenTweets, selectedFilter, tweets.length, unseenCounts.total, updateUrl]);
 
 	// Get list of people with unseen tweets
 	const peopleWithUnseen = useMemo(() => {
@@ -260,7 +318,7 @@ export function FilterableTweetFeed({
 								variant={selectedFilter === null ? "default" : "secondary"}
 								label="All"
 								count={unseenCounts.total}
-								onClick={() => setSelectedFilter(null)}
+								onClick={() => handleSelectFilter(null)}
 							/>
 
 							{peopleWithUnseen.map(([person, count]) => (
@@ -269,7 +327,7 @@ export function FilterableTweetFeed({
 									variant={selectedFilter === person ? "default" : "secondary"}
 									label={person}
 									count={count}
-									onClick={() => setSelectedFilter(person)}
+									onClick={() => handleSelectFilter(person)}
 								/>
 							))}
 
@@ -278,7 +336,7 @@ export function FilterableTweetFeed({
 								label={hideSeenTweets ? "Show All" : "Hide Seen"}
 								count={0}
 								withoutCount={true}
-								onClick={() => setHideSeenTweets(!hideSeenTweets)}
+								onClick={handleToggleHideSeen}
 							/>
 						</>
 					) : (
@@ -287,7 +345,7 @@ export function FilterableTweetFeed({
 							label={hideSeenTweets ? "Show Seen" : "Hide Seen"}
 							count={0}
 							withoutCount={true}
-							onClick={() => setHideSeenTweets(!hideSeenTweets)}
+							onClick={handleToggleHideSeen}
 						/>
 					)}
 				</div>

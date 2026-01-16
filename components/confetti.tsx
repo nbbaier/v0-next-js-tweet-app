@@ -1,10 +1,17 @@
 "use client";
 
 import confetti from "canvas-confetti";
+import { useReducedMotion } from "framer-motion";
 import { useEffect } from "react";
 
 export function Confetti() {
+	const shouldReduceMotion = useReducedMotion();
+
 	useEffect(() => {
+		if (shouldReduceMotion) {
+			return;
+		}
+
 		// Fire confetti when component mounts
 		const duration = 3000;
 		const animationEnd = Date.now() + duration;
@@ -38,7 +45,7 @@ export function Confetti() {
 		}, 250);
 
 		return () => clearInterval(interval);
-	}, []);
+	}, [shouldReduceMotion]);
 
 	return null;
 }

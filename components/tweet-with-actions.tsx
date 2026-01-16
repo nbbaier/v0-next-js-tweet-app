@@ -3,7 +3,8 @@
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { memo, useEffect, useState } from "react";
-import { Tweet } from "react-tweet";
+import { EmbeddedTweet, Tweet } from "react-tweet";
+import type { Tweet as TweetType } from "react-tweet/api";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -21,6 +22,7 @@ interface TweetWithActionsProps {
 	tweetId: string;
 	submittedBy: string[]; // Array of poster names
 	seen?: boolean;
+	content?: TweetType;
 	apiSecret?: string;
 	onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
 	onDelete?: (tweetId: string) => Promise<void>;
@@ -30,6 +32,7 @@ function TweetWithActionsComponent({
 	tweetId,
 	submittedBy,
 	seen: initialSeen = false,
+	content,
 	apiSecret,
 	onToggleSeen,
 	onDelete,
@@ -159,11 +162,11 @@ function TweetWithActionsComponent({
 
 			{/* Tweet display with conditional styling for seen tweets */}
 			<div
-				className={`flex justify-center w-full tweet-container transition-all ${
+				className={`flex justify-center w-full tweet-container transition-[max-height] duration-300 ${
 					isSeen ? "max-h-24 overflow-hidden relative" : ""
 				}`}
 			>
-				<Tweet id={tweetId} />
+				{content ? <EmbeddedTweet tweet={content} /> : <Tweet id={tweetId} />}
 				{isSeen && (
 					<div className="absolute inset-0 bg-gradient-to-b from-transparent pointer-events-none to-background" />
 				)}
@@ -178,7 +181,7 @@ function TweetWithActionsComponent({
 					disabled={isTogglingSeenStatus}
 				>
 					{isTogglingSeenStatus
-						? "Updating..."
+						? "Updating…"
 						: isSeen
 							? "Mark as Unseen"
 							: "Mark as Seen"}
@@ -197,8 +200,9 @@ function TweetWithActionsComponent({
 							size="icon-sm"
 							disabled={isDeleting}
 							onClick={() => setDialogOpen(true)}
+							aria-label="Delete tweet"
 						>
-							<Trash2 className="w-4 h-4 text-destructive" />
+							<Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
 						</Button>
 					</AlertDialogTrigger>
 					<AlertDialogContent>
@@ -210,9 +214,12 @@ function TweetWithActionsComponent({
 							</AlertDialogDescription>
 						</AlertDialogHeader>
 						{error && (
-							<div className="p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20">
+							<output
+								className="block p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20"
+								aria-live="polite"
+							>
 								{error}
-							</div>
+							</output>
 						)}
 						<AlertDialogFooter>
 							<AlertDialogCancel
@@ -231,7 +238,7 @@ function TweetWithActionsComponent({
 								aria-label="Delete tweet"
 								className="bg-destructive text-white hover:bg-destructive/90"
 							>
-								{isDeleting ? "Deleting..." : "Delete"}
+								{isDeleting ? "Deleting…" : "Delete"}
 							</AlertDialogAction>
 						</AlertDialogFooter>
 					</AlertDialogContent>
@@ -241,9 +248,12 @@ function TweetWithActionsComponent({
 			{/* Error display for seen status toggle */}
 			{error && !dialogOpen && (
 				<div className="w-full max-w-[550px]">
-					<p className="p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20">
+					<output
+						className="block p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20"
+						aria-live="polite"
+					>
 						{error}
-					</p>
+					</output>
 				</div>
 			)}
 		</div>
@@ -260,6 +270,11 @@ function arePropsEqual(
 	// Functions are stable if using useCallback properly, but we check them anyway
 	if (prevProps.onToggleSeen !== nextProps.onToggleSeen) return false;
 	if (prevProps.onDelete !== nextProps.onDelete) return false;
+
+	if (prevProps.content !== nextProps.content) {
+		if (!prevProps.content || !nextProps.content) return false;
+		if (prevProps.content.id_str !== nextProps.content.id_str) return false;
+	}
 
 	// Deep compare submittedBy array content
 	if (prevProps.submittedBy === nextProps.submittedBy) return true;

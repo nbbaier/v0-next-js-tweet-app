@@ -17,8 +17,14 @@ export function ThemeToggle() {
 
 	if (!mounted) {
 		return (
-			<Button variant="ghost" size="icon" className="opacity-0">
-				<Sun className="w-5 h-5" />
+			<Button
+				variant="ghost"
+				size="icon"
+				className="opacity-0"
+				aria-hidden="true"
+				tabIndex={-1}
+			>
+				<Sun className="w-5 h-5" aria-hidden="true" />
 			</Button>
 		);
 	}
@@ -30,8 +36,14 @@ export function ThemeToggle() {
 			onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
 			aria-label="Toggle theme"
 		>
-			<Sun className="w-5 h-5 transition-all scale-100 rotate-0 dark:-rotate-90 dark:scale-0" />
-			<Moon className="absolute w-5 h-5 transition-all scale-0 rotate-90 dark:rotate-0 dark:scale-100" />
+			<Sun
+				className="w-5 h-5 transition-[transform,opacity] scale-100 rotate-0 dark:-rotate-90 dark:scale-0"
+				aria-hidden="true"
+			/>
+			<Moon
+				className="absolute w-5 h-5 transition-[transform,opacity] scale-0 rotate-90 dark:rotate-0 dark:scale-100"
+				aria-hidden="true"
+			/>
 			<span className="sr-only">Toggle theme</span>
 		</Button>
 	);

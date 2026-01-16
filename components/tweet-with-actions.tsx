@@ -2,7 +2,7 @@
 
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Tweet } from "react-tweet";
 import {
 	AlertDialog,
@@ -26,7 +26,8 @@ interface TweetWithActionsProps {
 	onDelete?: (tweetId: string) => Promise<void>;
 }
 
-export function TweetWithActions({
+// Memoized to prevent unnecessary re-renders when parent list updates but tweet data is unchanged
+export const TweetWithActions = memo(function TweetWithActions({
 	tweetId,
 	submittedBy,
 	seen: initialSeen = false,
@@ -211,13 +212,12 @@ export function TweetWithActions({
 							</AlertDialogDescription>
 						</AlertDialogHeader>
 						{error && (
-							<div
-								className="p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20"
-								role="status"
+							<output
+								className="block p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20"
 								aria-live="polite"
 							>
 								{error}
-							</div>
+							</output>
 						)}
 						<AlertDialogFooter>
 							<AlertDialogCancel
@@ -246,15 +246,14 @@ export function TweetWithActions({
 			{/* Error display for seen status toggle */}
 			{error && !dialogOpen && (
 				<div className="w-full max-w-[550px]">
-					<p
-						className="p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20"
-						role="status"
+					<output
+						className="block p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20"
 						aria-live="polite"
 					>
 						{error}
-					</p>
+					</output>
 				</div>
 			)}
 		</div>
 	);
-}
+});

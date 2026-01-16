@@ -2,7 +2,7 @@
 
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Tweet } from "react-tweet";
 import {
 	AlertDialog,
@@ -26,7 +26,7 @@ interface TweetWithActionsProps {
 	onDelete?: (tweetId: string) => Promise<void>;
 }
 
-export function TweetWithActions({
+function TweetWithActionsComponent({
 	tweetId,
 	submittedBy,
 	seen: initialSeen = false,
@@ -249,3 +249,31 @@ export function TweetWithActions({
 		</div>
 	);
 }
+
+function arePropsEqual(
+	prevProps: TweetWithActionsProps,
+	nextProps: TweetWithActionsProps,
+) {
+	if (prevProps.tweetId !== nextProps.tweetId) return false;
+	if (prevProps.seen !== nextProps.seen) return false;
+	if (prevProps.apiSecret !== nextProps.apiSecret) return false;
+	// Functions are stable if using useCallback properly, but we check them anyway
+	if (prevProps.onToggleSeen !== nextProps.onToggleSeen) return false;
+	if (prevProps.onDelete !== nextProps.onDelete) return false;
+
+	// Deep compare submittedBy array content
+	if (prevProps.submittedBy === nextProps.submittedBy) return true;
+	if (prevProps.submittedBy.length !== nextProps.submittedBy.length)
+		return false;
+
+	for (let i = 0; i < prevProps.submittedBy.length; i++) {
+		if (prevProps.submittedBy[i] !== nextProps.submittedBy[i]) return false;
+	}
+
+	return true;
+}
+
+// Add display name for debugging
+TweetWithActionsComponent.displayName = "TweetWithActions";
+
+export const TweetWithActions = memo(TweetWithActionsComponent, arePropsEqual);

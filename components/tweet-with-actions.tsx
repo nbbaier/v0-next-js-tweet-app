@@ -2,7 +2,7 @@
 
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Tweet } from "react-tweet";
 import {
 	AlertDialog,
@@ -26,7 +26,7 @@ interface TweetWithActionsProps {
 	onDelete?: (tweetId: string) => Promise<void>;
 }
 
-export function TweetWithActions({
+function TweetWithActionsComponent({
 	tweetId,
 	submittedBy,
 	seen: initialSeen = false,
@@ -249,3 +249,7 @@ export function TweetWithActions({
 		</div>
 	);
 }
+
+// Memoized to prevent re-renders when parent updates but props are unchanged.
+// Critical for performance as the parent list re-renders frequently on real-time updates.
+export const TweetWithActions = memo(TweetWithActionsComponent);

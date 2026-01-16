@@ -1,0 +1,26 @@
+
+> my-v0-project@0.1.0 start /app
+> next start --port 3000
+
+▲ Next.js 16.1.1
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+
+✓ Starting...
+✓ Ready in 294ms
+[Storage ERROR] Failed to get tweet IDs: TypeError: fetch failed
+    at async u.request (.next/server/chunks/ssr/_20fff80e._.js:1:5008)
+    at async cx.exec (.next/server/chunks/ssr/_20fff80e._.js:1:7770)
+    at async nh (.next/server/chunks/ssr/_20fff80e._.js:37:175276)
+    at async nj (.next/server/chunks/ssr/_20fff80e._.js:37:176213)
+    at async no (.next/server/chunks/ssr/_20fff80e._.js:37:177372) {
+  [cause]: Error: connect ECONNREFUSED 0.0.0.0
+      at ignore-listed frames {
+    errno: -111,
+    code: 'ECONNREFUSED',
+    syscall: 'connect',
+    address: '0.0.0.0'
+  }
+}
+[Config] No tweets in storage
+ ELIFECYCLE  Command failed.

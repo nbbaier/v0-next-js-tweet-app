@@ -1,0 +1,14 @@
+
+> my-v0-project@0.1.0 dev /app
+> next dev
+
+▲ Next.js 16.1.1 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+
+✓ Starting...
+✓ Ready in 731ms
+○ Compiling /verify-layout ...
+ GET /verify-layout 200 in 5.4s (compile: 4.7s, render: 730ms)
+ GET /verify-layout 200 in 491ms (compile: 111ms, render: 381ms)
+✓ Compiled in 97ms

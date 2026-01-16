@@ -3,7 +3,8 @@
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Tweet } from "react-tweet";
+import { Tweet, EmbeddedTweet } from "react-tweet";
+import type { Tweet as TweetType } from "react-tweet/api";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -21,6 +22,7 @@ interface TweetWithActionsProps {
 	tweetId: string;
 	submittedBy: string[]; // Array of poster names
 	seen?: boolean;
+	content?: TweetType;
 	apiSecret?: string;
 	onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
 	onDelete?: (tweetId: string) => Promise<void>;
@@ -30,6 +32,7 @@ export function TweetWithActions({
 	tweetId,
 	submittedBy,
 	seen: initialSeen = false,
+	content,
 	apiSecret,
 	onToggleSeen,
 	onDelete,
@@ -163,7 +166,7 @@ export function TweetWithActions({
 					isSeen ? "max-h-24 overflow-hidden relative" : ""
 				}`}
 			>
-				<Tweet id={tweetId} />
+				{content ? <EmbeddedTweet tweet={content} /> : <Tweet id={tweetId} />}
 				{isSeen && (
 					<div className="absolute inset-0 bg-gradient-to-b from-transparent pointer-events-none to-background" />
 				)}

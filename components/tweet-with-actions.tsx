@@ -3,7 +3,6 @@
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Tweet } from "react-tweet";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -15,6 +14,7 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { LazyTweet } from "./lazy-tweet";
 import { Button } from "./ui/button";
 
 interface TweetWithActionsProps {
@@ -163,7 +163,7 @@ export function TweetWithActions({
 					isSeen ? "max-h-24 overflow-hidden relative" : ""
 				}`}
 			>
-				<Tweet id={tweetId} />
+				<LazyTweet id={tweetId} />
 				{isSeen && (
 					<div className="absolute inset-0 bg-gradient-to-b from-transparent pointer-events-none to-background" />
 				)}

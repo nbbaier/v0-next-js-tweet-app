@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import type { TweetData } from "@/lib/tweet-service";
 import { Confetti } from "./confetti";
+import { LazyTweet } from "./lazy-tweet";
 import { TweetWithActions } from "./tweet-with-actions";
 import { Button } from "./ui/button";
 
@@ -96,7 +97,7 @@ export function TweetList({
 							/>
 						) : (
 							<div className="flex justify-center tweet-container">
-								<Tweet id={tweet.id} />
+								<LazyTweet id={tweet.id} />
 							</div>
 						)}
 					</motion.div>
@@ -106,6 +107,3 @@ export function TweetList({
 	);
 }
 
-// Re-export Tweet for backwards compatibility if needed
-import { Tweet } from "react-tweet";
-export { Tweet };

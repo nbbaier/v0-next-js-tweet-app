@@ -97,6 +97,7 @@ export function TweetList({
 							<TweetWithActions
 								tweetId={tweet.id}
 								submittedBy={tweet.submittedBy}
+								savedAt={tweet.savedAt}
 								seen={tweet.seen}
 								content={tweet.content}
 								apiSecret={apiSecret}

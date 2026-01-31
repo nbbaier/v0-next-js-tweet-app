@@ -21,6 +21,7 @@ import { Button } from "./ui/button";
 interface TweetWithActionsProps {
 	tweetId: string;
 	submittedBy: string[]; // Array of poster names
+	savedAt?: number; // Unix timestamp of when tweet was first saved
 	seen?: boolean;
 	content?: TweetType;
 	apiSecret?: string;
@@ -28,9 +29,28 @@ interface TweetWithActionsProps {
 	onDelete?: (tweetId: string) => Promise<void>;
 }
 
+function formatSavedAt(timestamp: number): string {
+	const date = new Date(timestamp);
+	const now = new Date();
+	const diffMs = now.getTime() - date.getTime();
+	const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+	if (diffDays === 0) {
+		return `Today at ${date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+	}
+	if (diffDays === 1) {
+		return `Yesterday at ${date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+	}
+	if (diffDays < 7) {
+		return `${diffDays} days ago`;
+	}
+	return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
 function TweetWithActionsComponent({
 	tweetId,
 	submittedBy,
+	savedAt,
 	seen: initialSeen = false,
 	content,
 	apiSecret,
@@ -143,7 +163,7 @@ function TweetWithActionsComponent({
 	return (
 		<div className="flex flex-col items-center space-y-1 w-full">
 			{/* Submitter badges */}
-			<div className="w-full max-w-[550px] flex flex-wrap gap-2 justify-start mb-1">
+			<div className="w-full max-w-[550px] flex flex-wrap gap-2 justify-start items-center mb-1">
 				{submittedBy.length > 0 ? (
 					submittedBy.map((poster) => (
 						<span
@@ -156,6 +176,11 @@ function TweetWithActionsComponent({
 				) : (
 					<span className="py-1 px-2 text-xs rounded-full bg-muted text-muted-foreground">
 						Saved by: Unknown
+					</span>
+				)}
+				{savedAt && (
+					<span className="text-xs text-muted-foreground/70">
+						{formatSavedAt(savedAt)}
 					</span>
 				)}
 			</div>
@@ -266,6 +291,7 @@ function arePropsEqual(
 ) {
 	if (prevProps.tweetId !== nextProps.tweetId) return false;
 	if (prevProps.seen !== nextProps.seen) return false;
+	if (prevProps.savedAt !== nextProps.savedAt) return false;
 	if (prevProps.apiSecret !== nextProps.apiSecret) return false;
 	// Functions are stable if using useCallback properly, but we check them anyway
 	if (prevProps.onToggleSeen !== nextProps.onToggleSeen) return false;

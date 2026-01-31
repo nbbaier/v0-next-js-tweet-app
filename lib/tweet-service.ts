@@ -10,9 +10,9 @@ import { getTweetMetadata, getTweetMetadatas } from "./tweet-storage";
 export interface TweetData {
 	id: string;
 	submittedBy: string[]; // Array of poster names
+	savedAt?: number; // Unix timestamp of when tweet was first saved
 	seen?: boolean;
 	content?: Tweet; // The actual tweet content from react-tweet
-	// Add other tweet metadata as needed
 }
 
 /**
@@ -46,6 +46,7 @@ export async function fetchTweetWithCache(tweetId: string): Promise<TweetData> {
 			return {
 				...cached,
 				submittedBy: metadata.posters.map((p) => p.name),
+				savedAt: metadata.submittedAt,
 				seen: metadata.seen,
 				content,
 			};
@@ -70,6 +71,7 @@ export async function fetchTweetWithCache(tweetId: string): Promise<TweetData> {
 	const tweetData: TweetData = {
 		id: tweetId,
 		submittedBy: metadata?.posters.map((p) => p.name) || [],
+		savedAt: metadata?.submittedAt,
 		seen: metadata?.seen,
 		content,
 	};
@@ -111,6 +113,7 @@ export async function fetchTweetsWithCache(
 				results.push({
 					...cached,
 					submittedBy: metadata.posters.map((p) => p.name),
+					savedAt: metadata.submittedAt,
 					seen: metadata.seen,
 				});
 			} else {
@@ -123,6 +126,7 @@ export async function fetchTweetsWithCache(
 			const placeholder: TweetData = {
 				id,
 				submittedBy: metadata?.posters.map((p) => p.name) || [],
+				savedAt: metadata?.submittedAt,
 				seen: metadata?.seen,
 				content: cached?.content, // Might be undefined
 			};

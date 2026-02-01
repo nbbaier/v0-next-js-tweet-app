@@ -409,12 +409,34 @@ export function FilterableTweetFeed({
 		return result;
 	}, [savedTweets, selectedFilter]);
 
+	// Count all feed tweets (regardless of seen status) for badge display
+	const feedAllCounts = useMemo(() => {
+		return feedTweets.reduce(
+			(acc, tweet) => {
+				const posters =
+					tweet.submittedBy.length > 0 ? tweet.submittedBy : ["Unknown"];
+				for (const poster of posters) {
+					acc[poster] = (acc[poster] || 0) + 1;
+				}
+				acc.total = (acc.total || 0) + 1;
+				return acc;
+			},
+			{ total: 0 } as Record<string, number>,
+		);
+	}, [feedTweets]);
+
 	// Get list of people with tweets in current view
 	const peopleWithUnseen = useMemo(() => {
 		return Object.entries(unseenCounts)
 			.filter(([key, count]) => key !== "total" && count > 0)
 			.sort(([a], [b]) => a.localeCompare(b));
 	}, [unseenCounts]);
+
+	const peopleWithFeed = useMemo(() => {
+		return Object.entries(feedAllCounts)
+			.filter(([key, count]) => key !== "total" && count > 0)
+			.sort(([a], [b]) => a.localeCompare(b));
+	}, [feedAllCounts]);
 
 	// Get list of people with saved tweets
 	const peopleWithSaved = useMemo(() => {
@@ -428,9 +450,12 @@ export function FilterableTweetFeed({
 		allTweetsSeen && hideSeenTweets && activeTab === "feed";
 
 	// Get current counts and people based on active tab
-	const currentCounts = activeTab === "feed" ? unseenCounts : savedCounts;
+	// When hideSeenTweets is off, show counts for all feed tweets (not just unseen)
+	const feedDisplayCounts = hideSeenTweets ? unseenCounts : feedAllCounts;
+	const feedDisplayPeople = hideSeenTweets ? peopleWithUnseen : peopleWithFeed;
+	const currentCounts = activeTab === "feed" ? feedDisplayCounts : savedCounts;
 	const currentPeople =
-		activeTab === "feed" ? peopleWithUnseen : peopleWithSaved;
+		activeTab === "feed" ? feedDisplayPeople : peopleWithSaved;
 	const showHideSeen = activeTab === "feed";
 
 	return (
@@ -457,7 +482,7 @@ export function FilterableTweetFeed({
 					</Button>
 
 					{/* Filter badges */}
-					{showHideSeen && currentCounts.total > 0 ? (
+					{showHideSeen && (currentCounts.total > 0 || feedTweets.length > 0) ? (
 						<>
 							<FilterBadge
 								variant={selectedFilter === null ? "default" : "secondary"}

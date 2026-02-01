@@ -106,7 +106,6 @@ export async function PATCH(
 		}
 
 		// Update seen status if provided
-		let updatedMetadata = null;
 		if (typeof seen === "boolean") {
 			updatedMetadata = await updateTweetSeen(tweetId, seen);
 		}
@@ -114,6 +113,10 @@ export async function PATCH(
 		// Update saved status if provided
 		if (typeof saved === "boolean") {
 			updatedMetadata = await updateTweetSaved(tweetId, saved);
+		}
+
+		if (!updatedMetadata) {
+			return NextResponse.json({ error: "Tweet not found" }, { status: 404 });
 		}
 
 		if (!updatedMetadata) {

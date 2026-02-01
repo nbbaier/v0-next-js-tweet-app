@@ -392,6 +392,22 @@ export function FilterableTweetFeed({
 		return result;
 	}, [sortedFeedTweets, selectedFilter, hideSeenTweets]);
 
+	// Filter saved tweets based on selected filter
+	const filteredSavedTweets = useMemo(() => {
+		let result = savedTweets;
+
+		// Filter by selected person
+		if (selectedFilter) {
+			result = result.filter(
+				(tweet) =>
+					tweet.submittedBy.includes(selectedFilter) ||
+					(tweet.submittedBy.length === 0 && selectedFilter === "Unknown"),
+			);
+		}
+
+		return result;
+	}, [savedTweets, selectedFilter]);
+
 	// Get list of people with tweets in current view
 	const peopleWithUnseen = useMemo(() => {
 		return Object.entries(unseenCounts)
@@ -516,11 +532,11 @@ export function FilterableTweetFeed({
 					/>
 				) : (
 					<TweetList
-						tweets={savedTweets}
+						tweets={filteredSavedTweets}
 						showActions={showActions}
 						onToggleSaved={handleToggleSaved}
 						onDelete={handleDelete}
-						isEmpty={savedTweets.length === 0}
+						isEmpty={filteredSavedTweets.length === 0}
 					/>
 				)}
 			</div>

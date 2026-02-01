@@ -7,7 +7,9 @@ import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
 import { isValidTweetId } from "@/lib/tweet-parser";
 import {
+	getTweetMetadata,
 	removeTweetFromStorage,
+	type TweetMetadata,
 	updateTweetSaved,
 	updateTweetSeen,
 } from "@/lib/tweet-storage";
@@ -98,30 +100,33 @@ export async function PATCH(
 		if (typeof seen !== "boolean" && typeof saved !== "boolean") {
 			return NextResponse.json(
 				{
-					error:
-						"Must provide 'seen' (boolean) or 'saved' (boolean).",
+					error: "Must provide 'seen' (boolean) or 'saved' (boolean).",
 				},
 				{ status: 400 },
 			);
 		}
 
+		// Track if any update was performed and if tweet was found
+		let found = false;
+
 		// Update seen status if provided
 		if (typeof seen === "boolean") {
-			updatedMetadata = await updateTweetSeen(tweetId, seen);
+			const result = await updateTweetSeen(tweetId, seen);
+			if (result) found = true;
 		}
 
 		// Update saved status if provided
 		if (typeof saved === "boolean") {
-			updatedMetadata = await updateTweetSaved(tweetId, saved);
+			const result = await updateTweetSaved(tweetId, saved);
+			if (result) found = true;
 		}
 
-		if (!updatedMetadata) {
+		if (!found) {
 			return NextResponse.json({ error: "Tweet not found" }, { status: 404 });
 		}
 
-		if (!updatedMetadata) {
-			return NextResponse.json({ error: "Tweet not found" }, { status: 404 });
-		}
+		// Fetch the final metadata to return the combined state
+		const updatedMetadata = await getTweetMetadata(tweetId);
 
 		// Revalidate the home page
 		revalidatePath("/");

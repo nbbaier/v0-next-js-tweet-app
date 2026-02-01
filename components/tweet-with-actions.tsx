@@ -27,7 +27,10 @@ interface TweetWithActionsProps {
 	content?: TweetType;
 	apiSecret?: string;
 	onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
-	onToggleSaved?: (tweetId: string, currentSavedStatus: boolean) => Promise<void>;
+	onToggleSaved?: (
+		tweetId: string,
+		currentSavedStatus: boolean,
+	) => Promise<void>;
 	onDelete?: (tweetId: string) => Promise<void>;
 }
 
@@ -46,7 +49,11 @@ function formatSavedAt(timestamp: number): string {
 	if (diffDays < 7) {
 		return `${diffDays} days ago`;
 	}
-	return date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+	return date.toLocaleDateString(undefined, {
+		month: "short",
+		day: "numeric",
+		year: "numeric",
+	});
 }
 
 function TweetWithActionsComponent({
@@ -115,7 +122,9 @@ function TweetWithActionsComponent({
 			}
 		} catch (error) {
 			setError(
-				error instanceof Error ? error.message : "Failed to update saved status",
+				error instanceof Error
+					? error.message
+					: "Failed to update saved status",
 			);
 		} finally {
 			setIsTogglingSavedStatus(false);
@@ -250,23 +259,28 @@ function TweetWithActionsComponent({
 					aria-label={isSaved ? "Unsave tweet" : "Save tweet"}
 				>
 					{isSaved ? (
-						<BookmarkCheck className="w-4 h-4 text-primary" aria-hidden="true" />
+						<BookmarkCheck
+							className="w-4 h-4 text-primary"
+							aria-hidden="true"
+						/>
 					) : (
 						<Bookmark className="w-4 h-4" aria-hidden="true" />
 					)}
 				</Button>
-				<Button
-					variant="outline"
-					size="sm"
-					onClick={handleToggleSeen}
-					disabled={isTogglingSeenStatus}
-				>
-					{isTogglingSeenStatus
-						? "Updating…"
-						: isSeen
-							? "Mark as Unseen"
-							: "Mark as Seen"}
-				</Button>
+				{onToggleSeen && (
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={handleToggleSeen}
+						disabled={isTogglingSeenStatus}
+					>
+						{isTogglingSeenStatus
+							? "Updating…"
+							: isSeen
+								? "Mark as Unseen"
+								: "Mark as Seen"}
+					</Button>
+				)}
 
 				<AlertDialog
 					open={dialogOpen}

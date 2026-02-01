@@ -147,9 +147,10 @@ export function FilterableTweetFeed({
 	const handleTabChange = useCallback(
 		(tab: "feed" | "saved") => {
 			setActiveTab(tab);
-			updateUrl(selectedFilter, hideSeenTweets, tab);
+			setSelectedFilter(null);
+			updateUrl(null, hideSeenTweets, tab);
 		},
-		[hideSeenTweets, selectedFilter, updateUrl],
+		[hideSeenTweets, updateUrl],
 	);
 
 	const handleToggleHideSeen = useCallback(() => {

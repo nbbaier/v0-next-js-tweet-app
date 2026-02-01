@@ -64,11 +64,11 @@ export function FilterableTweetFeed({
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const pathname = usePathname();
-	const [activeTab, setActiveTab] = useState<"feed" | "saved">(
-		() => (searchParams.get("tab") === "saved" ? "saved" : "feed"),
+	const [activeTab, setActiveTab] = useState<"feed" | "saved">(() =>
+		searchParams.get("tab") === "saved" ? "saved" : "feed",
 	);
-	const [selectedFilter, setSelectedFilter] = useState<string | null>(
-		() => searchParams.get("filter"),
+	const [selectedFilter, setSelectedFilter] = useState<string | null>(() =>
+		searchParams.get("filter"),
 	);
 	const [hideSeenTweets, setHideSeenTweets] = useState(() => {
 		return searchParams.get("hideSeen") === "true";
@@ -81,7 +81,11 @@ export function FilterableTweetFeed({
 	const tabParam = searchParams.get("tab") === "saved" ? "saved" : "feed";
 
 	const updateUrl = useCallback(
-		(nextFilter: string | null, nextHideSeen: boolean, nextTab?: "feed" | "saved") => {
+		(
+			nextFilter: string | null,
+			nextHideSeen: boolean,
+			nextTab?: "feed" | "saved",
+		) => {
 			const params = new URLSearchParams(searchParams);
 
 			if (nextFilter) {
@@ -123,7 +127,14 @@ export function FilterableTweetFeed({
 		if (tabParam !== activeTab) {
 			setActiveTab(tabParam);
 		}
-	}, [filterParam, hideSeenParam, tabParam, selectedFilter, hideSeenTweets, activeTab]);
+	}, [
+		filterParam,
+		hideSeenParam,
+		tabParam,
+		selectedFilter,
+		hideSeenTweets,
+		activeTab,
+	]);
 
 	const handleSelectFilter = useCallback(
 		(filter: string | null) => {
@@ -274,9 +285,14 @@ export function FilterableTweetFeed({
 		[router],
 	);
 
-	// Calculate unseen tweets per person
+	// Filter out saved tweets for feed view
+	const feedTweets = useMemo(() => {
+		return tweets.filter((tweet) => tweet.saved !== true);
+	}, [tweets]);
+
+	// Calculate unseen tweets per person (for feed view, only non-saved tweets)
 	const unseenCounts = useMemo(() => {
-		return tweets.reduce(
+		return feedTweets.reduce(
 			(acc, tweet) => {
 				if (tweet.seen !== true) {
 					// Count this tweet for each poster
@@ -291,7 +307,28 @@ export function FilterableTweetFeed({
 			},
 			{ total: 0 } as Record<string, number>,
 		);
+	}, [feedTweets]);
+
+	// Calculate counts for saved view
+	const savedTweets = useMemo(() => {
+		return tweets.filter((tweet) => tweet.saved === true);
 	}, [tweets]);
+
+	const savedCounts = useMemo(() => {
+		return savedTweets.reduce(
+			(acc, tweet) => {
+				// Count this tweet for each poster
+				const posters =
+					tweet.submittedBy.length > 0 ? tweet.submittedBy : ["Unknown"];
+				for (const poster of posters) {
+					acc[poster] = (acc[poster] || 0) + 1;
+				}
+				acc.total = (acc.total || 0) + 1;
+				return acc;
+			},
+			{ total: 0 } as Record<string, number>,
+		);
+	}, [savedTweets]);
 
 	// Auto-hide seen tweets when unread count transitions to zero or on initial load with no unseen
 	useEffect(() => {
@@ -313,18 +350,17 @@ export function FilterableTweetFeed({
 
 		// Update the ref with current count
 		prevUnseenCountRef.current = currentCount;
-	}, [hideSeenTweets, selectedFilter, tweets.length, unseenCounts.total, updateUrl]);
+	}, [
+		hideSeenTweets,
+		selectedFilter,
+		tweets.length,
+		unseenCounts.total,
+		updateUrl,
+	]);
 
-	// Get list of people with unseen tweets
-	const peopleWithUnseen = useMemo(() => {
-		return Object.entries(unseenCounts)
-			.filter(([key, count]) => key !== "total" && count > 0)
-			.sort(([a], [b]) => a.localeCompare(b));
-	}, [unseenCounts]);
-
-	// Sort tweets: unread first, then seen
-	const sortedTweets = useMemo(() => {
-		return [...tweets].sort((a, b) => {
+	// Sort feed tweets: unread first, then seen
+	const sortedFeedTweets = useMemo(() => {
+		return [...feedTweets].sort((a, b) => {
 			// Unread tweets (seen !== true) come first
 			const aUnseen = a.seen !== true;
 			const bUnseen = b.seen !== true;
@@ -333,11 +369,11 @@ export function FilterableTweetFeed({
 			if (!aUnseen && bUnseen) return 1;
 			return 0;
 		});
-	}, [tweets]);
+	}, [feedTweets]);
 
-	// Filter tweets based on selected filter and hide seen toggle
+	// Filter feed tweets based on selected filter and hide seen toggle
 	const filteredTweets = useMemo(() => {
-		let result = sortedTweets;
+		let result = sortedFeedTweets;
 
 		// Filter by selected person
 		if (selectedFilter) {
@@ -354,21 +390,38 @@ export function FilterableTweetFeed({
 		}
 
 		return result;
-	}, [sortedTweets, selectedFilter, hideSeenTweets]);
+	}, [sortedFeedTweets, selectedFilter, hideSeenTweets]);
 
-	// Saved tweets for the saved tab
-	const savedTweets = useMemo(() => {
-		return tweets.filter((tweet) => tweet.saved === true);
-	}, [tweets]);
+	// Get list of people with tweets in current view
+	const peopleWithUnseen = useMemo(() => {
+		return Object.entries(unseenCounts)
+			.filter(([key, count]) => key !== "total" && count > 0)
+			.sort(([a], [b]) => a.localeCompare(b));
+	}, [unseenCounts]);
 
-	const allTweetsSeen = unseenCounts.total === 0 && tweets.length > 0;
-	const showCompletionMessage = allTweetsSeen && hideSeenTweets && activeTab === "feed";
+	// Get list of people with saved tweets
+	const peopleWithSaved = useMemo(() => {
+		return Object.entries(savedCounts)
+			.filter(([key, count]) => key !== "total" && count > 0)
+			.sort(([a], [b]) => a.localeCompare(b));
+	}, [savedCounts]);
+
+	const allTweetsSeen = unseenCounts.total === 0 && feedTweets.length > 0;
+	const showCompletionMessage =
+		allTweetsSeen && hideSeenTweets && activeTab === "feed";
+
+	// Get current counts and people based on active tab
+	const currentCounts = activeTab === "feed" ? unseenCounts : savedCounts;
+	const currentPeople =
+		activeTab === "feed" ? peopleWithUnseen : peopleWithSaved;
+	const showHideSeen = activeTab === "feed";
 
 	return (
 		<div className="flex flex-col w-full">
 			<div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 py-3 -mx-4 px-4">
-				{/* Tab switcher */}
-				<div className="flex gap-1 mb-2">
+				{/* Tabs and filter badges in single row */}
+				<div className="flex flex-wrap gap-2 items-center">
+					{/* Tab switcher */}
 					<Button
 						variant={activeTab === "feed" ? "default" : "ghost"}
 						size="sm"
@@ -385,49 +438,64 @@ export function FilterableTweetFeed({
 					>
 						Saved{savedTweets.length > 0 && ` (${savedTweets.length})`}
 					</Button>
-				</div>
 
-				{/* Filter badges - only show on feed tab */}
-				{activeTab === "feed" && (
-					<div className="flex flex-wrap gap-2">
-						{unseenCounts.total > 0 ? (
-							<>
+					{/* Filter badges */}
+					{showHideSeen && currentCounts.total > 0 ? (
+						<>
+							<FilterBadge
+								variant={selectedFilter === null ? "default" : "secondary"}
+								label="All"
+								count={currentCounts.total}
+								onClick={() => handleSelectFilter(null)}
+							/>
+
+							{currentPeople.map(([person, count]) => (
 								<FilterBadge
-									variant={selectedFilter === null ? "default" : "secondary"}
-									label="All"
-									count={unseenCounts.total}
-									onClick={() => handleSelectFilter(null)}
+									key={person}
+									variant={selectedFilter === person ? "default" : "secondary"}
+									label={person}
+									count={count}
+									onClick={() => handleSelectFilter(person)}
 								/>
+							))}
 
-								{peopleWithUnseen.map(([person, count]) => (
-									<FilterBadge
-										key={person}
-										variant={selectedFilter === person ? "default" : "secondary"}
-										label={person}
-										count={count}
-										onClick={() => handleSelectFilter(person)}
-									/>
-								))}
-
-								<FilterBadge
-									variant={hideSeenTweets ? "default" : "secondary"}
-									label={hideSeenTweets ? "Show All" : "Hide Seen"}
-									count={0}
-									withoutCount={true}
-									onClick={handleToggleHideSeen}
-								/>
-							</>
-						) : (
 							<FilterBadge
 								variant={hideSeenTweets ? "default" : "secondary"}
-								label={hideSeenTweets ? "Show Seen" : "Hide Seen"}
+								label={hideSeenTweets ? "Show All" : "Hide Seen"}
 								count={0}
 								withoutCount={true}
 								onClick={handleToggleHideSeen}
 							/>
-						)}
-					</div>
-				)}
+						</>
+					) : showHideSeen ? (
+						<FilterBadge
+							variant={hideSeenTweets ? "default" : "secondary"}
+							label={hideSeenTweets ? "Show Seen" : "Hide Seen"}
+							count={0}
+							withoutCount={true}
+							onClick={handleToggleHideSeen}
+						/>
+					) : (
+						<>
+							<FilterBadge
+								variant={selectedFilter === null ? "default" : "secondary"}
+								label="All"
+								count={currentCounts.total}
+								onClick={() => handleSelectFilter(null)}
+							/>
+
+							{currentPeople.map(([person, count]) => (
+								<FilterBadge
+									key={person}
+									variant={selectedFilter === person ? "default" : "secondary"}
+									label={person}
+									count={count}
+									onClick={() => handleSelectFilter(person)}
+								/>
+							))}
+						</>
+					)}
+				</div>
 				<div className="absolute left-[calc(-50vw+50%)] right-[calc(-50vw+50%)] bottom-0 w-screen">
 					<Separator />
 				</div>
@@ -450,7 +518,6 @@ export function FilterableTweetFeed({
 					<TweetList
 						tweets={savedTweets}
 						showActions={showActions}
-						onToggleSeen={handleToggleSeen}
 						onToggleSaved={handleToggleSaved}
 						onDelete={handleDelete}
 						isEmpty={savedTweets.length === 0}

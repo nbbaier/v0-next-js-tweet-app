@@ -14,6 +14,7 @@ interface TweetListProps {
 	showDevTweets?: boolean;
 	onToggleDevTweets?: () => void;
 	onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
+	onToggleSaved?: (tweetId: string, currentSavedStatus: boolean) => Promise<void>;
 	completionMessage?: string;
 	onDelete?: (tweetId: string) => Promise<void>;
 }
@@ -26,6 +27,7 @@ export function TweetList({
 	showDevTweets = false,
 	onToggleDevTweets,
 	onToggleSeen,
+	onToggleSaved,
 	completionMessage,
 	onDelete,
 }: TweetListProps) {
@@ -99,9 +101,11 @@ export function TweetList({
 								submittedBy={tweet.submittedBy}
 								savedAt={tweet.savedAt}
 								seen={tweet.seen}
+								saved={tweet.saved}
 								content={tweet.content}
 								apiSecret={apiSecret}
 								onToggleSeen={onToggleSeen}
+								onToggleSaved={onToggleSaved}
 								onDelete={onDelete}
 							/>
 						) : (

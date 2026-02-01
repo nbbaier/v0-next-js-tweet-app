@@ -3,10 +3,15 @@ import { FilterableTweetFeed } from "@/components/filterable-tweet-feed";
 import { TweetFeedHeader } from "@/components/tweet-feed-header";
 import { getTweetIds } from "@/lib/tweet-config";
 import { fetchTweetsWithCache } from "@/lib/tweet-service";
+import { getSavedTweetIdsFromStorage } from "@/lib/tweet-storage";
 
 export default async function Home() {
-	const tweetIds = await getTweetIds();
-	const tweets = await fetchTweetsWithCache(tweetIds);
+	const [tweetIds, savedTweetIds] = await Promise.all([
+		getTweetIds(),
+		getSavedTweetIdsFromStorage(),
+	]);
+	const allIds = [...new Set([...tweetIds, ...savedTweetIds])];
+	const tweets = await fetchTweetsWithCache(allIds);
 
 	return (
 		<div className="flex flex-col min-h-screen">

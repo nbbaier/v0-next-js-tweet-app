@@ -85,6 +85,28 @@ export function useRealtimeTweets(
 		},
 	});
 
+	// Tweet saved handler
+	useRealtime<RealtimeEvents, "tweet.saved">({
+		enabled,
+		channels: ["tweets"],
+		events: ["tweet.saved"],
+		onData: (data) => {
+			console.log("[Realtime Hook] Received tweet.saved event:", data);
+			setTweets((prev) =>
+				prev.map((t) =>
+					t.id === data.data.tweetId
+						? { ...t, saved: data.data.saved }
+						: t,
+				),
+			);
+			console.log(
+				"[Realtime] Tweet saved status updated:",
+				data.data.tweetId,
+				data.data.saved,
+			);
+		},
+	});
+
 	// Tweet seen handler
 	useRealtime<RealtimeEvents, "tweet.seen">({
 		enabled,

@@ -6,6 +6,7 @@ const tweetDataSchema = z.object({
 	id: z.string(),
 	submittedBy: z.array(z.string()),
 	seen: z.boolean().optional(),
+	saved: z.boolean().optional(),
 });
 
 const schema = {
@@ -26,6 +27,10 @@ const schema = {
 			tweetId: z.string(),
 			seen: z.boolean(),
 		}),
+		saved: z.object({
+			tweetId: z.string(),
+			saved: z.boolean(),
+		}),
 	},
 };
 
@@ -42,3 +47,4 @@ export type TweetUpdatedEvent = z.infer<typeof schema.tweet.updated>;
 export type TweetRemovedEvent = z.infer<typeof schema.tweet.removed>;
 export type TweetReorderEvent = z.infer<typeof schema.tweet.reorder>;
 export type TweetSeenEvent = z.infer<typeof schema.tweet.seen>;
+export type TweetSavedEvent = z.infer<typeof schema.tweet.saved>;

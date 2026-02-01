@@ -78,6 +78,23 @@ export async function publishTweetSeen(
 }
 
 /**
+ * Helper function to publish a tweet saved status change event
+ */
+export async function publishTweetSaved(
+	tweetId: string,
+	saved: boolean,
+): Promise<void> {
+	try {
+		const channel = getChannel();
+		await channel.emit("tweet.saved", { tweetId, saved });
+		console.log(`[Realtime] Published tweet:saved for ${tweetId}`);
+	} catch (error) {
+		console.error("[Realtime ERROR] Failed to publish tweet:saved:", error);
+		throw error;
+	}
+}
+
+/**
  * Helper function to publish a tweet reorder event
  */
 export async function publishTweetReorder(tweetIds: string[]): Promise<void> {

@@ -6,7 +6,11 @@
 import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
 import { isValidTweetId } from "@/lib/tweet-parser";
-import { removeTweetFromStorage, updateTweetSeen } from "@/lib/tweet-storage";
+import {
+	removeTweetFromStorage,
+	updateTweetSaved,
+	updateTweetSeen,
+} from "@/lib/tweet-storage";
 
 /**
  * DELETE /api/tweets/[id]
@@ -89,17 +93,28 @@ export async function PATCH(
 
 		// Parse request body
 		const body = await request.json();
-		const { seen } = body;
+		const { seen, saved } = body;
 
-		if (typeof seen !== "boolean") {
+		if (typeof seen !== "boolean" && typeof saved !== "boolean") {
 			return NextResponse.json(
-				{ error: "Invalid 'seen' value. Must be a boolean." },
+				{
+					error:
+						"Must provide 'seen' (boolean) or 'saved' (boolean).",
+				},
 				{ status: 400 },
 			);
 		}
 
-		// Update seen status
-		const updatedMetadata = await updateTweetSeen(tweetId, seen);
+		// Update seen status if provided
+		let updatedMetadata = null;
+		if (typeof seen === "boolean") {
+			updatedMetadata = await updateTweetSeen(tweetId, seen);
+		}
+
+		// Update saved status if provided
+		if (typeof saved === "boolean") {
+			updatedMetadata = await updateTweetSaved(tweetId, saved);
+		}
 
 		if (!updatedMetadata) {
 			return NextResponse.json({ error: "Tweet not found" }, { status: 404 });

@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { Bookmark, BookmarkCheck, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { memo, useEffect, useState } from "react";
 import { EmbeddedTweet, Tweet } from "react-tweet";
@@ -23,9 +23,11 @@ interface TweetWithActionsProps {
 	submittedBy: string[]; // Array of poster names
 	savedAt?: number; // Unix timestamp of when tweet was first saved
 	seen?: boolean;
+	saved?: boolean;
 	content?: TweetType;
 	apiSecret?: string;
 	onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
+	onToggleSaved?: (tweetId: string, currentSavedStatus: boolean) => Promise<void>;
 	onDelete?: (tweetId: string) => Promise<void>;
 }
 
@@ -52,13 +54,17 @@ function TweetWithActionsComponent({
 	submittedBy,
 	savedAt,
 	seen: initialSeen = false,
+	saved: initialSaved = false,
 	content,
 	apiSecret,
 	onToggleSeen,
+	onToggleSaved,
 	onDelete,
 }: TweetWithActionsProps) {
 	const [error, setError] = useState<string | null>(null);
 	const [isSeen, setIsSeen] = useState(initialSeen);
+	const [isSaved, setIsSaved] = useState(initialSaved);
+	const [isTogglingSavedStatus, setIsTogglingSavedStatus] = useState(false);
 	const [isTogglingSeenStatus, setIsTogglingSeenStatus] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -78,6 +84,43 @@ function TweetWithActionsComponent({
 	useEffect(() => {
 		setIsSeen(initialSeen);
 	}, [initialSeen]);
+
+	// Sync saved state with prop changes
+	useEffect(() => {
+		setIsSaved(initialSaved);
+	}, [initialSaved]);
+
+	const handleToggleSaved = async () => {
+		setIsTogglingSavedStatus(true);
+		setError(null);
+
+		try {
+			if (onToggleSaved) {
+				await onToggleSaved(tweetId, isSaved);
+				setIsSaved(!isSaved);
+			} else {
+				const response = await fetch(`/api/tweets/${tweetId}`, {
+					method: "PATCH",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ saved: !isSaved }),
+				});
+
+				if (!response.ok) {
+					const data = await response.json();
+					throw new Error(data.error || "Failed to update saved status");
+				}
+
+				setIsSaved(!isSaved);
+				router.refresh();
+			}
+		} catch (error) {
+			setError(
+				error instanceof Error ? error.message : "Failed to update saved status",
+			);
+		} finally {
+			setIsTogglingSavedStatus(false);
+		}
+	};
 
 	const handleToggleSeen = async () => {
 		setIsTogglingSeenStatus(true);
@@ -201,6 +244,19 @@ function TweetWithActionsComponent({
 			<div className="w-full max-w-[550px] flex justify-end gap-2">
 				<Button
 					variant="outline"
+					size="icon-sm"
+					onClick={handleToggleSaved}
+					disabled={isTogglingSavedStatus}
+					aria-label={isSaved ? "Unsave tweet" : "Save tweet"}
+				>
+					{isSaved ? (
+						<BookmarkCheck className="w-4 h-4 text-primary" aria-hidden="true" />
+					) : (
+						<Bookmark className="w-4 h-4" aria-hidden="true" />
+					)}
+				</Button>
+				<Button
+					variant="outline"
 					size="sm"
 					onClick={handleToggleSeen}
 					disabled={isTogglingSeenStatus}
@@ -291,10 +347,12 @@ function arePropsEqual(
 ) {
 	if (prevProps.tweetId !== nextProps.tweetId) return false;
 	if (prevProps.seen !== nextProps.seen) return false;
+	if (prevProps.saved !== nextProps.saved) return false;
 	if (prevProps.savedAt !== nextProps.savedAt) return false;
 	if (prevProps.apiSecret !== nextProps.apiSecret) return false;
 	// Functions are stable if using useCallback properly, but we check them anyway
 	if (prevProps.onToggleSeen !== nextProps.onToggleSeen) return false;
+	if (prevProps.onToggleSaved !== nextProps.onToggleSaved) return false;
 	if (prevProps.onDelete !== nextProps.onDelete) return false;
 
 	if (prevProps.content !== nextProps.content) {

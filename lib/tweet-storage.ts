@@ -6,12 +6,14 @@ import { redis } from "./redis";
 import {
 	publishTweetAdded,
 	publishTweetRemoved,
+	publishTweetSaved,
 	publishTweetSeen,
 	publishTweetUpdated,
 } from "./tweet-realtime";
 import type { TweetData } from "./tweet-service";
 
 const TWEETS_LIST_KEY = "tweets:list";
+const TWEETS_SAVED_KEY = "tweets:saved";
 const TWEET_METADATA_PREFIX = "tweet:meta:";
 
 export interface Poster {
@@ -25,6 +27,7 @@ export interface TweetMetadata {
 	posters: Poster[]; // Array of all users who submitted this tweet
 	url: string;
 	seen?: boolean; // Optional: marks tweet as seen/minimized
+	saved?: boolean; // Optional: marks tweet as saved/pinned (excluded from cleanup)
 }
 
 /**
@@ -340,6 +343,9 @@ export async function removeTweetFromStorage(
 		// Remove from sorted set
 		const removed = await redis.zrem(TWEETS_LIST_KEY, tweetId);
 
+		// Remove from saved set too
+		await redis.zrem(TWEETS_SAVED_KEY, tweetId);
+
 		// Remove metadata
 		await redis.del(`${TWEET_METADATA_PREFIX}${tweetId}`);
 
@@ -386,5 +392,76 @@ export async function getTweetCount(): Promise<number> {
 	} catch (error) {
 		console.error("[Storage ERROR] Failed to get tweet count:", error);
 		return 0;
+	}
+}
+
+/**
+ * Updates the saved status for a tweet
+ * Saved tweets are added to a separate sorted set and excluded from cleanup
+ * @param tweetId - The tweet ID
+ * @param saved - The saved status to set
+ * @returns Updated metadata or null if not found
+ */
+export async function updateTweetSaved(
+	tweetId: string,
+	saved: boolean,
+): Promise<TweetMetadata | null> {
+	try {
+		const metadata = await getTweetMetadata(tweetId);
+		if (!metadata) {
+			console.error(`[Storage ERROR] Tweet ${tweetId} not found`);
+			return null;
+		}
+
+		const updatedMetadata: TweetMetadata = {
+			...metadata,
+			saved,
+		};
+
+		await redis.set(`${TWEET_METADATA_PREFIX}${tweetId}`, updatedMetadata);
+
+		if (saved) {
+			// Add to saved sorted set
+			await redis.zadd(TWEETS_SAVED_KEY, {
+				score: Date.now(),
+				member: tweetId,
+			});
+		} else {
+			// Remove from saved sorted set
+			await redis.zrem(TWEETS_SAVED_KEY, tweetId);
+		}
+
+		console.log(
+			`[Storage] Updated saved status for tweet ${tweetId} to ${saved}`,
+		);
+
+		// Publish real-time update
+		await publishTweetSaved(tweetId, saved);
+
+		return updatedMetadata;
+	} catch (error) {
+		console.error(
+			`[Storage ERROR] Failed to update saved status for ${tweetId}:`,
+			error,
+		);
+		return null;
+	}
+}
+
+/**
+ * Retrieves all saved tweet IDs from storage, ordered by save time (newest first)
+ * @returns Array of saved tweet IDs
+ */
+export async function getSavedTweetIdsFromStorage(): Promise<string[]> {
+	try {
+		const tweetIds = await redis.zrange(TWEETS_SAVED_KEY, 0, -1, {
+			rev: true,
+		});
+
+		console.log(`[Storage] Retrieved ${tweetIds.length} saved tweet IDs`);
+		return tweetIds as string[];
+	} catch (error) {
+		console.error("[Storage ERROR] Failed to get saved tweet IDs:", error);
+		return [];
 	}
 }

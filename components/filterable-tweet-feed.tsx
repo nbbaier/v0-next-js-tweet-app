@@ -64,6 +64,9 @@ export function FilterableTweetFeed({
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const pathname = usePathname();
+	const [activeTab, setActiveTab] = useState<"feed" | "saved">(
+		() => (searchParams.get("tab") === "saved" ? "saved" : "feed"),
+	);
 	const [selectedFilter, setSelectedFilter] = useState<string | null>(
 		() => searchParams.get("filter"),
 	);
@@ -75,9 +78,10 @@ export function FilterableTweetFeed({
 	const prevUnseenCountRef = useRef<number | null>(null);
 	const filterParam = searchParams.get("filter");
 	const hideSeenParam = searchParams.get("hideSeen") === "true";
+	const tabParam = searchParams.get("tab") === "saved" ? "saved" : "feed";
 
 	const updateUrl = useCallback(
-		(nextFilter: string | null, nextHideSeen: boolean) => {
+		(nextFilter: string | null, nextHideSeen: boolean, nextTab?: "feed" | "saved") => {
 			const params = new URLSearchParams(searchParams);
 
 			if (nextFilter) {
@@ -92,12 +96,19 @@ export function FilterableTweetFeed({
 				params.delete("hideSeen");
 			}
 
+			const tab = nextTab ?? activeTab;
+			if (tab === "saved") {
+				params.set("tab", "saved");
+			} else {
+				params.delete("tab");
+			}
+
 			const queryString = params.toString();
 			router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
 				scroll: false,
 			});
 		},
-		[pathname, router, searchParams],
+		[pathname, router, searchParams, activeTab],
 	);
 
 	useEffect(() => {
@@ -108,7 +119,11 @@ export function FilterableTweetFeed({
 		if (hideSeenParam !== hideSeenTweets) {
 			setHideSeenTweets(hideSeenParam);
 		}
-	}, [filterParam, hideSeenParam, selectedFilter, hideSeenTweets]);
+
+		if (tabParam !== activeTab) {
+			setActiveTab(tabParam);
+		}
+	}, [filterParam, hideSeenParam, tabParam, selectedFilter, hideSeenTweets, activeTab]);
 
 	const handleSelectFilter = useCallback(
 		(filter: string | null) => {
@@ -116,6 +131,14 @@ export function FilterableTweetFeed({
 			updateUrl(filter, hideSeenTweets);
 		},
 		[hideSeenTweets, updateUrl],
+	);
+
+	const handleTabChange = useCallback(
+		(tab: "feed" | "saved") => {
+			setActiveTab(tab);
+			updateUrl(selectedFilter, hideSeenTweets, tab);
+		},
+		[hideSeenTweets, selectedFilter, updateUrl],
 	);
 
 	const handleToggleHideSeen = useCallback(() => {
@@ -223,6 +246,34 @@ export function FilterableTweetFeed({
 		[router],
 	);
 
+	// Handle tweet save/unsave
+	const handleToggleSaved = useCallback(
+		async (tweetId: string, currentSavedStatus: boolean) => {
+			try {
+				const response = await fetch(`/api/tweets/${tweetId}`, {
+					method: "PATCH",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ saved: !currentSavedStatus }),
+				});
+
+				if (!response.ok) {
+					const data = await response.json();
+					throw new Error(data.error || "Failed to update saved status");
+				}
+
+				setTimeout(() => {
+					router.refresh();
+				}, 1000);
+			} catch (error) {
+				console.error("Failed to update saved status:", error);
+				throw error;
+			}
+		},
+		[router],
+	);
+
 	// Calculate unseen tweets per person
 	const unseenCounts = useMemo(() => {
 		return tweets.reduce(
@@ -305,50 +356,78 @@ export function FilterableTweetFeed({
 		return result;
 	}, [sortedTweets, selectedFilter, hideSeenTweets]);
 
+	// Saved tweets for the saved tab
+	const savedTweets = useMemo(() => {
+		return tweets.filter((tweet) => tweet.saved === true);
+	}, [tweets]);
+
 	const allTweetsSeen = unseenCounts.total === 0 && tweets.length > 0;
-	const showCompletionMessage = allTweetsSeen && hideSeenTweets;
+	const showCompletionMessage = allTweetsSeen && hideSeenTweets && activeTab === "feed";
 
 	return (
 		<div className="flex flex-col w-full">
 			<div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 py-3 -mx-4 px-4">
-				<div className="flex flex-wrap gap-2">
-					{unseenCounts.total > 0 ? (
-						<>
-							<FilterBadge
-								variant={selectedFilter === null ? "default" : "secondary"}
-								label="All"
-								count={unseenCounts.total}
-								onClick={() => handleSelectFilter(null)}
-							/>
+				{/* Tab switcher */}
+				<div className="flex gap-1 mb-2">
+					<Button
+						variant={activeTab === "feed" ? "default" : "ghost"}
+						size="sm"
+						onClick={() => handleTabChange("feed")}
+						className="text-sm"
+					>
+						Feed
+					</Button>
+					<Button
+						variant={activeTab === "saved" ? "default" : "ghost"}
+						size="sm"
+						onClick={() => handleTabChange("saved")}
+						className="text-sm"
+					>
+						Saved{savedTweets.length > 0 && ` (${savedTweets.length})`}
+					</Button>
+				</div>
 
-							{peopleWithUnseen.map(([person, count]) => (
+				{/* Filter badges - only show on feed tab */}
+				{activeTab === "feed" && (
+					<div className="flex flex-wrap gap-2">
+						{unseenCounts.total > 0 ? (
+							<>
 								<FilterBadge
-									key={person}
-									variant={selectedFilter === person ? "default" : "secondary"}
-									label={person}
-									count={count}
-									onClick={() => handleSelectFilter(person)}
+									variant={selectedFilter === null ? "default" : "secondary"}
+									label="All"
+									count={unseenCounts.total}
+									onClick={() => handleSelectFilter(null)}
 								/>
-							))}
 
+								{peopleWithUnseen.map(([person, count]) => (
+									<FilterBadge
+										key={person}
+										variant={selectedFilter === person ? "default" : "secondary"}
+										label={person}
+										count={count}
+										onClick={() => handleSelectFilter(person)}
+									/>
+								))}
+
+								<FilterBadge
+									variant={hideSeenTweets ? "default" : "secondary"}
+									label={hideSeenTweets ? "Show All" : "Hide Seen"}
+									count={0}
+									withoutCount={true}
+									onClick={handleToggleHideSeen}
+								/>
+							</>
+						) : (
 							<FilterBadge
 								variant={hideSeenTweets ? "default" : "secondary"}
-								label={hideSeenTweets ? "Show All" : "Hide Seen"}
+								label={hideSeenTweets ? "Show Seen" : "Hide Seen"}
 								count={0}
 								withoutCount={true}
 								onClick={handleToggleHideSeen}
 							/>
-						</>
-					) : (
-						<FilterBadge
-							variant={hideSeenTweets ? "default" : "secondary"}
-							label={hideSeenTweets ? "Show Seen" : "Hide Seen"}
-							count={0}
-							withoutCount={true}
-							onClick={handleToggleHideSeen}
-						/>
-					)}
-				</div>
+						)}
+					</div>
+				)}
 				<div className="absolute left-[calc(-50vw+50%)] right-[calc(-50vw+50%)] bottom-0 w-screen">
 					<Separator />
 				</div>
@@ -356,15 +435,27 @@ export function FilterableTweetFeed({
 
 			{/* Tweet list */}
 			<div className="flex-1 py-6 w-full">
-				<TweetList
-					tweets={filteredTweets}
-					showActions={showActions}
-					onToggleSeen={handleToggleSeen}
-					completionMessage={
-						showCompletionMessage ? completionMessage : undefined
-					}
-					onDelete={handleDelete}
-				/>
+				{activeTab === "feed" ? (
+					<TweetList
+						tweets={filteredTweets}
+						showActions={showActions}
+						onToggleSeen={handleToggleSeen}
+						onToggleSaved={handleToggleSaved}
+						completionMessage={
+							showCompletionMessage ? completionMessage : undefined
+						}
+						onDelete={handleDelete}
+					/>
+				) : (
+					<TweetList
+						tweets={savedTweets}
+						showActions={showActions}
+						onToggleSeen={handleToggleSeen}
+						onToggleSaved={handleToggleSaved}
+						onDelete={handleDelete}
+						isEmpty={savedTweets.length === 0}
+					/>
+				)}
 			</div>
 		</div>
 	);

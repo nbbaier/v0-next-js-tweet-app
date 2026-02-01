@@ -12,6 +12,7 @@ export interface TweetData {
 	submittedBy: string[]; // Array of poster names
 	savedAt?: number; // Unix timestamp of when tweet was first saved
 	seen?: boolean;
+	saved?: boolean; // Whether this tweet is in the saved/pinned list
 	content?: Tweet; // The actual tweet content from react-tweet
 }
 
@@ -48,6 +49,7 @@ export async function fetchTweetWithCache(tweetId: string): Promise<TweetData> {
 				submittedBy: metadata.posters.map((p) => p.name),
 				savedAt: metadata.submittedAt,
 				seen: metadata.seen,
+				saved: metadata.saved,
 				content,
 			};
 		}
@@ -73,6 +75,7 @@ export async function fetchTweetWithCache(tweetId: string): Promise<TweetData> {
 		submittedBy: metadata?.posters.map((p) => p.name) || [],
 		savedAt: metadata?.submittedAt,
 		seen: metadata?.seen,
+		saved: metadata?.saved,
 		content,
 	};
 
@@ -115,6 +118,7 @@ export async function fetchTweetsWithCache(
 					submittedBy: metadata.posters.map((p) => p.name),
 					savedAt: metadata.submittedAt,
 					seen: metadata.seen,
+					saved: metadata.saved,
 				});
 			} else {
 				results.push(cached);
@@ -128,6 +132,7 @@ export async function fetchTweetsWithCache(
 				submittedBy: metadata?.posters.map((p) => p.name) || [],
 				savedAt: metadata?.submittedAt,
 				seen: metadata?.seen,
+				saved: metadata?.saved,
 				content: cached?.content, // Might be undefined
 			};
 			results.push(placeholder);

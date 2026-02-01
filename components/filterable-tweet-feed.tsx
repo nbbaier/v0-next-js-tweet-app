@@ -340,7 +340,7 @@ export function FilterableTweetFeed({
 		// 2. Transition from having unseen tweets to zero (prevCount > 0 && currentCount === 0)
 		if (
 			currentCount === 0 &&
-			tweets.length > 0 &&
+			feedTweets.length > 0 &&
 			(prevCount === null || prevCount > 0) &&
 			!hideSeenTweets
 		) {
@@ -353,7 +353,7 @@ export function FilterableTweetFeed({
 	}, [
 		hideSeenTweets,
 		selectedFilter,
-		tweets.length,
+		feedTweets.length,
 		unseenCounts.total,
 		updateUrl,
 	]);

@@ -207,17 +207,11 @@ export function FilterableTweetFeed({
 				});
 
 				if (!response.ok) {
-					// Revert on failure
-					setTweets((prev) =>
-						prev.map((t) =>
-							t.id === tweetId ? { ...t, seen: currentSeenStatus } : t,
-						),
-					);
 					const data = await response.json();
 					throw new Error(data.error || "Failed to update seen status");
 				}
 			} catch (error) {
-				// Revert on any error (network failure, etc.)
+				// Revert on any error (network failure, non-ok response, etc.)
 				setTweets((prev) =>
 					prev.map((t) =>
 						t.id === tweetId ? { ...t, seen: currentSeenStatus } : t,
@@ -313,17 +307,11 @@ export function FilterableTweetFeed({
 				});
 
 				if (!response.ok) {
-					// Revert on failure
-					setTweets((prev) =>
-						prev.map((t) =>
-							t.id === tweetId ? { ...t, saved: currentSavedStatus } : t,
-						),
-					);
 					const data = await response.json();
 					throw new Error(data.error || "Failed to update saved status");
 				}
 			} catch (error) {
-				// Revert on any error (network failure, etc.)
+				// Revert on any error (network failure, non-ok response, etc.)
 				setTweets((prev) =>
 					prev.map((t) =>
 						t.id === tweetId ? { ...t, saved: currentSavedStatus } : t,

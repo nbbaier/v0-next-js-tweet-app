@@ -5,47 +5,47 @@ import { useReducedMotion } from "framer-motion";
 import { useEffect } from "react";
 
 export function Confetti() {
-	const shouldReduceMotion = useReducedMotion();
+  const shouldReduceMotion = useReducedMotion();
 
-	useEffect(() => {
-		if (shouldReduceMotion) {
-			return;
-		}
+  useEffect(() => {
+    if (shouldReduceMotion) {
+      return;
+    }
 
-		// Fire confetti when component mounts
-		const duration = 3000;
-		const animationEnd = Date.now() + duration;
-		const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+    // Fire confetti when component mounts
+    const duration = 3000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
 
-		function randomInRange(min: number, max: number) {
-			return Math.random() * (max - min) + min;
-		}
+    function randomInRange(min: number, max: number) {
+      return Math.random() * (max - min) + min;
+    }
 
-		const interval = setInterval(() => {
-			const timeLeft = animationEnd - Date.now();
+    const interval = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
 
-			if (timeLeft <= 0) {
-				clearInterval(interval);
-				return;
-			}
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        return;
+      }
 
-			const particleCount = 50 * (timeLeft / duration);
+      const particleCount = 50 * (timeLeft / duration);
 
-			// Fire confetti from two different positions
-			confetti({
-				...defaults,
-				particleCount,
-				origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-			});
-			confetti({
-				...defaults,
-				particleCount,
-				origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-			});
-		}, 250);
+      // Fire confetti from two different positions
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+      });
+    }, 250);
 
-		return () => clearInterval(interval);
-	}, [shouldReduceMotion]);
+    return () => clearInterval(interval);
+  }, [shouldReduceMotion]);
 
-	return null;
+  return null;
 }

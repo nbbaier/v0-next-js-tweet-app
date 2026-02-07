@@ -6,28 +6,28 @@ import { fetchTweetsWithCache } from "@/lib/tweet-service";
 import { getSavedTweetIdsFromStorage } from "@/lib/tweet-storage";
 
 export default async function Home() {
-	const [tweetIds, savedTweetIds] = await Promise.all([
-		getTweetIds(),
-		getSavedTweetIdsFromStorage(),
-	]);
-	const allIds = [...new Set([...tweetIds, ...savedTweetIds])];
-	const tweets = await fetchTweetsWithCache(allIds);
+  const [tweetIds, savedTweetIds] = await Promise.all([
+    getTweetIds(),
+    getSavedTweetIdsFromStorage(),
+  ]);
+  const allIds = [...new Set([...tweetIds, ...savedTweetIds])];
+  const tweets = await fetchTweetsWithCache(allIds);
 
-	return (
-		<div className="flex flex-col min-h-screen">
-			<TweetFeedHeader />
+  return (
+    <div className="flex min-h-screen flex-col">
+      <TweetFeedHeader />
 
-			<main
-				id="main-content"
-				tabIndex={-1}
-				className="flex flex-col flex-1 items-center w-full"
-			>
-				<div className="w-full max-w-[550px] px-4">
-					<Suspense fallback={null}>
-						<FilterableTweetFeed tweets={tweets} showActions={true} />
-					</Suspense>
-				</div>
-			</main>
-		</div>
-	);
+      <main
+        className="flex w-full flex-1 flex-col items-center"
+        id="main-content"
+        tabIndex={-1}
+      >
+        <div className="w-full max-w-[550px] px-4">
+          <Suspense fallback={null}>
+            <FilterableTweetFeed showActions={true} tweets={tweets} />
+          </Suspense>
+        </div>
+      </main>
+    </div>
+  );
 }

@@ -6,384 +6,407 @@ import { memo, useEffect, useState } from "react";
 import { EmbeddedTweet, Tweet } from "react-tweet";
 import type { Tweet as TweetType } from "react-tweet/api";
 import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "./ui/button";
 
 interface TweetWithActionsProps {
-	tweetId: string;
-	submittedBy: string[]; // Array of poster names
-	savedAt?: number; // Unix timestamp of when tweet was first saved
-	seen?: boolean;
-	saved?: boolean;
-	content?: TweetType;
-	apiSecret?: string;
-	onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
-	onToggleSaved?: (
-		tweetId: string,
-		currentSavedStatus: boolean,
-	) => Promise<void>;
-	onDelete?: (tweetId: string) => Promise<void>;
+  tweetId: string;
+  submittedBy: string[]; // Array of poster names
+  savedAt?: number; // Unix timestamp of when tweet was first saved
+  seen?: boolean;
+  saved?: boolean;
+  content?: TweetType;
+  apiSecret?: string;
+  onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
+  onToggleSaved?: (
+    tweetId: string,
+    currentSavedStatus: boolean
+  ) => Promise<void>;
+  onDelete?: (tweetId: string) => Promise<void>;
 }
 
 function formatSavedAt(timestamp: number): string {
-	const date = new Date(timestamp);
-	const now = new Date();
-	const diffMs = now.getTime() - date.getTime();
-	const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-	if (diffDays === 0) {
-		return `Today at ${date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
-	}
-	if (diffDays === 1) {
-		return `Yesterday at ${date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
-	}
-	if (diffDays < 7) {
-		return `${diffDays} days ago`;
-	}
-	return date.toLocaleDateString(undefined, {
-		month: "short",
-		day: "numeric",
-		year: "numeric",
-	});
+  if (diffDays === 0) {
+    return `Today at ${date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+  }
+  if (diffDays === 1) {
+    return `Yesterday at ${date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+  }
+  if (diffDays < 7) {
+    return `${diffDays} days ago`;
+  }
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function TweetWithActionsComponent({
-	tweetId,
-	submittedBy,
-	savedAt,
-	seen: initialSeen = false,
-	saved: initialSaved = false,
-	content,
-	apiSecret,
-	onToggleSeen,
-	onToggleSaved,
-	onDelete,
+  tweetId,
+  submittedBy,
+  savedAt,
+  seen: initialSeen = false,
+  saved: initialSaved = false,
+  content,
+  apiSecret,
+  onToggleSeen,
+  onToggleSaved,
+  onDelete,
 }: TweetWithActionsProps) {
-	const [error, setError] = useState<string | null>(null);
-	const [isSeen, setIsSeen] = useState(initialSeen);
-	const [isSaved, setIsSaved] = useState(initialSaved);
-	const [isTogglingSavedStatus, setIsTogglingSavedStatus] = useState(false);
-	const [isTogglingSeenStatus, setIsTogglingSeenStatus] = useState(false);
-	const [isDeleting, setIsDeleting] = useState(false);
-	const [dialogOpen, setDialogOpen] = useState(false);
-	const [storedSecret, setStoredSecret] = useState<string>("");
-	const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [isSeen, setIsSeen] = useState(initialSeen);
+  const [isSaved, setIsSaved] = useState(initialSaved);
+  const [isTogglingSavedStatus, setIsTogglingSavedStatus] = useState(false);
+  const [isTogglingSeenStatus, setIsTogglingSeenStatus] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [storedSecret, setStoredSecret] = useState<string>("");
+  const router = useRouter();
 
-	useEffect(() => {
-		if (typeof window !== "undefined") {
-			const saved = localStorage.getItem("tweet_api_secret");
-			if (saved) {
-				setStoredSecret(saved);
-			}
-		}
-	}, []);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("tweet_api_secret");
+      if (saved) {
+        setStoredSecret(saved);
+      }
+    }
+  }, []);
 
-	// Sync seen state with prop changes (for optimistic updates)
-	useEffect(() => {
-		setIsSeen(initialSeen);
-	}, [initialSeen]);
+  // Sync seen state with prop changes (for optimistic updates)
+  useEffect(() => {
+    setIsSeen(initialSeen);
+  }, [initialSeen]);
 
-	// Sync saved state with prop changes
-	useEffect(() => {
-		setIsSaved(initialSaved);
-	}, [initialSaved]);
+  // Sync saved state with prop changes
+  useEffect(() => {
+    setIsSaved(initialSaved);
+  }, [initialSaved]);
 
-	const handleToggleSaved = async () => {
-		setIsTogglingSavedStatus(true);
-		setError(null);
+  const handleToggleSaved = async () => {
+    setIsTogglingSavedStatus(true);
+    setError(null);
 
-		try {
-			if (onToggleSaved) {
-				await onToggleSaved(tweetId, isSaved);
-				setIsSaved(!isSaved);
-			} else {
-				const response = await fetch(`/api/tweets/${tweetId}`, {
-					method: "PATCH",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ saved: !isSaved }),
-				});
+    try {
+      if (onToggleSaved) {
+        await onToggleSaved(tweetId, isSaved);
+        setIsSaved(!isSaved);
+      } else {
+        const response = await fetch(`/api/tweets/${tweetId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ saved: !isSaved }),
+        });
 
-				if (!response.ok) {
-					const data = await response.json();
-					throw new Error(data.error || "Failed to update saved status");
-				}
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to update saved status");
+        }
 
-				setIsSaved(!isSaved);
-				router.refresh();
-			}
-		} catch (error) {
-			setError(
-				error instanceof Error
-					? error.message
-					: "Failed to update saved status",
-			);
-		} finally {
-			setIsTogglingSavedStatus(false);
-		}
-	};
+        setIsSaved(!isSaved);
+        router.refresh();
+      }
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Failed to update saved status"
+      );
+    } finally {
+      setIsTogglingSavedStatus(false);
+    }
+  };
 
-	const handleToggleSeen = async () => {
-		setIsTogglingSeenStatus(true);
-		setError(null);
+  const handleToggleSeen = async () => {
+    setIsTogglingSeenStatus(true);
+    setError(null);
 
-		try {
-			if (onToggleSeen) {
-				// Use the callback for optimistic updates with animation
-				await onToggleSeen(tweetId, isSeen);
-				setIsSeen(!isSeen);
-			} else {
-				// Fallback to original behavior
-				const response = await fetch(`/api/tweets/${tweetId}`, {
-					method: "PATCH",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					body: JSON.stringify({ seen: !isSeen }),
-				});
+    try {
+      if (onToggleSeen) {
+        // Use the callback for optimistic updates with animation
+        await onToggleSeen(tweetId, isSeen);
+        setIsSeen(!isSeen);
+      } else {
+        // Fallback to original behavior
+        const response = await fetch(`/api/tweets/${tweetId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ seen: !isSeen }),
+        });
 
-				const data = await response.json();
+        const data = await response.json();
 
-				if (!response.ok) {
-					throw new Error(data.error || "Failed to update seen status");
-				}
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to update seen status");
+        }
 
-				setIsSeen(!isSeen);
-				router.refresh();
-			}
-		} catch (error) {
-			setError(
-				error instanceof Error ? error.message : "Failed to update seen status",
-			);
-		} finally {
-			setIsTogglingSeenStatus(false);
-		}
-	};
+        setIsSeen(!isSeen);
+        router.refresh();
+      }
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Failed to update seen status"
+      );
+    } finally {
+      setIsTogglingSeenStatus(false);
+    }
+  };
 
-	const handleDelete = async () => {
-		const secretToUse = apiSecret || storedSecret;
+  const handleDelete = async () => {
+    const secretToUse = apiSecret || storedSecret;
 
-		if (!secretToUse) {
-			setError("No API secret found. Please set it in the form above.");
-			return;
-		}
+    if (!secretToUse) {
+      setError("No API secret found. Please set it in the form above.");
+      return;
+    }
 
-		setIsDeleting(true);
-		setError(null);
+    setIsDeleting(true);
+    setError(null);
 
-		try {
-			if (onDelete) {
-				// Use the callback for optimistic updates with animation
-				await onDelete(tweetId);
-				setDialogOpen(false);
-				setError(null);
-			} else {
-				// Fallback to original behavior
-				const response = await fetch(`/api/tweets/${tweetId}`, {
-					method: "DELETE",
-					headers: {
-						"x-api-secret": secretToUse,
-					},
-				});
+    try {
+      if (onDelete) {
+        // Use the callback for optimistic updates with animation
+        await onDelete(tweetId);
+        setDialogOpen(false);
+        setError(null);
+      } else {
+        // Fallback to original behavior
+        const response = await fetch(`/api/tweets/${tweetId}`, {
+          method: "DELETE",
+          headers: {
+            "x-api-secret": secretToUse,
+          },
+        });
 
-				const data = await response.json();
+        const data = await response.json();
 
-				if (!response.ok) {
-					throw new Error(data.error || "Failed to delete tweet");
-				}
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to delete tweet");
+        }
 
-				setDialogOpen(false);
-				setError(null);
-				router.refresh();
-			}
-		} catch (error) {
-			setError(
-				error instanceof Error ? error.message : "Failed to delete tweet",
-			);
-			setIsDeleting(false);
-		}
-	};
+        setDialogOpen(false);
+        setError(null);
+        router.refresh();
+      }
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Failed to delete tweet"
+      );
+      setIsDeleting(false);
+    }
+  };
 
-	return (
-		<div className="flex flex-col items-center space-y-1 w-full">
-			{/* Submitter badges */}
-			<div className="w-full max-w-[550px] flex flex-wrap gap-2 justify-start items-center mb-1">
-				{submittedBy.length > 0 ? (
-					submittedBy.map((poster) => (
-						<span
-							key={poster}
-							className="py-1 px-2 text-xs rounded-full bg-muted text-muted-foreground"
-						>
-							Saved by: {poster.charAt(0).toUpperCase() + poster.slice(1)}
-						</span>
-					))
-				) : (
-					<span className="py-1 px-2 text-xs rounded-full bg-muted text-muted-foreground">
-						Saved by: Unknown
-					</span>
-				)}
-				{savedAt && (
-					<span className="text-xs text-muted-foreground/70">
-						{formatSavedAt(savedAt)}
-					</span>
-				)}
-			</div>
+  const seenButtonLabel = isSeen ? "Mark as Unseen" : "Mark as Seen";
 
-			{/* Tweet display with conditional styling for seen tweets */}
-			<div
-				className={`flex justify-center w-full tweet-container transition-[max-height] duration-300 ${
-					isSeen ? "max-h-24 overflow-hidden relative" : ""
-				}`}
-			>
-				{content ? <EmbeddedTweet tweet={content} /> : <Tweet id={tweetId} />}
-				{isSeen && (
-					<div className="absolute inset-0 bg-gradient-to-b from-transparent pointer-events-none to-background" />
-				)}
-			</div>
+  return (
+    <div className="flex w-full flex-col items-center space-y-1">
+      {/* Submitter badges */}
+      <div className="mb-1 flex w-full max-w-[550px] flex-wrap items-center justify-start gap-2">
+        {submittedBy.length > 0 ? (
+          submittedBy.map((poster) => (
+            <span
+              className="rounded-full bg-muted px-2 py-1 text-muted-foreground text-xs"
+              key={poster}
+            >
+              Saved by: {poster.charAt(0).toUpperCase() + poster.slice(1)}
+            </span>
+          ))
+        ) : (
+          <span className="rounded-full bg-muted px-2 py-1 text-muted-foreground text-xs">
+            Saved by: Unknown
+          </span>
+        )}
+        {savedAt && (
+          <span className="text-muted-foreground/70 text-xs">
+            {formatSavedAt(savedAt)}
+          </span>
+        )}
+      </div>
 
-			{/* Action buttons below the tweet - constrained to tweet width */}
-			<div className="w-full max-w-[550px] flex justify-end gap-2">
-				<Button
-					variant="outline"
-					size="icon-sm"
-					onClick={handleToggleSaved}
-					disabled={isTogglingSavedStatus}
-					aria-label={isSaved ? "Unsave tweet" : "Save tweet"}
-				>
-					{isSaved ? (
-						<BookmarkCheck
-							className="w-4 h-4 text-primary"
-							aria-hidden="true"
-						/>
-					) : (
-						<Bookmark className="w-4 h-4" aria-hidden="true" />
-					)}
-				</Button>
-				{onToggleSeen && (
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={handleToggleSeen}
-						disabled={isTogglingSeenStatus}
-					>
-						{isTogglingSeenStatus
-							? "Updating…"
-							: isSeen
-								? "Mark as Unseen"
-								: "Mark as Seen"}
-					</Button>
-				)}
+      {/* Tweet display with conditional styling for seen tweets */}
+      <div
+        className={`tweet-container flex w-full justify-center transition-[max-height] duration-300 ${
+          isSeen ? "relative max-h-24 overflow-hidden" : ""
+        }`}
+      >
+        {content ? <EmbeddedTweet tweet={content} /> : <Tweet id={tweetId} />}
+        {isSeen && (
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-background" />
+        )}
+      </div>
 
-				<AlertDialog
-					open={dialogOpen}
-					onOpenChange={(open) => {
-						setDialogOpen(open);
-						if (!open) setError(null);
-					}}
-				>
-					<AlertDialogTrigger asChild>
-						<Button
-							variant="outline"
-							size="icon-sm"
-							disabled={isDeleting}
-							onClick={() => setDialogOpen(true)}
-							aria-label="Delete tweet"
-						>
-							<Trash2 className="w-4 h-4 text-destructive" aria-hidden="true" />
-						</Button>
-					</AlertDialogTrigger>
-					<AlertDialogContent>
-						<AlertDialogHeader>
-							<AlertDialogTitle>Delete Tweet</AlertDialogTitle>
-							<AlertDialogDescription>
-								Are you sure you want to delete this tweet? This action cannot
-								be undone.
-							</AlertDialogDescription>
-						</AlertDialogHeader>
-						{error && (
-							<output
-								className="block p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20"
-								aria-live="polite"
-							>
-								{error}
-							</output>
-						)}
-						<AlertDialogFooter>
-							<AlertDialogCancel
-								onClick={() => {
-									setDialogOpen(false);
-									setError(null);
-								}}
-								disabled={isDeleting}
-							>
-								Cancel
-							</AlertDialogCancel>
-							<AlertDialogAction
-								onClick={handleDelete}
-								disabled={isDeleting}
-								type="button"
-								aria-label="Delete tweet"
-								className="bg-destructive text-white hover:bg-destructive/90"
-							>
-								{isDeleting ? "Deleting…" : "Delete"}
-							</AlertDialogAction>
-						</AlertDialogFooter>
-					</AlertDialogContent>
-				</AlertDialog>
-			</div>
+      {/* Action buttons below the tweet - constrained to tweet width */}
+      <div className="flex w-full max-w-[550px] justify-end gap-2">
+        <Button
+          aria-label={isSaved ? "Unsave tweet" : "Save tweet"}
+          disabled={isTogglingSavedStatus}
+          onClick={handleToggleSaved}
+          size="icon-sm"
+          variant="outline"
+        >
+          {isSaved ? (
+            <BookmarkCheck
+              aria-hidden="true"
+              className="h-4 w-4 text-primary"
+            />
+          ) : (
+            <Bookmark aria-hidden="true" className="h-4 w-4" />
+          )}
+        </Button>
+        {onToggleSeen && (
+          <Button
+            disabled={isTogglingSeenStatus}
+            onClick={handleToggleSeen}
+            size="sm"
+            variant="outline"
+          >
+            {isTogglingSeenStatus ? "Updating…" : seenButtonLabel}
+          </Button>
+        )}
 
-			{/* Error display for seen status toggle */}
-			{error && !dialogOpen && (
-				<div className="w-full max-w-[550px]">
-					<output
-						className="block p-2 text-xs text-red-600 bg-red-50 rounded dark:bg-red-900/20"
-						aria-live="polite"
-					>
-						{error}
-					</output>
-				</div>
-			)}
-		</div>
-	);
+        <AlertDialog
+          onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) {
+              setError(null);
+            }
+          }}
+          open={dialogOpen}
+        >
+          <AlertDialogTrigger asChild>
+            <Button
+              aria-label="Delete tweet"
+              disabled={isDeleting}
+              onClick={() => setDialogOpen(true)}
+              size="icon-sm"
+              variant="outline"
+            >
+              <Trash2 aria-hidden="true" className="h-4 w-4 text-destructive" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Tweet</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this tweet? This action cannot
+                be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            {error && (
+              <output
+                aria-live="polite"
+                className="block rounded bg-red-50 p-2 text-red-600 text-xs dark:bg-red-900/20"
+              >
+                {error}
+              </output>
+            )}
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                disabled={isDeleting}
+                onClick={() => {
+                  setDialogOpen(false);
+                  setError(null);
+                }}
+              >
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                aria-label="Delete tweet"
+                className="bg-destructive text-white hover:bg-destructive/90"
+                disabled={isDeleting}
+                onClick={handleDelete}
+                type="button"
+              >
+                {isDeleting ? "Deleting…" : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+
+      {/* Error display for seen status toggle */}
+      {error && !dialogOpen && (
+        <div className="w-full max-w-[550px]">
+          <output
+            aria-live="polite"
+            className="block rounded bg-red-50 p-2 text-red-600 text-xs dark:bg-red-900/20"
+          >
+            {error}
+          </output>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function arePropsEqual(
-	prevProps: TweetWithActionsProps,
-	nextProps: TweetWithActionsProps,
+  prevProps: TweetWithActionsProps,
+  nextProps: TweetWithActionsProps
 ) {
-	if (prevProps.tweetId !== nextProps.tweetId) return false;
-	if (prevProps.seen !== nextProps.seen) return false;
-	if (prevProps.saved !== nextProps.saved) return false;
-	if (prevProps.savedAt !== nextProps.savedAt) return false;
-	if (prevProps.apiSecret !== nextProps.apiSecret) return false;
-	// Functions are stable if using useCallback properly, but we check them anyway
-	if (prevProps.onToggleSeen !== nextProps.onToggleSeen) return false;
-	if (prevProps.onToggleSaved !== nextProps.onToggleSaved) return false;
-	if (prevProps.onDelete !== nextProps.onDelete) return false;
+  if (prevProps.tweetId !== nextProps.tweetId) {
+    return false;
+  }
+  if (prevProps.seen !== nextProps.seen) {
+    return false;
+  }
+  if (prevProps.saved !== nextProps.saved) {
+    return false;
+  }
+  if (prevProps.savedAt !== nextProps.savedAt) {
+    return false;
+  }
+  if (prevProps.apiSecret !== nextProps.apiSecret) {
+    return false;
+  }
+  // Functions are stable if using useCallback properly, but we check them anyway
+  if (prevProps.onToggleSeen !== nextProps.onToggleSeen) {
+    return false;
+  }
+  if (prevProps.onToggleSaved !== nextProps.onToggleSaved) {
+    return false;
+  }
+  if (prevProps.onDelete !== nextProps.onDelete) {
+    return false;
+  }
 
-	if (prevProps.content !== nextProps.content) {
-		if (!prevProps.content || !nextProps.content) return false;
-		if (prevProps.content.id_str !== nextProps.content.id_str) return false;
-	}
+  if (prevProps.content !== nextProps.content) {
+    if (!(prevProps.content && nextProps.content)) {
+      return false;
+    }
+    if (prevProps.content.id_str !== nextProps.content.id_str) {
+      return false;
+    }
+  }
 
-	// Deep compare submittedBy array content
-	if (prevProps.submittedBy === nextProps.submittedBy) return true;
-	if (prevProps.submittedBy.length !== nextProps.submittedBy.length)
-		return false;
+  // Deep compare submittedBy array content
+  if (prevProps.submittedBy === nextProps.submittedBy) {
+    return true;
+  }
+  if (prevProps.submittedBy.length !== nextProps.submittedBy.length) {
+    return false;
+  }
 
-	for (let i = 0; i < prevProps.submittedBy.length; i++) {
-		if (prevProps.submittedBy[i] !== nextProps.submittedBy[i]) return false;
-	}
+  for (let i = 0; i < prevProps.submittedBy.length; i++) {
+    if (prevProps.submittedBy[i] !== nextProps.submittedBy[i]) {
+      return false;
+    }
+  }
 
-	return true;
+  return true;
 }
 
 // Add display name for debugging

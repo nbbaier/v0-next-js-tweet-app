@@ -14,7 +14,10 @@ interface TweetListProps {
 	showDevTweets?: boolean;
 	onToggleDevTweets?: () => void;
 	onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
-	onToggleSaved?: (tweetId: string, currentSavedStatus: boolean) => Promise<void>;
+	onToggleSaved?: (
+		tweetId: string,
+		currentSavedStatus: boolean,
+	) => Promise<void>;
 	completionMessage?: string;
 	onDelete?: (tweetId: string) => Promise<void>;
 }
@@ -125,5 +128,5 @@ export function TweetList({
 }
 
 // Re-export Tweet for backwards compatibility if needed
-import { Tweet, EmbeddedTweet } from "react-tweet";
+import { EmbeddedTweet, Tweet } from "react-tweet";
 export { Tweet };

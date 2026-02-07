@@ -160,7 +160,7 @@ export function FilterableTweetFeed({
 	}, [hideSeenTweets, selectedFilter, updateUrl]);
 
 	// Use real-time tweets hook
-	const { tweets } = useRealtimeTweets(initialTweets, {
+	const { tweets, setTweets } = useRealtimeTweets(initialTweets, {
 		enabled: true,
 		onError: (error) => {
 			console.error("[FilterableTweetFeed] Real-time error:", error);
@@ -190,6 +190,13 @@ export function FilterableTweetFeed({
 	// Handle optimistic tweet seen status update
 	const handleToggleSeen = useCallback(
 		async (tweetId: string, currentSeenStatus: boolean) => {
+			// Optimistic update - update state immediately
+			setTweets((prev) =>
+				prev.map((t) =>
+					t.id === tweetId ? { ...t, seen: !currentSeenStatus } : t,
+				),
+			);
+
 			try {
 				const response = await fetch(`/api/tweets/${tweetId}`, {
 					method: "PATCH",
@@ -203,18 +210,18 @@ export function FilterableTweetFeed({
 					const data = await response.json();
 					throw new Error(data.error || "Failed to update seen status");
 				}
-
-				// Real-time updates will handle the UI update via SSE
-				// But also trigger a refresh as backup
-				setTimeout(() => {
-					router.refresh();
-				}, 1000);
 			} catch (error) {
+				// Revert on any error (network failure, non-ok response, etc.)
+				setTweets((prev) =>
+					prev.map((t) =>
+						t.id === tweetId ? { ...t, seen: currentSeenStatus } : t,
+					),
+				);
 				console.error("Failed to update seen status:", error);
 				throw error;
 			}
 		},
-		[router],
+		[setTweets],
 	);
 
 	// Handle tweet deletion
@@ -232,6 +239,15 @@ export function FilterableTweetFeed({
 				);
 			}
 
+			// Optimistic update - capture tweet for potential rollback, then remove
+			let removedTweet: TweetData | undefined;
+			let removedIndex = -1;
+			setTweets((prev) => {
+				removedIndex = prev.findIndex((t) => t.id === tweetId);
+				if (removedIndex !== -1) removedTweet = prev[removedIndex];
+				return prev.filter((t) => t.id !== tweetId);
+			});
+
 			try {
 				const response = await fetch(`/api/tweets/${tweetId}`, {
 					method: "DELETE",
@@ -241,26 +257,46 @@ export function FilterableTweetFeed({
 				});
 
 				if (!response.ok) {
+					// Revert on failure - re-insert at original position
+					if (removedTweet) {
+						const tweet = removedTweet;
+						setTweets((prev) => {
+							const next = [...prev];
+							next.splice(Math.min(removedIndex, next.length), 0, tweet);
+							return next;
+						});
+					}
 					const data = await response.json();
 					throw new Error(data.error || "Failed to delete tweet");
 				}
-
-				// Real-time updates will handle the UI update via SSE
-				// But also trigger a refresh as backup
-				setTimeout(() => {
-					router.refresh();
-				}, 1000);
 			} catch (error) {
+				// Revert on any error (network failure, etc.)
+				if (removedTweet) {
+					const tweet = removedTweet;
+					setTweets((prev) => {
+						if (prev.some((t) => t.id === tweetId)) return prev;
+						const next = [...prev];
+						next.splice(Math.min(removedIndex, next.length), 0, tweet);
+						return next;
+					});
+				}
 				console.error("Failed to delete tweet:", error);
 				throw error;
 			}
 		},
-		[router],
+		[setTweets],
 	);
 
 	// Handle tweet save/unsave
 	const handleToggleSaved = useCallback(
 		async (tweetId: string, currentSavedStatus: boolean) => {
+			// Optimistic update - toggle saved status immediately
+			setTweets((prev) =>
+				prev.map((t) =>
+					t.id === tweetId ? { ...t, saved: !currentSavedStatus } : t,
+				),
+			);
+
 			try {
 				const response = await fetch(`/api/tweets/${tweetId}`, {
 					method: "PATCH",
@@ -274,16 +310,18 @@ export function FilterableTweetFeed({
 					const data = await response.json();
 					throw new Error(data.error || "Failed to update saved status");
 				}
-
-				setTimeout(() => {
-					router.refresh();
-				}, 1000);
 			} catch (error) {
+				// Revert on any error (network failure, non-ok response, etc.)
+				setTweets((prev) =>
+					prev.map((t) =>
+						t.id === tweetId ? { ...t, saved: currentSavedStatus } : t,
+					),
+				);
 				console.error("Failed to update saved status:", error);
 				throw error;
 			}
 		},
-		[router],
+		[setTweets],
 	);
 
 	// Filter out saved tweets for feed view
@@ -409,34 +447,12 @@ export function FilterableTweetFeed({
 		return result;
 	}, [savedTweets, selectedFilter]);
 
-	// Count all feed tweets (regardless of seen status) for badge display
-	const feedAllCounts = useMemo(() => {
-		return feedTweets.reduce(
-			(acc, tweet) => {
-				const posters =
-					tweet.submittedBy.length > 0 ? tweet.submittedBy : ["Unknown"];
-				for (const poster of posters) {
-					acc[poster] = (acc[poster] || 0) + 1;
-				}
-				acc.total = (acc.total || 0) + 1;
-				return acc;
-			},
-			{ total: 0 } as Record<string, number>,
-		);
-	}, [feedTweets]);
-
-	// Get list of people with tweets in current view
+	// Get list of people with unseen tweets in feed
 	const peopleWithUnseen = useMemo(() => {
 		return Object.entries(unseenCounts)
 			.filter(([key, count]) => key !== "total" && count > 0)
 			.sort(([a], [b]) => a.localeCompare(b));
 	}, [unseenCounts]);
-
-	const peopleWithFeed = useMemo(() => {
-		return Object.entries(feedAllCounts)
-			.filter(([key, count]) => key !== "total" && count > 0)
-			.sort(([a], [b]) => a.localeCompare(b));
-	}, [feedAllCounts]);
 
 	// Get list of people with saved tweets
 	const peopleWithSaved = useMemo(() => {
@@ -450,12 +466,10 @@ export function FilterableTweetFeed({
 		allTweetsSeen && hideSeenTweets && activeTab === "feed";
 
 	// Get current counts and people based on active tab
-	// When hideSeenTweets is off, show counts for all feed tweets (not just unseen)
-	const feedDisplayCounts = hideSeenTweets ? unseenCounts : feedAllCounts;
-	const feedDisplayPeople = hideSeenTweets ? peopleWithUnseen : peopleWithFeed;
-	const currentCounts = activeTab === "feed" ? feedDisplayCounts : savedCounts;
+	// Always show unseen counts for feed badges, regardless of hide-seen toggle
+	const currentCounts = activeTab === "feed" ? unseenCounts : savedCounts;
 	const currentPeople =
-		activeTab === "feed" ? feedDisplayPeople : peopleWithSaved;
+		activeTab === "feed" ? peopleWithUnseen : peopleWithSaved;
 	const showHideSeen = activeTab === "feed";
 
 	return (
@@ -482,7 +496,8 @@ export function FilterableTweetFeed({
 					</Button>
 
 					{/* Filter badges */}
-					{showHideSeen && (currentCounts.total > 0 || feedTweets.length > 0) ? (
+					{showHideSeen &&
+					(currentCounts.total > 0 || feedTweets.length > 0) ? (
 						<>
 							<FilterBadge
 								variant={selectedFilter === null ? "default" : "secondary"}

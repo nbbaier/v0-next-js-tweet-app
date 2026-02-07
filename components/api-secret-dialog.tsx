@@ -84,7 +84,10 @@ export function ApiSecretDialog() {
 				<Button size="sm" variant="outline" aria-label="Manage API secret">
 					<Key className="w-4 h-4" aria-hidden="true" />
 					{hasStoredSecret ? (
-						<CheckCircle2 className="w-3 h-3 text-green-500" aria-hidden="true" />
+						<CheckCircle2
+							className="w-3 h-3 text-green-500"
+							aria-hidden="true"
+						/>
 					) : (
 						<XCircle className="w-3 h-3 text-red-500" aria-hidden="true" />
 					)}

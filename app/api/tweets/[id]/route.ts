@@ -9,7 +9,6 @@ import { isValidTweetId } from "@/lib/tweet-parser";
 import {
 	getTweetMetadata,
 	removeTweetFromStorage,
-	type TweetMetadata,
 	updateTweetSaved,
 	updateTweetSeen,
 } from "@/lib/tweet-storage";

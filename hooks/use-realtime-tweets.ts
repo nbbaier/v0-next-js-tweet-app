@@ -94,9 +94,7 @@ export function useRealtimeTweets(
 			console.log("[Realtime Hook] Received tweet.saved event:", data);
 			setTweets((prev) =>
 				prev.map((t) =>
-					t.id === data.data.tweetId
-						? { ...t, saved: data.data.saved }
-						: t,
+					t.id === data.data.tweetId ? { ...t, saved: data.data.saved } : t,
 				),
 			);
 			console.log(
@@ -149,6 +147,7 @@ export function useRealtimeTweets(
 
 	return {
 		tweets,
+		setTweets,
 		isConnected,
 		reconnect: () => {
 			console.log(

@@ -149,6 +149,7 @@ export function useRealtimeTweets(
 
 	return {
 		tweets,
+		setTweets,
 		isConnected,
 		reconnect: () => {
 			console.log(

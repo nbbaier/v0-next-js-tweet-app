@@ -217,6 +217,12 @@ export function FilterableTweetFeed({
 					throw new Error(data.error || "Failed to update seen status");
 				}
 			} catch (error) {
+				// Revert on any error (network failure, etc.)
+				setTweets((prev) =>
+					prev.map((t) =>
+						t.id === tweetId ? { ...t, seen: currentSeenStatus } : t,
+					),
+				);
 				console.error("Failed to update seen status:", error);
 				throw error;
 			}
@@ -239,9 +245,14 @@ export function FilterableTweetFeed({
 				);
 			}
 
-			// Optimistic update - remove tweet immediately
-			const snapshot = tweets;
-			setTweets((prev) => prev.filter((t) => t.id !== tweetId));
+			// Optimistic update - capture tweet for potential rollback, then remove
+			let removedTweet: TweetData | undefined;
+			let removedIndex = -1;
+			setTweets((prev) => {
+				removedIndex = prev.findIndex((t) => t.id === tweetId);
+				if (removedIndex !== -1) removedTweet = prev[removedIndex];
+				return prev.filter((t) => t.id !== tweetId);
+			});
 
 			try {
 				const response = await fetch(`/api/tweets/${tweetId}`, {
@@ -252,17 +263,34 @@ export function FilterableTweetFeed({
 				});
 
 				if (!response.ok) {
-					// Revert on failure
-					setTweets(snapshot);
+					// Revert on failure - re-insert at original position
+					if (removedTweet) {
+						const tweet = removedTweet;
+						setTweets((prev) => {
+							const next = [...prev];
+							next.splice(Math.min(removedIndex, next.length), 0, tweet);
+							return next;
+						});
+					}
 					const data = await response.json();
 					throw new Error(data.error || "Failed to delete tweet");
 				}
 			} catch (error) {
+				// Revert on any error (network failure, etc.)
+				if (removedTweet) {
+					const tweet = removedTweet;
+					setTweets((prev) => {
+						if (prev.some((t) => t.id === tweetId)) return prev;
+						const next = [...prev];
+						next.splice(Math.min(removedIndex, next.length), 0, tweet);
+						return next;
+					});
+				}
 				console.error("Failed to delete tweet:", error);
 				throw error;
 			}
 		},
-		[tweets, setTweets],
+		[setTweets],
 	);
 
 	// Handle tweet save/unsave
@@ -295,6 +323,12 @@ export function FilterableTweetFeed({
 					throw new Error(data.error || "Failed to update saved status");
 				}
 			} catch (error) {
+				// Revert on any error (network failure, etc.)
+				setTweets((prev) =>
+					prev.map((t) =>
+						t.id === tweetId ? { ...t, saved: currentSavedStatus } : t,
+					),
+				);
 				console.error("Failed to update saved status:", error);
 				throw error;
 			}
@@ -474,7 +508,8 @@ export function FilterableTweetFeed({
 					</Button>
 
 					{/* Filter badges */}
-					{showHideSeen && (currentCounts.total > 0 || feedTweets.length > 0) ? (
+					{showHideSeen &&
+					(currentCounts.total > 0 || feedTweets.length > 0) ? (
 						<>
 							<FilterBadge
 								variant={selectedFilter === null ? "default" : "secondary"}

@@ -55,7 +55,11 @@ export async function cleanupOldTweets(): Promise<CleanupResult> {
 				}
 
 				// Check if tweet is older than retention period AND has been seen AND is not saved
-				if (metadata.submittedAt < cutoffTime && metadata.seen === true && metadata.saved !== true) {
+				if (
+					metadata.submittedAt < cutoffTime &&
+					metadata.seen === true &&
+					metadata.saved !== true
+				) {
 					const ageInDays =
 						(now - metadata.submittedAt) / (24 * 60 * 60 * 1000);
 					console.log(

@@ -13,7 +13,7 @@ const TWEET_URL_PATTERNS = [
   /^(\d+)$/,
 ];
 
-export interface ParsedTweet {
+interface ParsedTweet {
   id: string;
   url: string;
 }

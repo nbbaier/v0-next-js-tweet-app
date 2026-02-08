@@ -93,17 +93,3 @@ export async function publishTweetSaved(
     throw error;
   }
 }
-
-/**
- * Helper function to publish a tweet reorder event
- */
-export async function publishTweetReorder(tweetIds: string[]): Promise<void> {
-  try {
-    const channel = getChannel();
-    await channel.emit("tweet.reorder", { tweetIds });
-    console.log("[Realtime] Published tweet:reorder");
-  } catch (error) {
-    console.error("[Realtime ERROR] Failed to publish tweet:reorder:", error);
-    throw error;
-  }
-}

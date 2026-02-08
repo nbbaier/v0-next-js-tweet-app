@@ -13,7 +13,7 @@
 ## Tech Stack
 
 - **Framework**: Next.js 16.0.0 (App Router), React 19.2.0, TypeScript 5.x
-- **Styling**: Tailwind CSS 4.x, Radix UI, next-themes (dark mode)
+- **Styling**: Tailwind CSS 4.x, Base UI, next-themes (dark mode)
 - **Database**: Upstash Redis (tweet storage + caching)
 - **Realtime**: Upstash Realtime with SSE
 - **Code Quality**: Biome (Ultracite preset)
@@ -79,7 +79,7 @@ Channel: `"tweets"` (global feed)
 **Add a new component:**
 1. Create in `/components`
 2. Use PascalCase filename
-3. Use Radix UI primitives for accessibility
+3. Use Base UI primitives for accessibility
 
 **Add an API endpoint:**
 1. Create route in `/app/api/...`

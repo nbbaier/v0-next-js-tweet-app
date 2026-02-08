@@ -227,10 +227,12 @@ export function TweetSubmitForm({
             <Select
               disabled={isSubmitting}
               name="submitted-by"
-              onValueChange={(value: string) => {
-                setSubmittedBy(value);
-                if (typeof window !== "undefined") {
-                  localStorage.setItem(NAME_STORAGE_KEY, value);
+              onValueChange={(value: string | null) => {
+                if (value) {
+                  setSubmittedBy(value);
+                  if (typeof window !== "undefined") {
+                    localStorage.setItem(NAME_STORAGE_KEY, value);
+                  }
                 }
               }}
               required
@@ -287,8 +289,8 @@ export function TweetSubmitForm({
                 <Checkbox
                   checked={rememberSecret}
                   id="remember-secret"
-                  onCheckedChange={(checked: boolean | "indeterminate") =>
-                    setRememberSecret(checked === true)
+                  onCheckedChange={(checked: boolean) =>
+                    setRememberSecret(checked)
                   }
                 />
                 <Label

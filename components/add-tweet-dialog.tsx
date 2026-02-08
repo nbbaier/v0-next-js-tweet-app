@@ -17,11 +17,9 @@ export function AddTweetDialog() {
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger asChild>
-        <Button size="sm" variant="default">
-          <Plus aria-hidden="true" className="h-4 w-4" />
-          Add Tweet
-        </Button>
+      <DialogTrigger render={<Button size="sm" variant="default" />}>
+        <Plus aria-hidden="true" className="h-4 w-4" />
+        Add Tweet
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>

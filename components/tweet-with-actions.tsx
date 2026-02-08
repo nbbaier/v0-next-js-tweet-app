@@ -287,16 +287,18 @@ function TweetWithActionsComponent({
           }}
           open={dialogOpen}
         >
-          <AlertDialogTrigger asChild>
-            <Button
-              aria-label="Delete tweet"
-              disabled={isDeleting}
-              onClick={() => setDialogOpen(true)}
-              size="icon-sm"
-              variant="outline"
-            >
-              <Trash2 aria-hidden="true" className="h-4 w-4 text-destructive" />
-            </Button>
+          <AlertDialogTrigger
+            render={
+              <Button
+                aria-label="Delete tweet"
+                disabled={isDeleting}
+                onClick={() => setDialogOpen(true)}
+                size="icon-sm"
+                variant="outline"
+              />
+            }
+          >
+            <Trash2 aria-hidden="true" className="h-4 w-4 text-destructive" />
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>

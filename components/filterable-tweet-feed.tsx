@@ -44,15 +44,18 @@ function FilterBadge({
   onClick: () => void;
 }) {
   return (
-    <Badge asChild variant={variant}>
-      <Button
-        className="rounded-lg hover:text-primary-foreground"
-        onClick={onClick}
-        size="sm"
-      >
-        <span className="font-medium text-xs">{label}</span>
-        {!withoutCount && <span className="font-bold text-xs">{count}</span>}
-      </Button>
+    <Badge
+      render={
+        <Button
+          className="rounded-lg hover:text-primary-foreground"
+          onClick={onClick}
+          size="sm"
+        />
+      }
+      variant={variant}
+    >
+      <span className="font-medium text-xs">{label}</span>
+      {!withoutCount && <span className="font-bold text-xs">{count}</span>}
     </Badge>
   );
 }

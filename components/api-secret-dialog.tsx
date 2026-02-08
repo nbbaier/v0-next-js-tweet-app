@@ -80,18 +80,17 @@ export function ApiSecretDialog() {
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger asChild>
-        <Button aria-label="Manage API secret" size="sm" variant="outline">
-          <Key aria-hidden="true" className="h-4 w-4" />
-          {hasStoredSecret ? (
-            <CheckCircle2
-              aria-hidden="true"
-              className="h-3 w-3 text-green-500"
-            />
-          ) : (
-            <XCircle aria-hidden="true" className="h-3 w-3 text-red-500" />
-          )}
-        </Button>
+      <DialogTrigger
+        render={
+          <Button aria-label="Manage API secret" size="sm" variant="outline" />
+        }
+      >
+        <Key aria-hidden="true" className="h-4 w-4" />
+        {hasStoredSecret ? (
+          <CheckCircle2 aria-hidden="true" className="h-3 w-3 text-green-500" />
+        ) : (
+          <XCircle aria-hidden="true" className="h-3 w-3 text-red-500" />
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
@@ -123,9 +122,7 @@ export function ApiSecretDialog() {
             <Checkbox
               checked={rememberSecret}
               id="remember-secret"
-              onCheckedChange={(checked: boolean | "indeterminate") =>
-                setRememberSecret(checked === true)
-              }
+              onCheckedChange={(checked: boolean) => setRememberSecret(checked)}
             />
             <Label
               className="cursor-pointer font-normal text-muted-foreground text-sm"

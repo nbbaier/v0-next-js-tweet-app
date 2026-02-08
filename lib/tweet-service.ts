@@ -4,8 +4,8 @@
  */
 
 import { getTweet, type Tweet } from "react-tweet/api";
-import { getCachedTweet, getCachedTweets, setCachedTweet } from "./tweet-cache";
-import { getTweetMetadata, getTweetMetadatas } from "./tweet-storage";
+import { getCachedTweets, setCachedTweet } from "./tweet-cache";
+import { getTweetMetadatas } from "./tweet-storage";
 
 export interface TweetData {
   id: string;
@@ -16,74 +16,70 @@ export interface TweetData {
   content?: Tweet; // The actual tweet content from react-tweet
 }
 
-/**
- * Fetch tweet data with caching
- * Checks cache first, then fetches from API if needed
- */
-export async function fetchTweetWithCache(tweetId: string): Promise<TweetData> {
-  // Check cache first
-  const cached = await getCachedTweet(tweetId);
-  if (cached) {
-    // Also fetch fresh metadata to ensure seen status is up to date
-    const metadata = await getTweetMetadata(tweetId);
+// export async function fetchTweetWithCache(tweetId: string): Promise<TweetData> {
+//   // Check cache first
+//   const cached = await getCachedTweet(tweetId);
+//   if (cached) {
+//     // Also fetch fresh metadata to ensure seen status is up to date
+//     const metadata = await getTweetMetadata(tweetId);
 
-    // If cached data has content, use it
-    // Otherwise we might want to fetch content
-    let content = cached.content;
-    if (!content) {
-      try {
-        const tweet = await getTweet(tweetId);
-        if (tweet) {
-          content = tweet;
-          // Update cache asynchronously
-          setCachedTweet(tweetId, { ...cached, content: tweet });
-        }
-      } catch (e) {
-        console.error(`Failed to fetch tweet content for ${tweetId}`, e);
-      }
-    }
+//     // If cached data has content, use it
+//     // Otherwise we might want to fetch content
+//     let content = cached.content;
+//     if (!content) {
+//       try {
+//         const tweet = await getTweet(tweetId);
+//         if (tweet) {
+//           content = tweet;
+//           // Update cache asynchronously
+//           setCachedTweet(tweetId, { ...cached, content: tweet });
+//         }
+//       } catch (e) {
+//         console.error(`Failed to fetch tweet content for ${tweetId}`, e);
+//       }
+//     }
 
-    if (metadata) {
-      return {
-        ...cached,
-        submittedBy: metadata.posters.map((p) => p.name),
-        savedAt: metadata.submittedAt,
-        seen: metadata.seen,
-        saved: metadata.saved,
-        content,
-      };
-    }
-    return { ...cached, content };
-  }
+//     if (metadata) {
+//       return {
+//         ...cached,
+//         submittedBy: metadata.posters.map((p) => p.name),
+//         savedAt: metadata.submittedAt,
+//         seen: metadata.seen,
+//         saved: metadata.saved,
+//         content,
+//       };
+//     }
+//     return { ...cached, content };
+//   }
 
-  // Fetch metadata from storage
-  const metadata = await getTweetMetadata(tweetId);
+//   // Fetch metadata from storage
+//   const metadata = await getTweetMetadata(tweetId);
 
-  // Fetch tweet content
-  let content: Tweet | undefined;
-  try {
-    const tweet = await getTweet(tweetId);
-    if (tweet) {
-      content = tweet;
-    }
-  } catch (e) {
-    console.error(`Failed to fetch tweet content for ${tweetId}`, e);
-  }
+//   // Fetch tweet content
+//   let content: Tweet | undefined;
+//   try {
+//     const tweet = await getTweet(tweetId);
+//     if (tweet) {
+//       content = tweet;
+//     }
+//   } catch (e) {
+//     console.error(`Failed to fetch tweet content for ${tweetId}`, e);
+//   }
 
-  const tweetData: TweetData = {
-    id: tweetId,
-    submittedBy: metadata?.posters.map((p) => p.name) || [],
-    savedAt: metadata?.submittedAt,
-    seen: metadata?.seen,
-    saved: metadata?.saved,
-    content,
-  };
+//   const tweetData: TweetData = {
+//     id: tweetId,
+//     submittedBy: metadata?.posters.map((p) => p.name) || [],
+//     savedAt: metadata?.submittedAt,
+//     seen: metadata?.seen,
+//     saved: metadata?.saved,
+//     content,
+//   };
 
-  // Store in cache
-  await setCachedTweet(tweetId, tweetData);
+//   // Store in cache
+//   await setCachedTweet(tweetId, tweetData);
 
-  return tweetData;
-}
+//   return tweetData;
+// }
 
 /**
  * Fetch multiple tweets with caching

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 const Select = SelectPrimitive.Root;
 
-function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
+function _SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (
     <SelectPrimitive.Group
       className={cn("scroll-my-1 p-1", className)}
@@ -97,7 +97,7 @@ function SelectContent({
   );
 }
 
-function SelectLabel({
+function _SelectLabel({
   className,
   ...props
 }: SelectPrimitive.GroupLabel.Props) {
@@ -138,7 +138,7 @@ function SelectItem({
   );
 }
 
-function SelectSeparator({
+function _SelectSeparator({
   className,
   ...props
 }: SelectPrimitive.Separator.Props) {
@@ -190,12 +190,12 @@ function SelectScrollDownButton({
 export {
   Select,
   SelectContent,
-  SelectGroup,
+  //   SelectGroup,
   SelectItem,
-  SelectLabel,
-  SelectScrollDownButton,
-  SelectScrollUpButton,
-  SelectSeparator,
+  //   SelectLabel,
+  //   SelectScrollDownButton,
+  //   SelectScrollUpButton,
+  //   SelectSeparator,
   SelectTrigger,
   SelectValue,
 };

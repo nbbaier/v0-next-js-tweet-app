@@ -13,7 +13,7 @@ import {
 // Retention period in milliseconds (3 days)
 const RETENTION_PERIOD_MS = 3 * 24 * 60 * 60 * 1000;
 
-export interface CleanupResult {
+interface CleanupResult {
   deletedCount: number;
   deletedTweetIds: string[];
   errors: Array<{ tweetId: string; error: string }>;

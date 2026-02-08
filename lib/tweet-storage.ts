@@ -16,12 +16,12 @@ const TWEETS_LIST_KEY = "tweets:list";
 const TWEETS_SAVED_KEY = "tweets:saved";
 const TWEET_METADATA_PREFIX = "tweet:meta:";
 
-export interface Poster {
+interface Poster {
   name: string;
   submittedAt: number; // Unix timestamp when this poster submitted the tweet
 }
 
-export interface TweetMetadata {
+interface TweetMetadata {
   id: string;
   submittedAt: number; // Unix timestamp of first submission
   posters: Poster[]; // Array of all users who submitted this tweet
@@ -372,32 +372,32 @@ export async function removeTweetFromStorage(
  * @param tweetId - The tweet ID to check
  * @returns True if exists, false otherwise
  */
-export async function tweetExistsInStorage(tweetId: string): Promise<boolean> {
-  try {
-    const score = await redis.zscore(TWEETS_LIST_KEY, tweetId);
-    return score !== null;
-  } catch (error) {
-    console.error(
-      `[Storage ERROR] Failed to check existence of ${tweetId}:`,
-      error
-    );
-    return false;
-  }
-}
+// export async function tweetExistsInStorage(tweetId: string): Promise<boolean> {
+//   try {
+//     const score = await redis.zscore(TWEETS_LIST_KEY, tweetId);
+//     return score !== null;
+//   } catch (error) {
+//     console.error(
+//       `[Storage ERROR] Failed to check existence of ${tweetId}:`,
+//       error
+//     );
+//     return false;
+//   }
+// }
 
 /**
  * Gets the total count of stored tweets
  * @returns Number of tweets in storage
  */
-export async function getTweetCount(): Promise<number> {
-  try {
-    const count = await redis.zcard(TWEETS_LIST_KEY);
-    return count;
-  } catch (error) {
-    console.error("[Storage ERROR] Failed to get tweet count:", error);
-    return 0;
-  }
-}
+// export async function getTweetCount(): Promise<number> {
+//   try {
+//     const count = await redis.zcard(TWEETS_LIST_KEY);
+//     return count;
+//   } catch (error) {
+//     console.error("[Storage ERROR] Failed to get tweet count:", error);
+//     return 0;
+//   }
+// }
 
 /**
  * Updates the saved status for a tweet

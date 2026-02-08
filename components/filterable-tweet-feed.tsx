@@ -44,15 +44,19 @@ function FilterBadge({
   onClick: () => void;
 }) {
   return (
-    <Badge asChild variant={variant}>
-      <Button
-        className="rounded-lg hover:text-primary-foreground"
-        onClick={onClick}
-        size="sm"
-      >
-        <span className="font-medium text-xs">{label}</span>
-        {!withoutCount && <span className="font-bold text-xs">{count}</span>}
-      </Button>
+    <Badge
+      className="h-7"
+      render={
+        <Button
+          className="rounded-lg hover:text-primary-foreground"
+          onClick={onClick}
+          size="sm"
+        />
+      }
+      variant={variant}
+    >
+      <span className="font-medium text-xs">{label}</span>
+      {!withoutCount && <span className="font-bold text-xs">{count}</span>}
     </Badge>
   );
 }
@@ -550,7 +554,7 @@ export function FilterableTweetFeed({
 
   return (
     <div className="flex w-full flex-col">
-      <div className="sticky top-0 z-10 -mx-4 bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="sticky top-0 z-10 -mx-4 bg-background/95 px-4 py-3 backdrop-blur supports-backdrop-filter:bg-background/80">
         {/* Tabs and filter badges in single row */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Tab switcher */}

@@ -23,24 +23,24 @@ const redis = new Redis({
 
 const CACHE_TTL = 3600; // 1 hour in seconds
 
-export async function getCachedTweet(
-  tweetId: string
-): Promise<TweetData | null> {
-  try {
-    const cached = await redis.get<TweetData>(`tweet:${tweetId}`);
+// export async function getCachedTweet(
+//   tweetId: string
+// ): Promise<TweetData | null> {
+//   try {
+//     const cached = await redis.get<TweetData>(`tweet:${tweetId}`);
 
-    if (cached) {
-      // console.log(`[Cache HIT] Tweet ${tweetId}`);
-      return cached;
-    }
+//     if (cached) {
+//       // console.log(`[Cache HIT] Tweet ${tweetId}`);
+//       return cached;
+//     }
 
-    console.log(`[Cache MISS] Tweet ${tweetId}`);
-    return null;
-  } catch (error) {
-    console.error(`[Cache ERROR] Failed to get tweet ${tweetId}:`, error);
-    return null;
-  }
-}
+//     console.log(`[Cache MISS] Tweet ${tweetId}`);
+//     return null;
+//   } catch (error) {
+//     console.error(`[Cache ERROR] Failed to get tweet ${tweetId}:`, error);
+//     return null;
+//   }
+// }
 
 export async function getCachedTweets(
   tweetIds: string[]

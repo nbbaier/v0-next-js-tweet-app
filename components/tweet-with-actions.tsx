@@ -292,12 +292,6 @@ function TweetWithActionsComponent({
               <Button
                 aria-label="Delete tweet"
                 disabled={isDeleting}
-              <Button
-                aria-label="Delete tweet"
-                disabled={isDeleting}
-                size="icon-sm"
-                variant="outline"
-              />
                 size="icon-sm"
                 variant="outline"
               />

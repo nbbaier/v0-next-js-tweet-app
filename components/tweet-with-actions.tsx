@@ -279,7 +279,7 @@ function TweetWithActionsComponent({
         )}
 
         <AlertDialog
-          onOpenChange={(open) => {
+          onOpenChange={(open: boolean) => {
             setDialogOpen(open);
             if (!open) {
               setError(null);

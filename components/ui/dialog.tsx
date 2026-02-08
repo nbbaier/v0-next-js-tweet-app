@@ -1,16 +1,11 @@
 "use client";
 
-import {
-  Close,
-  Content,
-  Description,
-  Overlay,
-  Portal,
-  Root,
-  Title,
-  Trigger,
-} from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
+import { Dialog as DialogPrimitive } from "radix-ui";
+
+const { Close, Content, Description, Overlay, Portal, Root, Title, Trigger } =
+  DialogPrimitive;
+
 import type { ComponentProps } from "react";
 import { cn } from "@/lib/utils";
 

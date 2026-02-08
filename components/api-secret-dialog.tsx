@@ -123,7 +123,9 @@ export function ApiSecretDialog() {
             <Checkbox
               checked={rememberSecret}
               id="remember-secret"
-              onCheckedChange={(checked) => setRememberSecret(checked === true)}
+              onCheckedChange={(checked: boolean | "indeterminate") =>
+                setRememberSecret(checked === true)
+              }
             />
             <Label
               className="cursor-pointer font-normal text-muted-foreground text-sm"

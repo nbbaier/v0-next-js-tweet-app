@@ -1,5 +1,8 @@
-import { Indicator, Root } from "@radix-ui/react-checkbox";
 import { Check } from "lucide-react";
+import { Checkbox as CheckboxPrimitive } from "radix-ui";
+
+const { Indicator, Root } = CheckboxPrimitive;
+
 import {
   type ComponentPropsWithoutRef,
   type ElementRef,

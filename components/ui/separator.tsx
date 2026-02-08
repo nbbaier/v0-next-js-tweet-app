@@ -1,6 +1,9 @@
 "use client";
 
-import { Root } from "@radix-ui/react-separator";
+import { Separator as SeparatorPrimitive } from "radix-ui";
+
+const { Root } = SeparatorPrimitive;
+
 import type { ComponentProps } from "react";
 
 import { cn } from "@/lib/utils";

@@ -482,7 +482,8 @@ export function FilterableTweetFeed({
 					</Button>
 
 					{/* Filter badges */}
-					{showHideSeen && (currentCounts.total > 0 || feedTweets.length > 0) ? (
+					{showHideSeen &&
+					(currentCounts.total > 0 || feedTweets.length > 0) ? (
 						<>
 							<FilterBadge
 								variant={selectedFilter === null ? "default" : "secondary"}
@@ -555,6 +556,8 @@ export function FilterableTweetFeed({
 							showCompletionMessage ? completionMessage : undefined
 						}
 						onDelete={handleDelete}
+						isEmpty={feedTweets.length === 0}
+						noResultsMessage="No tweets match your filters."
 					/>
 				) : (
 					<TweetList
@@ -562,7 +565,8 @@ export function FilterableTweetFeed({
 						showActions={showActions}
 						onToggleSaved={handleToggleSaved}
 						onDelete={handleDelete}
-						isEmpty={filteredSavedTweets.length === 0}
+						isEmpty={savedTweets.length === 0}
+						noResultsMessage="No saved tweets match your filters."
 					/>
 				)}
 			</div>

@@ -2,22 +2,8 @@
  * Tweet caching service - Upstash KV implementation
  */
 
-import { Redis } from "@upstash/redis";
+import { redis } from "./redis";
 import type { TweetData } from "./tweet-service";
-
-if (
-	!process.env.UPSTASH_KV_KV_REST_API_URL ||
-	!process.env.UPSTASH_KV_KV_REST_API_TOKEN
-) {
-	throw new Error(
-		"UPSTASH_KV_KV_REST_API_URL and UPSTASH_KV_KV_REST_API_TOKEN must be set",
-	);
-}
-
-const redis = new Redis({
-	url: process.env.UPSTASH_KV_KV_REST_API_URL,
-	token: process.env.UPSTASH_KV_KV_REST_API_TOKEN,
-});
 
 const CACHE_TTL = 3600; // 1 hour in seconds
 

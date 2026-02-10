@@ -14,9 +14,13 @@ interface TweetListProps {
 	showDevTweets?: boolean;
 	onToggleDevTweets?: () => void;
 	onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
-	onToggleSaved?: (tweetId: string, currentSavedStatus: boolean) => Promise<void>;
+	onToggleSaved?: (
+		tweetId: string,
+		currentSavedStatus: boolean,
+	) => Promise<void>;
 	completionMessage?: string;
 	onDelete?: (tweetId: string) => Promise<void>;
+	noResultsMessage?: string;
 }
 
 export function TweetList({
@@ -30,6 +34,7 @@ export function TweetList({
 	onToggleSaved,
 	completionMessage,
 	onDelete,
+	noResultsMessage,
 }: TweetListProps) {
 	const shouldReduceMotion = useReducedMotion();
 
@@ -65,6 +70,14 @@ export function TweetList({
 						{showDevTweets ? "Hide" : "Show"} Development Tweets
 					</Button>
 				)}
+			</div>
+		);
+	}
+
+	if (tweets.length === 0 && noResultsMessage) {
+		return (
+			<div className="flex flex-col gap-4 justify-center items-center py-12">
+				<p className="text-lg text-muted-foreground">{noResultsMessage}</p>
 			</div>
 		);
 	}
@@ -125,5 +138,5 @@ export function TweetList({
 }
 
 // Re-export Tweet for backwards compatibility if needed
-import { Tweet, EmbeddedTweet } from "react-tweet";
+import { EmbeddedTweet, Tweet } from "react-tweet";
 export { Tweet };

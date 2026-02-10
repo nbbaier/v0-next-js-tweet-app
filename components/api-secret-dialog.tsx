@@ -84,7 +84,10 @@ export function ApiSecretDialog() {
 				<Button size="sm" variant="outline" aria-label="Manage API secret">
 					<Key className="w-4 h-4" aria-hidden="true" />
 					{hasStoredSecret ? (
-						<CheckCircle2 className="w-3 h-3 text-green-500" aria-hidden="true" />
+						<CheckCircle2
+							className="w-3 h-3 text-green-500"
+							aria-hidden="true"
+						/>
 					) : (
 						<XCircle className="w-3 h-3 text-red-500" aria-hidden="true" />
 					)}
@@ -131,17 +134,16 @@ export function ApiSecretDialog() {
 					</div>
 
 					{message && (
-						<div
-							className={`p-4 rounded-md ${
+						<output
+							className={`block p-4 rounded-md ${
 								message.type === "success"
 									? "bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-400"
 									: "bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-400"
 							}`}
-							role="status"
 							aria-live="polite"
 						>
 							{message.text}
-						</div>
+						</output>
 					)}
 
 					<div className="flex gap-2">

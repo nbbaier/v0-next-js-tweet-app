@@ -314,21 +314,12 @@ export function FilterableTweetFeed({
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const [activeTab, setActiveTab] = useState<"feed" | "saved">(() =>
-    searchParams.get("tab") === "saved" ? "saved" : "feed"
-  );
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(() =>
-    searchParams.get("filter")
-  );
-  const [hideSeenTweets, setHideSeenTweets] = useState(() => {
-    return searchParams.get("hideSeen") === "true";
-  });
-
   const [completionMessage, setCompletionMessage] = useState<string>("");
   const prevUnseenCountRef = useRef<number | null>(null);
-  const filterParam = searchParams.get("filter");
-  const hideSeenParam = searchParams.get("hideSeen") === "true";
-  const tabParam = searchParams.get("tab") === "saved" ? "saved" : "feed";
+  const activeTab: "feed" | "saved" =
+    searchParams.get("tab") === "saved" ? "saved" : "feed";
+  const selectedFilter = searchParams.get("filter");
+  const hideSeenTweets = searchParams.get("hideSeen") === "true";
 
   const updateUrl = useCallback(
     (
@@ -365,30 +356,8 @@ export function FilterableTweetFeed({
     [pathname, router, searchParams, activeTab]
   );
 
-  useEffect(() => {
-    if (filterParam !== selectedFilter) {
-      setSelectedFilter(filterParam);
-    }
-
-    if (hideSeenParam !== hideSeenTweets) {
-      setHideSeenTweets(hideSeenParam);
-    }
-
-    if (tabParam !== activeTab) {
-      setActiveTab(tabParam);
-    }
-  }, [
-    filterParam,
-    hideSeenParam,
-    tabParam,
-    selectedFilter,
-    hideSeenTweets,
-    activeTab,
-  ]);
-
   const handleSelectFilter = useCallback(
     (filter: string | null) => {
-      setSelectedFilter(filter);
       updateUrl(filter, hideSeenTweets);
     },
     [hideSeenTweets, updateUrl]
@@ -396,17 +365,13 @@ export function FilterableTweetFeed({
 
   const handleTabChange = useCallback(
     (tab: "feed" | "saved") => {
-      setActiveTab(tab);
-      setSelectedFilter(null);
       updateUrl(null, hideSeenTweets, tab);
     },
     [hideSeenTweets, updateUrl]
   );
 
   const handleToggleHideSeen = useCallback(() => {
-    const nextHideSeen = !hideSeenTweets;
-    setHideSeenTweets(nextHideSeen);
-    updateUrl(selectedFilter, nextHideSeen);
+    updateUrl(selectedFilter, !hideSeenTweets);
   }, [hideSeenTweets, selectedFilter, updateUrl]);
 
   // Use real-time tweets hook
@@ -473,7 +438,6 @@ export function FilterableTweetFeed({
       !hideSeenTweets;
 
     if (shouldAutoHide) {
-      setHideSeenTweets(true);
       updateUrl(selectedFilter, true);
     }
 

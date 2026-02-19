@@ -69,13 +69,13 @@ function TweetWithActionsComponent({
   onDelete,
 }: TweetWithActionsProps) {
   const [error, setError] = useState<string | null>(null);
-  const [isSeen, setIsSeen] = useState(initialSeen);
-  const [isSaved, setIsSaved] = useState(initialSaved);
   const [isTogglingSavedStatus, setIsTogglingSavedStatus] = useState(false);
   const [isTogglingSeenStatus, setIsTogglingSeenStatus] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [storedSecret, setStoredSecret] = useState<string>("");
+  const isSeen = initialSeen;
+  const isSaved = initialSaved;
   const router = useRouter();
 
   useEffect(() => {
@@ -87,16 +87,6 @@ function TweetWithActionsComponent({
     }
   }, []);
 
-  // Sync seen state with prop changes (for optimistic updates)
-  useEffect(() => {
-    setIsSeen(initialSeen);
-  }, [initialSeen]);
-
-  // Sync saved state with prop changes
-  useEffect(() => {
-    setIsSaved(initialSaved);
-  }, [initialSaved]);
-
   const handleToggleSaved = async () => {
     setIsTogglingSavedStatus(true);
     setError(null);
@@ -104,7 +94,6 @@ function TweetWithActionsComponent({
     try {
       if (onToggleSaved) {
         await onToggleSaved(tweetId, isSaved);
-        setIsSaved(!isSaved);
       } else {
         const response = await fetch(`/api/tweets/${tweetId}`, {
           method: "PATCH",
@@ -117,7 +106,6 @@ function TweetWithActionsComponent({
           throw new Error(data.error || "Failed to update saved status");
         }
 
-        setIsSaved(!isSaved);
         router.refresh();
       }
     } catch (error) {
@@ -137,7 +125,6 @@ function TweetWithActionsComponent({
       if (onToggleSeen) {
         // Use the callback for optimistic updates with animation
         await onToggleSeen(tweetId, isSeen);
-        setIsSeen(!isSeen);
       } else {
         // Fallback to original behavior
         const response = await fetch(`/api/tweets/${tweetId}`, {
@@ -154,7 +141,6 @@ function TweetWithActionsComponent({
           throw new Error(data.error || "Failed to update seen status");
         }
 
-        setIsSeen(!isSeen);
         router.refresh();
       }
     } catch (error) {

@@ -236,7 +236,7 @@ export function TweetSubmitForm({
                 }
               }}
               required
-              value={submittedBy || undefined}
+              value={submittedBy || null}
             >
               <SelectTrigger id="submitted-by">
                 <SelectValue placeholder="Select a name…" />

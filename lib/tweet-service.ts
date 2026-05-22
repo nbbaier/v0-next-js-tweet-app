@@ -3,17 +3,57 @@
  * Handles fetching and caching logic with clean separation
  */
 
-import { getTweet, type Tweet } from "react-tweet/api";
+import { fetchTweet, type QuotedTweet, type Tweet } from "react-tweet/api";
 import { getCachedTweets, setCachedTweet } from "./tweet-cache";
-import { getTweetMetadatas } from "./tweet-storage";
+import { getTweetMetadatas, removeTweetFromStorage } from "./tweet-storage";
 
 export interface TweetData {
+  content?: Tweet; // The actual tweet content from react-tweet
   id: string;
-  submittedBy: string[]; // Array of poster names
+  saved?: boolean; // Whether this tweet is in the saved/pinned list
   savedAt?: number; // Unix timestamp of when tweet was first saved
   seen?: boolean;
-  saved?: boolean; // Whether this tweet is in the saved/pinned list
-  content?: Tweet; // The actual tweet content from react-tweet
+  submittedBy: string[]; // Array of poster names
+}
+
+function normalizeTweetBase<T extends QuotedTweet | Tweet>(tweet: T): T {
+  const entities = tweet.entities ?? {};
+
+  return {
+    ...tweet,
+    display_text_range: tweet.display_text_range ?? [0, tweet.text.length],
+    entities: {
+      ...entities,
+      hashtags: entities.hashtags ?? [],
+      media: entities.media,
+      symbols: entities.symbols ?? [],
+      urls: entities.urls ?? [],
+      user_mentions: entities.user_mentions ?? [],
+    },
+  };
+}
+
+function normalizeTweetContent(tweet: Tweet): Tweet {
+  return {
+    ...normalizeTweetBase(tweet),
+    quoted_tweet: tweet.quoted_tweet
+      ? normalizeTweetBase(tweet.quoted_tweet)
+      : undefined,
+  };
+}
+
+async function fetchTweetContent(tweetId: string): Promise<Tweet | undefined> {
+  const result = await fetchTweet(tweetId);
+
+  if (result.tombstone || result.notFound) {
+    console.error(
+      `[TweetService] Tweet ${tweetId} is unavailable; removing it from storage.`
+    );
+    await removeTweetFromStorage(tweetId);
+    return;
+  }
+
+  return result.data ? normalizeTweetContent(result.data) : undefined;
 }
 
 /**
@@ -43,16 +83,18 @@ export async function fetchTweetsWithCache(
 
     if (cached?.content) {
       // Full cache hit (metadata + content)
+      const content = normalizeTweetContent(cached.content);
       if (metadata) {
         results.push({
           ...cached,
+          content,
           submittedBy: metadata.posters.map((p) => p.name),
           savedAt: metadata.submittedAt,
           seen: metadata.seen,
           saved: metadata.saved,
         });
       } else {
-        results.push(cached);
+        results.push({ ...cached, content });
       }
     } else {
       // Missing content or full miss
@@ -70,9 +112,8 @@ export async function fetchTweetsWithCache(
 
       // Schedule fetch
       contentFetches.push(
-        getTweet(id).catch((e) => {
+        fetchTweetContent(id).catch((e): undefined => {
           console.error(`Failed to fetch tweet ${id}`, e);
-          return undefined;
         })
       );
       contentFetchIndices.push(i);
@@ -92,12 +133,6 @@ export async function fetchTweetsWithCache(
         tweetData.content = content;
         // Update cache with new content
         updates.push(setCachedTweet(tweetData.id, tweetData));
-      } else if (!tweetData.content && cachedTweets[originalIndex]) {
-        // If we failed to fetch content but had cached data (without content), keep it?
-        // Actually we already set content from cached if available.
-        // If we have no content at all, we still return the item, client might fail or fetch itself?
-        // But we are removing client fetch.
-        // If server fetch fails, content is undefined.
       }
     }
   }
@@ -107,5 +142,5 @@ export async function fetchTweetsWithCache(
     await Promise.all(updates);
   }
 
-  return results;
+  return results.filter((tweet) => tweet.content);
 }

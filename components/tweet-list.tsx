@@ -69,6 +69,7 @@ export function TweetList({
   const hasMore = visibleCount < tweets.length;
 
   // Grow the visible window as the sentinel scrolls into view.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: resetKey intentionally refreshes the observer after pagination context changes
   useEffect(() => {
     if (!hasMore) {
       return;
@@ -91,7 +92,7 @@ export function TweetList({
     observer.observe(sentinel);
 
     return () => observer.disconnect();
-  }, [hasMore, tweets.length]);
+  }, [hasMore, resetKey, tweets.length]);
 
   // Show completion message when all tweets are seen and filtered out
   if (completionMessage) {

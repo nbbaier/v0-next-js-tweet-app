@@ -566,6 +566,7 @@ export function FilterableTweetFeed({
             onDelete={handleDelete}
             onToggleSaved={handleToggleSaved}
             onToggleSeen={handleToggleSeen}
+            resetKey={`feed:${selectedFilter ?? "all"}:${hideSeenTweets}`}
             showActions={showActions}
             tweets={filteredTweets}
           />
@@ -574,6 +575,7 @@ export function FilterableTweetFeed({
             isEmpty={filteredSavedTweets.length === 0}
             onDelete={handleDelete}
             onToggleSaved={handleToggleSaved}
+            resetKey={`saved:${selectedFilter ?? "all"}`}
             showActions={showActions}
             tweets={filteredSavedTweets}
           />

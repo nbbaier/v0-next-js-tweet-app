@@ -10,8 +10,8 @@ import type { TweetData } from "@/lib/tweet-service";
 import { TweetList } from "./tweet-list";
 
 interface FilterableTweetFeedProps {
-  tweets: TweetData[];
   showActions?: boolean;
+  tweets: TweetData[];
 }
 
 // Fun completion messages to display when all tweets are seen
@@ -186,9 +186,9 @@ function useTweetActions(
   const handleDelete = useCallback(
     async (tweetId: string) => {
       const storedSecret =
-        typeof window !== "undefined"
-          ? localStorage.getItem("tweet_api_secret")
-          : null;
+        typeof window === "undefined"
+          ? null
+          : localStorage.getItem("tweet_api_secret");
 
       if (!storedSecret) {
         throw new Error(
@@ -406,9 +406,10 @@ export function FilterableTweetFeed({
   }, [tweets, completionMessage]);
 
   // Filter out saved tweets for feed view
-  const feedTweets = useMemo(() => {
-    return tweets.filter((tweet) => tweet.saved !== true);
-  }, [tweets]);
+  const feedTweets = useMemo(
+    () => tweets.filter((tweet) => tweet.saved !== true),
+    [tweets]
+  );
 
   // Calculate unseen tweets per person (for feed view, only non-saved tweets)
   const unseenCounts = useMemo(
@@ -417,9 +418,10 @@ export function FilterableTweetFeed({
   );
 
   // Calculate counts for saved view
-  const savedTweets = useMemo(() => {
-    return tweets.filter((tweet) => tweet.saved === true);
-  }, [tweets]);
+  const savedTweets = useMemo(
+    () => tweets.filter((tweet) => tweet.saved === true),
+    [tweets]
+  );
 
   const savedCounts = useMemo(
     () => countByPoster(savedTweets, false),
@@ -451,20 +453,22 @@ export function FilterableTweetFeed({
   ]);
 
   // Sort feed tweets: unread first, then seen
-  const sortedFeedTweets = useMemo(() => {
-    return [...feedTweets].sort((a, b) => {
-      const aUnseen = a.seen !== true;
-      const bUnseen = b.seen !== true;
+  const sortedFeedTweets = useMemo(
+    () =>
+      [...feedTweets].sort((a, b) => {
+        const aUnseen = a.seen !== true;
+        const bUnseen = b.seen !== true;
 
-      if (aUnseen && !bUnseen) {
-        return -1;
-      }
-      if (!aUnseen && bUnseen) {
-        return 1;
-      }
-      return 0;
-    });
-  }, [feedTweets]);
+        if (aUnseen && !bUnseen) {
+          return -1;
+        }
+        if (!aUnseen && bUnseen) {
+          return 1;
+        }
+        return 0;
+      }),
+    [feedTweets]
+  );
 
   // Filter feed tweets based on selected filter and hide seen toggle
   const filteredTweets = useMemo(() => {

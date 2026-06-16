@@ -6,8 +6,8 @@ import type { TweetData } from "@/lib/tweet-service";
 import { TweetList } from "./tweet-list";
 
 interface TweetFeedProps {
-  tweets: TweetData[];
   showActions?: boolean;
+  tweets: TweetData[];
 }
 
 export function TweetFeed({ tweets, showActions = true }: TweetFeedProps) {

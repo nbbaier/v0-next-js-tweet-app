@@ -19,19 +19,19 @@ import {
 import { Button } from "./ui/button";
 
 interface TweetWithActionsProps {
-  tweetId: string;
-  submittedBy: string[]; // Array of poster names
-  savedAt?: number; // Unix timestamp of when tweet was first saved
-  seen?: boolean;
-  saved?: boolean;
-  content?: TweetType;
   apiSecret?: string;
-  onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
+  content?: TweetType;
+  onDelete?: (tweetId: string) => Promise<void>;
   onToggleSaved?: (
     tweetId: string,
     currentSavedStatus: boolean
   ) => Promise<void>;
-  onDelete?: (tweetId: string) => Promise<void>;
+  onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
+  saved?: boolean;
+  savedAt?: number; // Unix timestamp of when tweet was first saved
+  seen?: boolean;
+  submittedBy: string[]; // Array of poster names
+  tweetId: string;
 }
 
 function formatSavedAt(timestamp: number): string {

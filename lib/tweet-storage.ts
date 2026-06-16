@@ -23,11 +23,11 @@ interface Poster {
 
 interface TweetMetadata {
   id: string;
-  submittedAt: number; // Unix timestamp of first submission
   posters: Poster[]; // Array of all users who submitted this tweet
-  url: string;
-  seen?: boolean; // Optional: marks tweet as seen/minimized
   saved?: boolean; // Optional: marks tweet as saved/pinned (excluded from cleanup)
+  seen?: boolean; // Optional: marks tweet as seen/minimized
+  submittedAt: number; // Unix timestamp of first submission
+  url: string;
 }
 
 /**
@@ -161,10 +161,10 @@ export async function getTweetIdsFromStorage(): Promise<string[]> {
  */
 interface LegacyTweetMetadata {
   id: string;
+  seen?: boolean;
   submittedAt: number;
   submittedBy?: string;
   url: string;
-  seen?: boolean;
 }
 
 /**

@@ -11,9 +11,9 @@ import type { TweetData } from "@/lib/tweet-service";
 
 interface UseRealtimeTweetsOptions {
   enabled?: boolean;
-  onError?: (error: Error) => void;
   onConnected?: () => void;
   onDisconnected?: () => void;
+  onError?: (error: Error) => void;
 }
 
 export function useRealtimeTweets(

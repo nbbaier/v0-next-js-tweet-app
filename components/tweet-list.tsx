@@ -18,22 +18,22 @@ const TWEETS_PER_PAGE = 10;
 const SENTINEL_ROOT_MARGIN = "800px 0px";
 
 interface TweetListProps {
-  tweets: TweetData[];
-  showActions?: boolean;
   apiSecret?: string;
+  completionMessage?: string;
   isEmpty?: boolean;
-  showDevTweets?: boolean;
+  onDelete?: (tweetId: string) => Promise<void>;
   onToggleDevTweets?: () => void;
-  onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
   onToggleSaved?: (
     tweetId: string,
     currentSavedStatus: boolean
   ) => Promise<void>;
-  completionMessage?: string;
-  onDelete?: (tweetId: string) => Promise<void>;
+  onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
   // Changes to this value reset pagination back to the first page (e.g. when
   // the active tab or filter changes).
   resetKey?: string;
+  showActions?: boolean;
+  showDevTweets?: boolean;
+  tweets: TweetData[];
 }
 
 export function TweetList({

@@ -13,7 +13,7 @@ until plan 003 lands; requires `.env.local`). No tests exist until plan 003.
 
 | Plan | Title | Priority | Effort | Depends on | Status |
 |------|-------|----------|--------|------------|--------|
-| 001  | Upgrade Next.js past GHSA-26hh-7cqf-hhc6 | P1 | S | — | TODO |
+| 001  | Upgrade Next.js past GHSA-26hh-7cqf-hhc6 | P1 | S | — | DONE |
 | 002  | Harden API auth (PATCH auth, fail-closed GET, timing-safe, zod bodies) | P1 | M | — | TODO |
 | 003  | Verification baseline (type-gated build, vitest, CI) | P1 | M | — | TODO |
 | 004  | Cleanup N+1 → bulk metadata fetch | P2 | S | 003 | TODO |

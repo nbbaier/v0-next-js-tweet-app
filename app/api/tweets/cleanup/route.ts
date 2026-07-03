@@ -6,6 +6,7 @@
 
 import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
+import { secretsMatch } from "@/lib/api-auth";
 import { cleanupOldTweets, getExpiredTweets } from "@/lib/tweet-cleanup";
 
 /**
@@ -19,12 +20,16 @@ function isAuthorized(request: NextRequest): boolean {
   const cronAuthHeader = request.headers.get("authorization");
 
   // Check if it's a Vercel cron request
-  if (cronSecret && cronAuthHeader === `Bearer ${cronSecret}`) {
+  if (
+    cronSecret &&
+    cronAuthHeader &&
+    secretsMatch(cronAuthHeader, `Bearer ${cronSecret}`)
+  ) {
     return true;
   }
 
   // Check if it's a regular API request with secret
-  if (apiSecret && authHeader === apiSecret) {
+  if (apiSecret && authHeader && secretsMatch(authHeader, apiSecret)) {
     return true;
   }
 

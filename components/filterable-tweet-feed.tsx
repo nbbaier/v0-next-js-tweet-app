@@ -160,9 +160,17 @@ function useTweetActions(
       );
 
       try {
+        const storedSecret =
+          typeof window === "undefined"
+            ? null
+            : localStorage.getItem("tweet_api_secret");
+
         const response = await fetch(`/api/tweets/${tweetId}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(storedSecret ? { "x-api-secret": storedSecret } : {}),
+          },
           body: JSON.stringify({ seen: !currentSeenStatus }),
         });
 
@@ -252,9 +260,17 @@ function useTweetActions(
       );
 
       try {
+        const storedSecret =
+          typeof window === "undefined"
+            ? null
+            : localStorage.getItem("tweet_api_secret");
+
         const response = await fetch(`/api/tweets/${tweetId}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(storedSecret ? { "x-api-secret": storedSecret } : {}),
+          },
           body: JSON.stringify({ saved: !currentSavedStatus }),
         });
 

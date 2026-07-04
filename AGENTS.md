@@ -105,3 +105,17 @@ curl -X POST http://localhost:3000/api/tweets \
 - Biome handles most formatting automatically - run `pnpm lint` before committing
 - React 19: Use ref as prop (no `forwardRef`)
 - Next.js: Use Server Components for async data fetching
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues (`nbbaier/v0-next-js-tweet-app`) via the `gh` CLI; external PRs are not a triage surface. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default label vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout — one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.

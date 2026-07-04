@@ -24,6 +24,16 @@ const postBodySchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.json();
+    const bodySecret =
+      rawBody && typeof rawBody === "object" && "secret" in rawBody
+        ? (rawBody as { secret?: unknown }).secret
+        : undefined;
+
+    const authError = requireApiSecret(request, bodySecret);
+    if (authError) {
+      return authError;
+    }
+
     const parseResult = postBodySchema.safeParse(rawBody);
 
     if (!parseResult.success) {
@@ -33,12 +43,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { url, secret, submittedBy } = parseResult.data;
-
-    const authError = requireApiSecret(request, secret);
-    if (authError) {
-      return authError;
-    }
+    const { url, submittedBy } = parseResult.data;
 
     // Parse tweet URL
     const parsed = parseTweetUrl(url);

@@ -84,16 +84,14 @@ export async function PATCH(
   try {
     const { id: tweetId } = await context.params;
 
-    // Validate tweet ID format
-    if (!isValidTweetId(tweetId)) {
-      return NextResponse.json(
-        { error: "Invalid tweet ID format" },
-        { status: 400 }
-      );
+    // Parse request body (malformed JSON is treated as no body secret, so
+    // auth still runs and fails closed rather than surfacing as a 500)
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      rawBody = undefined;
     }
-
-    // Parse request body
-    const rawBody = await request.json();
     const bodySecret =
       rawBody && typeof rawBody === "object" && "secret" in rawBody
         ? (rawBody as { secret?: unknown }).secret
@@ -102,6 +100,14 @@ export async function PATCH(
     const authError = requireApiSecret(request, bodySecret);
     if (authError) {
       return authError;
+    }
+
+    // Validate tweet ID format
+    if (!isValidTweetId(tweetId)) {
+      return NextResponse.json(
+        { error: "Invalid tweet ID format" },
+        { status: 400 }
+      );
     }
 
     // Validate request body shape

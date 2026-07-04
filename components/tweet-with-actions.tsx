@@ -95,9 +95,13 @@ function TweetWithActionsComponent({
       if (onToggleSaved) {
         await onToggleSaved(tweetId, isSaved);
       } else {
+        const secretToUse = apiSecret || storedSecret;
         const response = await fetch(`/api/tweets/${tweetId}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(secretToUse ? { "x-api-secret": secretToUse } : {}),
+          },
           body: JSON.stringify({ saved: !isSaved }),
         });
 
@@ -127,10 +131,12 @@ function TweetWithActionsComponent({
         await onToggleSeen(tweetId, isSeen);
       } else {
         // Fallback to original behavior
+        const secretToUse = apiSecret || storedSecret;
         const response = await fetch(`/api/tweets/${tweetId}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
+            ...(secretToUse ? { "x-api-secret": secretToUse } : {}),
           },
           body: JSON.stringify({ seen: !isSeen }),
         });

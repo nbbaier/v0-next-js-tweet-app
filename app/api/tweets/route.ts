@@ -6,8 +6,16 @@
 
 import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { requireApiSecret } from "@/lib/api-auth";
 import { parseTweetUrl } from "@/lib/tweet-parser";
 import { addTweetToStorage, getTweetIdsFromStorage } from "@/lib/tweet-storage";
+
+const postBodySchema = z.object({
+  url: z.string().min(1).max(500),
+  secret: z.string().optional(),
+  submittedBy: z.string().trim().max(50).optional(),
+});
 
 /**
  * POST /api/tweets
@@ -15,32 +23,27 @@ import { addTweetToStorage, getTweetIdsFromStorage } from "@/lib/tweet-storage";
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { url, secret, submittedBy } = body;
+    const rawBody = await request.json();
+    const bodySecret =
+      rawBody && typeof rawBody === "object" && "secret" in rawBody
+        ? (rawBody as { secret?: unknown }).secret
+        : undefined;
 
-    // Validate API secret
-    const apiSecret = process.env.TWEET_API_SECRET;
-    if (!apiSecret) {
-      return NextResponse.json(
-        { error: "API secret not configured on server" },
-        { status: 500 }
-      );
+    const authError = requireApiSecret(request, bodySecret);
+    if (authError) {
+      return authError;
     }
 
-    if (!secret || secret !== apiSecret) {
-      return NextResponse.json(
-        { error: "Invalid or missing API secret" },
-        { status: 401 }
-      );
-    }
+    const parseResult = postBodySchema.safeParse(rawBody);
 
-    // Validate input
-    if (!url || typeof url !== "string") {
+    if (!parseResult.success) {
       return NextResponse.json(
-        { error: "Missing or invalid tweet URL" },
+        { error: "Invalid request body" },
         { status: 400 }
       );
     }
+
+    const { url, submittedBy } = parseResult.data;
 
     // Parse tweet URL
     const parsed = parseTweetUrl(url);
@@ -80,15 +83,9 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    // Optional: require auth for GET as well
-    const apiSecret = process.env.TWEET_API_SECRET;
-    const authHeader = request.headers.get("x-api-secret");
-
-    if (apiSecret && authHeader !== apiSecret) {
-      return NextResponse.json(
-        { error: "Invalid or missing API secret" },
-        { status: 401 }
-      );
+    const authError = requireApiSecret(request);
+    if (authError) {
+      return authError;
     }
 
     const tweetIds = await getTweetIdsFromStorage();

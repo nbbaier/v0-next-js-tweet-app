@@ -5,6 +5,8 @@
 
 import { revalidatePath } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { requireApiSecret } from "@/lib/api-auth";
 import { isValidTweetId } from "@/lib/tweet-parser";
 import {
   getTweetMetadata,
@@ -12,6 +14,16 @@ import {
   updateTweetSaved,
   updateTweetSeen,
 } from "@/lib/tweet-storage";
+
+const patchBodySchema = z
+  .object({
+    seen: z.boolean().optional(),
+    saved: z.boolean().optional(),
+    secret: z.string().optional(),
+  })
+  .refine((b) => typeof b.seen === "boolean" || typeof b.saved === "boolean", {
+    message: "Must provide 'seen' (boolean) or 'saved' (boolean).",
+  });
 
 /**
  * DELETE /api/tweets/[id]
@@ -24,21 +36,9 @@ export async function DELETE(
   try {
     const { id: tweetId } = await context.params;
 
-    // Validate API secret
-    const apiSecret = process.env.TWEET_API_SECRET;
-    if (!apiSecret) {
-      return NextResponse.json(
-        { error: "API secret not configured on server" },
-        { status: 500 }
-      );
-    }
-
-    const authHeader = request.headers.get("x-api-secret");
-    if (!authHeader || authHeader !== apiSecret) {
-      return NextResponse.json(
-        { error: "Invalid or missing API secret" },
-        { status: 401 }
-      );
+    const authError = requireApiSecret(request);
+    if (authError) {
+      return authError;
     }
 
     // Validate tweet ID format
@@ -84,6 +84,24 @@ export async function PATCH(
   try {
     const { id: tweetId } = await context.params;
 
+    // Parse request body (malformed JSON is treated as no body secret, so
+    // auth still runs and fails closed rather than surfacing as a 500)
+    let rawBody: unknown;
+    try {
+      rawBody = await request.json();
+    } catch {
+      rawBody = undefined;
+    }
+    const bodySecret =
+      rawBody && typeof rawBody === "object" && "secret" in rawBody
+        ? (rawBody as { secret?: unknown }).secret
+        : undefined;
+
+    const authError = requireApiSecret(request, bodySecret);
+    if (authError) {
+      return authError;
+    }
+
     // Validate tweet ID format
     if (!isValidTweetId(tweetId)) {
       return NextResponse.json(
@@ -92,11 +110,10 @@ export async function PATCH(
       );
     }
 
-    // Parse request body
-    const body = await request.json();
-    const { seen, saved } = body;
+    // Validate request body shape
+    const parseResult = patchBodySchema.safeParse(rawBody);
 
-    if (typeof seen !== "boolean" && typeof saved !== "boolean") {
+    if (!parseResult.success) {
       return NextResponse.json(
         {
           error: "Must provide 'seen' (boolean) or 'saved' (boolean).",
@@ -104,6 +121,8 @@ export async function PATCH(
         { status: 400 }
       );
     }
+
+    const { seen, saved } = parseResult.data;
 
     // Track if any update was performed and if tweet was found
     let found = false;

@@ -153,6 +153,17 @@ function useTweetActions(
 ) {
   const handleToggleSeen = useCallback(
     async (tweetId: string, currentSeenStatus: boolean) => {
+      const storedSecret =
+        typeof window === "undefined"
+          ? null
+          : localStorage.getItem("tweet_api_secret");
+
+      if (!storedSecret) {
+        throw new Error(
+          "No API secret found. Please set it in the form above."
+        );
+      }
+
       setTweets((prev) =>
         prev.map((t) =>
           t.id === tweetId ? { ...t, seen: !currentSeenStatus } : t
@@ -162,7 +173,10 @@ function useTweetActions(
       try {
         const response = await fetch(`/api/tweets/${tweetId}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(storedSecret ? { "x-api-secret": storedSecret } : {}),
+          },
           body: JSON.stringify({ seen: !currentSeenStatus }),
         });
 
@@ -245,6 +259,17 @@ function useTweetActions(
 
   const handleToggleSaved = useCallback(
     async (tweetId: string, currentSavedStatus: boolean) => {
+      const storedSecret =
+        typeof window === "undefined"
+          ? null
+          : localStorage.getItem("tweet_api_secret");
+
+      if (!storedSecret) {
+        throw new Error(
+          "No API secret found. Please set it in the form above."
+        );
+      }
+
       setTweets((prev) =>
         prev.map((t) =>
           t.id === tweetId ? { ...t, saved: !currentSavedStatus } : t
@@ -254,7 +279,10 @@ function useTweetActions(
       try {
         const response = await fetch(`/api/tweets/${tweetId}`, {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(storedSecret ? { "x-api-secret": storedSecret } : {}),
+          },
           body: JSON.stringify({ saved: !currentSavedStatus }),
         });
 

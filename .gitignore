@@ -1,30 +1,36 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-
-# next.js
+_.log
+.cache
+.claude/settings.local.json
+.claude/worktrees
+.cursor/hooks/state/continual-learning*
+.DS_Store
+.env
+.env.development.local
+.env.local
+.env.production.local
+.env.test.local
+.env*
+.env*.local
+.eslintcache
+.idea
+.pnpm-debug.log*
+.pnpm-store
+.pnpm-store/
+.vercel
+*.lcov
+*.tgz
+*.tsbuildinfo
 /.next/
-/out/
-
-# production
 /build
-
-# debug
+/node_modules
+/out/
+coverage
+dist
+logs
+next-env.d.ts
+node_modules
 npm-debug.log*
+out
+report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
-
-# env files
-.env*
-.pnpm-store
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-.env*.local
-.pnpm-store/

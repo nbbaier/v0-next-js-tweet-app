@@ -40,6 +40,10 @@ beforeEach(() => {
   mockRemoveTweet.mockResolvedValue(true);
 });
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 describe("cleanupOldTweets", () => {
   it("deletes a tweet older than 3 days that is seen and not saved", async () => {
     mockGetTweetIds.mockResolvedValue(["111"]);

@@ -74,16 +74,12 @@ describe("cleanupOldTweets", () => {
     const result = await cleanupOldTweets();
 
     expect(mockRemoveTweet).not.toHaveBeenCalled();
-beforeEach(() => {
-  vi.clearAllMocks();
-  vi.useFakeTimers();
-  vi.setSystemTime(NOW);
-  mockRemoveTweet.mockResolvedValue(true);
-});
+    expect(result.deletedCount).toBe(0);
+    expect(result.errors).toEqual([]);
+  });
 
-afterEach(() => {
-  vi.useRealTimers();
-});
+  it("does not delete an old tweet that is unseen", async () => {
+    mockGetTweetIds.mockResolvedValue(["333"]);
     mockGetMetadata.mockResolvedValue(
       makeMetadata("333", { submittedAt: NOW - 4 * DAY_MS, seen: false })
     );

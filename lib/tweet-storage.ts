@@ -234,7 +234,7 @@ export async function getTweetMetadata(
  * @param tweetIds - The tweet IDs
  * @returns Array of Metadata objects or null if not found
  */
-export async function getTweetMetadatas(
+export async function getTweetMetadataBatch(
   tweetIds: string[]
 ): Promise<(TweetMetadata | null)[]> {
   if (tweetIds.length === 0) {
@@ -243,13 +243,13 @@ export async function getTweetMetadatas(
 
   try {
     const keys = tweetIds.map((id) => `${TWEET_METADATA_PREFIX}${id}`);
-    const metadatas = await redis.mget<
+    const batch = await redis.mget<
       (TweetMetadata | LegacyTweetMetadata | null)[]
     >(...keys);
 
     // Normalize and potentially migrate legacy ones.
     const results = await Promise.all(
-      metadatas.map(async (metadata, index) => {
+      batch.map(async (metadata, index) => {
         if (!metadata) {
           return null;
         }
@@ -290,7 +290,7 @@ export async function getTweetMetadatas(
 
     return results;
   } catch (error) {
-    console.error("[Storage ERROR] Failed to get metadatas:", error);
+    console.error("[Storage ERROR] Failed to get metadata batch:", error);
     return new Array(tweetIds.length).fill(null);
   }
 }

@@ -6,7 +6,7 @@
 
 import {
   getTweetIdsFromStorage,
-  getTweetMetadata,
+  getTweetMetadataBatch,
   removeTweetFromStorage,
 } from "./tweet-storage";
 
@@ -44,11 +44,15 @@ export async function cleanupOldTweets(): Promise<CleanupResult> {
     const now = Date.now();
     const cutoffTime = now - RETENTION_PERIOD_MS;
 
-    // Check each tweet and delete if older than retention period AND marked as seen
-    for (const tweetId of tweetIds) {
-      try {
-        const metadata = await getTweetMetadata(tweetId);
+    // Fetch all metadata in a single bulk request (reduces N Redis GETs to 1 MGET)
+    const metadataBatch = await getTweetMetadataBatch(tweetIds);
 
+    // Check each tweet and delete if older than retention period AND marked as seen
+    for (let i = 0; i < tweetIds.length; i++) {
+      const tweetId = tweetIds[i];
+      const metadata = metadataBatch[i];
+
+      try {
         if (!metadata) {
           console.warn(`[Cleanup] No metadata found for tweet ${tweetId}`);
           continue;
@@ -106,6 +110,11 @@ export async function getExpiredTweets(): Promise<
 > {
   try {
     const tweetIds = await getTweetIdsFromStorage();
+    if (tweetIds.length === 0) {
+      return [];
+    }
+
+    const metadataBatch = await getTweetMetadataBatch(tweetIds);
     const now = Date.now();
     const cutoffTime = now - RETENTION_PERIOD_MS;
     const expiredTweets: Array<{
@@ -115,8 +124,9 @@ export async function getExpiredTweets(): Promise<
       seen: boolean;
     }> = [];
 
-    for (const tweetId of tweetIds) {
-      const metadata = await getTweetMetadata(tweetId);
+    for (let i = 0; i < tweetIds.length; i++) {
+      const tweetId = tweetIds[i];
+      const metadata = metadataBatch[i];
 
       if (
         metadata &&

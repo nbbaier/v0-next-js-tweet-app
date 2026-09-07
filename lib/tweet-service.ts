@@ -5,7 +5,7 @@
 
 import { fetchTweet, type QuotedTweet, type Tweet } from "react-tweet/api";
 import { getCachedTweets, setCachedTweet } from "./tweet-cache";
-import { getTweetMetadatas, removeTweetFromStorage } from "./tweet-storage";
+import { getTweetMetadataBatch, removeTweetFromStorage } from "./tweet-storage";
 
 export interface TweetData {
   content?: Tweet; // The actual tweet content from react-tweet
@@ -68,7 +68,7 @@ export async function fetchTweetsWithCache(
   // 1. Bulk get cache
   const cachedTweets = await getCachedTweets(tweetIds);
   // 2. Bulk get metadata
-  const metadatas = await getTweetMetadatas(tweetIds);
+  const metadataBatch = await getTweetMetadataBatch(tweetIds);
 
   const updates: Promise<void>[] = [];
   const results: TweetData[] = [];
@@ -79,7 +79,7 @@ export async function fetchTweetsWithCache(
   for (let i = 0; i < tweetIds.length; i++) {
     const id = tweetIds[i];
     const cached = cachedTweets[i];
-    const metadata = metadatas[i];
+    const metadata = metadataBatch[i];
 
     if (cached?.content) {
       // Full cache hit (metadata + content)

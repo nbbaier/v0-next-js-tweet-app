@@ -3,19 +3,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/tweet-storage", () => ({
   getTweetIdsFromStorage: vi.fn(),
   getTweetMetadata: vi.fn(),
-  getTweetMetadatas: vi.fn(),
+  getTweetMetadataBatch: vi.fn(),
   removeTweetFromStorage: vi.fn(),
 }));
 
 import { cleanupOldTweets, getExpiredTweets } from "@/lib/tweet-cleanup";
 import {
   getTweetIdsFromStorage,
-  getTweetMetadata,
+  getTweetMetadataBatch,
   removeTweetFromStorage,
 } from "@/lib/tweet-storage";
 
 const mockGetTweetIds = vi.mocked(getTweetIdsFromStorage);
-const mockGetMetadata = vi.mocked(getTweetMetadata);
+const mockGetMetadataBatch = vi.mocked(getTweetMetadataBatch);
 const mockRemoveTweet = vi.mocked(removeTweetFromStorage);
 
 const NOW = new Date("2026-07-01T00:00:00Z").getTime();
@@ -47,12 +47,13 @@ afterEach(() => {
 describe("cleanupOldTweets", () => {
   it("deletes a tweet older than 3 days that is seen and not saved", async () => {
     mockGetTweetIds.mockResolvedValue(["111"]);
-    mockGetMetadata.mockResolvedValue(
-      makeMetadata("111", { submittedAt: NOW - 4 * DAY_MS, seen: true })
-    );
+    mockGetMetadataBatch.mockResolvedValue([
+      makeMetadata("111", { submittedAt: NOW - 4 * DAY_MS, seen: true }),
+    ]);
 
     const result = await cleanupOldTweets();
 
+    expect(mockGetMetadataBatch).toHaveBeenCalledWith(["111"]);
     expect(mockRemoveTweet).toHaveBeenCalledWith("111");
     expect(result).toEqual({
       deletedCount: 1,
@@ -63,13 +64,13 @@ describe("cleanupOldTweets", () => {
 
   it("does not delete an old, seen tweet that is saved", async () => {
     mockGetTweetIds.mockResolvedValue(["222"]);
-    mockGetMetadata.mockResolvedValue(
+    mockGetMetadataBatch.mockResolvedValue([
       makeMetadata("222", {
         submittedAt: NOW - 4 * DAY_MS,
         seen: true,
         saved: true,
-      })
-    );
+      }),
+    ]);
 
     const result = await cleanupOldTweets();
 
@@ -80,9 +81,9 @@ describe("cleanupOldTweets", () => {
 
   it("does not delete an old tweet that is unseen", async () => {
     mockGetTweetIds.mockResolvedValue(["333"]);
-    mockGetMetadata.mockResolvedValue(
-      makeMetadata("333", { submittedAt: NOW - 4 * DAY_MS, seen: false })
-    );
+    mockGetMetadataBatch.mockResolvedValue([
+      makeMetadata("333", { submittedAt: NOW - 4 * DAY_MS, seen: false }),
+    ]);
 
     const result = await cleanupOldTweets();
 
@@ -92,9 +93,9 @@ describe("cleanupOldTweets", () => {
 
   it("does not delete a seen tweet newer than 3 days", async () => {
     mockGetTweetIds.mockResolvedValue(["444"]);
-    mockGetMetadata.mockResolvedValue(
-      makeMetadata("444", { submittedAt: NOW - 2 * DAY_MS, seen: true })
-    );
+    mockGetMetadataBatch.mockResolvedValue([
+      makeMetadata("444", { submittedAt: NOW - 2 * DAY_MS, seen: true }),
+    ]);
 
     const result = await cleanupOldTweets();
 
@@ -104,7 +105,7 @@ describe("cleanupOldTweets", () => {
 
   it("skips a tweet with null metadata without recording an error", async () => {
     mockGetTweetIds.mockResolvedValue(["555"]);
-    mockGetMetadata.mockResolvedValue(null);
+    mockGetMetadataBatch.mockResolvedValue([null]);
 
     const result = await cleanupOldTweets();
 
@@ -118,11 +119,10 @@ describe("cleanupOldTweets", () => {
 
   it("records an error for a failed removal and keeps processing", async () => {
     mockGetTweetIds.mockResolvedValue(["666", "777"]);
-    mockGetMetadata.mockImplementation((id) =>
-      Promise.resolve(
-        makeMetadata(id, { submittedAt: NOW - 5 * DAY_MS, seen: true })
-      )
-    );
+    mockGetMetadataBatch.mockResolvedValue([
+      makeMetadata("666", { submittedAt: NOW - 5 * DAY_MS, seen: true }),
+      makeMetadata("777", { submittedAt: NOW - 5 * DAY_MS, seen: true }),
+    ]);
     mockRemoveTweet.mockImplementation((id) => {
       if (id === "666") {
         return Promise.reject(new Error("redis unavailable"));
@@ -144,7 +144,7 @@ describe("cleanupOldTweets", () => {
 
     const result = await cleanupOldTweets();
 
-    expect(mockGetMetadata).not.toHaveBeenCalled();
+    expect(mockGetMetadataBatch).not.toHaveBeenCalled();
     expect(result).toEqual({
       deletedCount: 0,
       deletedTweetIds: [],
@@ -156,25 +156,15 @@ describe("cleanupOldTweets", () => {
 describe("getExpiredTweets", () => {
   it("returns only old, seen, unsaved tweets with ageInDays populated", async () => {
     mockGetTweetIds.mockResolvedValue(["old-seen", "old-saved", "fresh"]);
-    mockGetMetadata.mockImplementation((id) => {
-      if (id === "old-seen") {
-        return Promise.resolve(
-          makeMetadata(id, { submittedAt: NOW - 6 * DAY_MS, seen: true })
-        );
-      }
-      if (id === "old-saved") {
-        return Promise.resolve(
-          makeMetadata(id, {
-            submittedAt: NOW - 6 * DAY_MS,
-            seen: true,
-            saved: true,
-          })
-        );
-      }
-      return Promise.resolve(
-        makeMetadata(id, { submittedAt: NOW - 1 * DAY_MS, seen: true })
-      );
-    });
+    mockGetMetadataBatch.mockResolvedValue([
+      makeMetadata("old-seen", { submittedAt: NOW - 6 * DAY_MS, seen: true }),
+      makeMetadata("old-saved", {
+        submittedAt: NOW - 6 * DAY_MS,
+        seen: true,
+        saved: true,
+      }),
+      makeMetadata("fresh", { submittedAt: NOW - 1 * DAY_MS, seen: true }),
+    ]);
 
     const expired = await getExpiredTweets();
 
@@ -190,9 +180,9 @@ describe("getExpiredTweets", () => {
 
   it("excludes old but unseen tweets", async () => {
     mockGetTweetIds.mockResolvedValue(["888"]);
-    mockGetMetadata.mockResolvedValue(
-      makeMetadata("888", { submittedAt: NOW - 10 * DAY_MS, seen: false })
-    );
+    mockGetMetadataBatch.mockResolvedValue([
+      makeMetadata("888", { submittedAt: NOW - 10 * DAY_MS, seen: false }),
+    ]);
 
     expect(await getExpiredTweets()).toEqual([]);
   });

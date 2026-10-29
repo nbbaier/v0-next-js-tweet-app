@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   title: "Shared Tweet Feed",
   description: "Share and view tweets together",
   generator: "v0.app",
+  // X rejects media requests that identify this app as the referring site.
+  // A document policy also covers video posters, which have no referrerPolicy prop.
+  referrer: "no-referrer",
   icons: {
     icon: [
       {

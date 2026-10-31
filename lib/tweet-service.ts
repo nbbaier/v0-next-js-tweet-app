@@ -11,8 +11,8 @@ export interface TweetData {
   content?: Tweet; // The actual tweet content from react-tweet
   id: string;
   saved?: boolean; // Whether this tweet is in the saved/pinned list
-  savedAt?: number; // Unix timestamp of when tweet was first saved
   seen?: boolean;
+  submittedAt?: number; // Unix timestamp (ms) of when the tweet was first added to the feed
   submittedBy: string[]; // Array of poster names
 }
 
@@ -104,7 +104,7 @@ export async function fetchTweetsWithCache(
           ...cached,
           content,
           submittedBy: metadata.posters.map((p) => p.name),
-          savedAt: metadata.submittedAt,
+          submittedAt: metadata.submittedAt,
           seen: metadata.seen,
           saved: metadata.saved,
         });
@@ -118,7 +118,7 @@ export async function fetchTweetsWithCache(
       const placeholder: TweetData = {
         id,
         submittedBy: metadata?.posters.map((p) => p.name) || [],
-        savedAt: metadata?.submittedAt,
+        submittedAt: metadata?.submittedAt,
         seen: metadata?.seen,
         saved: metadata?.saved,
         content: cached?.content, // Might be undefined

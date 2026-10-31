@@ -28,23 +28,23 @@ interface TweetWithActionsProps {
   ) => Promise<void>;
   onToggleSeen?: (tweetId: string, currentSeenStatus: boolean) => Promise<void>;
   saved?: boolean;
-  savedAt?: number; // Unix timestamp of when tweet was first saved
   seen?: boolean;
+  submittedAt?: number; // Unix timestamp (ms) of when the tweet was first added to the feed
   submittedBy: string[]; // Array of poster names
   tweetId: string;
 }
 
-function formatSavedAt(timestamp: number): string {
+function formatSubmittedAt(timestamp: number): string {
   const date = new Date(timestamp);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) {
-    return `Today at ${date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+    return `today at ${date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
   }
   if (diffDays === 1) {
-    return `Yesterday at ${date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+    return `yesterday at ${date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
   }
   if (diffDays < 7) {
     return `${diffDays} days ago`;
@@ -59,7 +59,7 @@ function formatSavedAt(timestamp: number): string {
 function TweetWithActionsComponent({
   tweetId,
   submittedBy,
-  savedAt,
+  submittedAt,
   seen: initialSeen = false,
   saved: initialSaved = false,
   content,
@@ -214,17 +214,17 @@ function TweetWithActionsComponent({
               className="rounded-full bg-muted px-2 py-1 text-muted-foreground text-xs"
               key={poster}
             >
-              Saved by: {poster.charAt(0).toUpperCase() + poster.slice(1)}
+              Added by: {poster.charAt(0).toUpperCase() + poster.slice(1)}
             </span>
           ))
         ) : (
           <span className="rounded-full bg-muted px-2 py-1 text-muted-foreground text-xs">
-            Saved by: Unknown
+            Added by: Unknown
           </span>
         )}
-        {savedAt && (
+        {submittedAt && (
           <span className="text-muted-foreground/70 text-xs">
-            {formatSavedAt(savedAt)}
+            Added {formatSubmittedAt(submittedAt)}
           </span>
         )}
       </div>
@@ -359,7 +359,7 @@ function arePropsEqual(
   if (prevProps.saved !== nextProps.saved) {
     return false;
   }
-  if (prevProps.savedAt !== nextProps.savedAt) {
+  if (prevProps.submittedAt !== nextProps.submittedAt) {
     return false;
   }
   if (prevProps.apiSecret !== nextProps.apiSecret) {

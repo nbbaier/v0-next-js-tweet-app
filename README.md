@@ -18,7 +18,7 @@ A real-time collaborative tweet feed built with Next.js, featuring instant updat
 
 -  **Framework**: Next.js 16.0.0 (App Router), React 19.2.0
 -  **TypeScript**: 5.x (strict mode)
--  **Styling**: Tailwind CSS 4.x, Radix UI components
+-  **Styling**: Tailwind CSS 4.x, Base UI components
 -  **Database**: Upstash Redis (sorted sets)
 -  **Real-time**: Upstash Realtime (Server-Sent Events)
 -  **Code Quality**: Biome (linting & formatting)
@@ -409,7 +409,7 @@ biome format --write .  # Format code
 
 ### Code Style
 
--  **Formatting**: Tabs, double quotes (Biome)
+-  **Formatting**: 2-space indentation, double quotes (Biome)
 -  **Imports**: Use `@/*` path alias
 -  **TypeScript**: Strict mode, avoid `any`
 -  **Components**: Functional components with TypeScript

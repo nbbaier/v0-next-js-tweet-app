@@ -70,7 +70,6 @@ Channel: `"tweets"` (global feed)
 | `tweet.updated` | `{ tweet }` |
 | `tweet.removed` | `{ id }` |
 | `tweet.seen` | `{ id }` |
-| `tweet.reorder` | `{ tweets }` |
 
 **Note**: Client uses separate `useRealtime()` hook per event type (v0.3.0 API).
 

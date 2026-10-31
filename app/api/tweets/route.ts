@@ -24,12 +24,7 @@ const postBodySchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.json();
-    const bodySecret =
-      rawBody && typeof rawBody === "object" && "secret" in rawBody
-        ? (rawBody as { secret?: unknown }).secret
-        : undefined;
-
-    const authError = requireApiSecret(request, bodySecret);
+    const authError = requireApiSecret(request, rawBody);
     if (authError) {
       return authError;
     }

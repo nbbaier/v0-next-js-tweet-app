@@ -11,14 +11,23 @@ export function secretsMatch(provided: string, expected: string): boolean {
   return timingSafeEqual(a, b);
 }
 
+function getBodySecret(body: unknown): string | null {
+  if (body && typeof body === "object" && "secret" in body) {
+    const { secret } = body as { secret?: unknown };
+    return typeof secret === "string" ? secret : null;
+  }
+  return null;
+}
+
 /**
- * Validates the request's API secret (x-api-secret header, with optional
- * fallback value e.g. from a request body). Fails closed when the env var
- * is missing. Returns null when authorized, otherwise the error response.
+ * Validates the request's API secret: the x-api-secret header, falling back
+ * to a `secret` field on the parsed request body if one is passed. Fails
+ * closed when the env var is missing. Returns null when authorized,
+ * otherwise the error response.
  */
 export function requireApiSecret(
   request: NextRequest,
-  bodySecret?: unknown
+  body?: unknown
 ): NextResponse | null {
   const apiSecret = process.env.TWEET_API_SECRET;
   if (!apiSecret) {
@@ -27,9 +36,7 @@ export function requireApiSecret(
       { status: 500 }
     );
   }
-  const provided =
-    request.headers.get("x-api-secret") ??
-    (typeof bodySecret === "string" ? bodySecret : null);
+  const provided = request.headers.get("x-api-secret") ?? getBodySecret(body);
   if (!(provided && secretsMatch(provided, apiSecret))) {
     return NextResponse.json(
       { error: "Invalid or missing API secret" },

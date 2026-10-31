@@ -75,7 +75,7 @@ Channel: `"tweets"` (global feed)
 | `tweet.seen` | `{ tweetId, seen }` |
 | `tweet.saved` | `{ tweetId, saved }` |
 
-**Note**: `hooks/use-realtime-tweets.ts` currently calls `useRealtime()` (`@upstash/realtime` 1.x) once per event type.
+**Note**: `hooks/use-realtime-tweets.ts` calls `useRealtime()` (`@upstash/realtime` 1.x) once per event type. These calls share the single SSE connection owned by `RealtimeProvider` (`components/providers.tsx`), so they don't open extra connections. Connection status is provider-wide, and the library has no manual reconnect (it retries on its own).
 
 ## Common Tasks
 

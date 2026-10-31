@@ -132,15 +132,5 @@ export function useRealtimeTweets(
     tweets,
     setTweets,
     isConnected,
-    reconnect: () => {
-      console.log(
-        "[Realtime] Reconnect requested - handled automatically by useRealtime"
-      );
-    },
-    disconnect: () => {
-      console.log(
-        "[Realtime] Disconnect requested - set enabled=false to disconnect"
-      );
-    },
   };
 }

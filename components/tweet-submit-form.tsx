@@ -2,7 +2,14 @@
 
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import {
+  type ChangeEvent,
+  type FormEvent,
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -65,7 +72,7 @@ export function TweetSubmitForm({
   }, []);
 
   // Handle keyboard shortcuts
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
     // Meta+Enter (Cmd+Enter on Mac, Ctrl+Enter on Windows/Linux) to submit
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
       e.preventDefault();
@@ -74,14 +81,14 @@ export function TweetSubmitForm({
         new Event("submit", { bubbles: true, cancelable: true })
       );
     }
-  };
+  }, []);
 
-  const handleSaveSecret = () => {
+  const handleSaveSecret = useCallback(() => {
     const secretToUse = secret.trim();
     if (!secretToUse) {
       setMessage({
-        type: "error",
         text: "Please enter an API secret to save",
+        type: "error",
       });
       return;
     }
@@ -91,76 +98,100 @@ export function TweetSubmitForm({
       setHasStoredSecret(true);
       setRememberSecret(true);
       setMessage({
-        type: "success",
         text: "API secret saved successfully!",
-      });
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setMessage(null);
-
-    const secretToUse = secret.trim();
-
-    try {
-      const response = await fetch("/api/tweets", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url: url.trim(),
-          secret: secretToUse,
-          submittedBy: submittedBy.trim() || undefined,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to add tweet");
-      }
-
-      // Save to localStorage if remember is checked and secret was valid
-      if (rememberSecret && secretToUse && typeof window !== "undefined") {
-        localStorage.setItem(STORAGE_KEY, secretToUse);
-        setHasStoredSecret(true);
-      }
-
-      // Save name to localStorage for convenience
-      if (submittedBy.trim() && typeof window !== "undefined") {
-        localStorage.setItem(NAME_STORAGE_KEY, submittedBy.trim());
-      }
-
-      setMessage({
         type: "success",
-        text: "Tweet added successfully!",
       });
-      setUrl("");
-
-      // Call onSuccess callback if provided
-      if (onSuccess) {
-        setTimeout(() => {
-          onSuccess();
-          router.refresh();
-        }, 500);
-      } else {
-        // Refresh the page to show the new tweet
-        setTimeout(() => {
-          router.refresh();
-        }, 500);
-      }
-    } catch (error) {
-      setMessage({
-        type: "error",
-        text: error instanceof Error ? error.message : "Failed to add tweet",
-      });
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+  }, [secret]);
+
+  const handleSubmit = useCallback(
+    async (e: FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setIsSubmitting(true);
+      setMessage(null);
+
+      const secretToUse = secret.trim();
+
+      try {
+        const response = await fetch("/api/tweets", {
+          body: JSON.stringify({
+            secret: secretToUse,
+            submittedBy: submittedBy.trim() || undefined,
+            url: url.trim(),
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to add tweet");
+        }
+
+        // Save to localStorage if remember is checked and secret was valid
+        if (rememberSecret && secretToUse && typeof window !== "undefined") {
+          localStorage.setItem(STORAGE_KEY, secretToUse);
+          setHasStoredSecret(true);
+        }
+
+        // Save name to localStorage for convenience
+        if (submittedBy.trim() && typeof window !== "undefined") {
+          localStorage.setItem(NAME_STORAGE_KEY, submittedBy.trim());
+        }
+
+        setMessage({
+          text: "Tweet added successfully!",
+          type: "success",
+        });
+        setUrl("");
+
+        // Call onSuccess callback if provided
+        if (onSuccess) {
+          setTimeout(() => {
+            onSuccess();
+            router.refresh();
+          }, 500);
+        } else {
+          // Refresh the page to show the new tweet
+          setTimeout(() => {
+            router.refresh();
+          }, 500);
+        }
+      } catch (error) {
+        setMessage({
+          text: error instanceof Error ? error.message : "Failed to add tweet",
+          type: "error",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [onSuccess, rememberSecret, router, secret, submittedBy, url]
+  );
+
+  const handleUrlChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => setUrl(e.target.value),
+    []
+  );
+
+  const handleSecretChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => setSecret(e.target.value),
+    []
+  );
+
+  const handleSubmitterChange = useCallback((value: string | null) => {
+    if (value) {
+      setSubmittedBy(value);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(NAME_STORAGE_KEY, value);
+      }
+    }
+  }, []);
+
+  const handleShowSecretField = useCallback(() => setShowSecretField(true), []);
 
   return (
     <div className="w-full">
@@ -189,14 +220,14 @@ export function TweetSubmitForm({
           </Badge>
         </div>
       )}
-      {isLoadingSecret && (
+      {isLoadingSecret ? (
         <div className="mb-4">
           <Badge className="pt-[2px]" variant="outline">
             <Loader2 aria-hidden="true" className="animate-spin" />
             Loading…
           </Badge>
         </div>
-      )}
+      ) : null}
 
       {/* Form content */}
       {
@@ -211,7 +242,7 @@ export function TweetSubmitForm({
               id="tweet-url"
               inputMode="url"
               name="tweet-url"
-              onChange={(e) => setUrl(e.target.value)}
+              onChange={handleUrlChange}
               onKeyDown={handleKeyDown}
               placeholder="Paste a full Twitter/X URL (e.g., https://x.com/user/status/123)…"
               required
@@ -227,14 +258,7 @@ export function TweetSubmitForm({
             <Select
               disabled={isSubmitting}
               name="submitted-by"
-              onValueChange={(value: string | null) => {
-                if (value) {
-                  setSubmittedBy(value);
-                  if (typeof window !== "undefined") {
-                    localStorage.setItem(NAME_STORAGE_KEY, value);
-                  }
-                }
-              }}
+              onValueChange={handleSubmitterChange}
               required
               value={submittedBy || null}
             >
@@ -262,7 +286,7 @@ export function TweetSubmitForm({
                     disabled={isSubmitting}
                     id="api-secret"
                     name="api-secret"
-                    onChange={(e) => setSecret(e.target.value)}
+                    onChange={handleSecretChange}
                     placeholder="Enter your API secret…"
                     required
                     type="password"
@@ -289,9 +313,7 @@ export function TweetSubmitForm({
                 <Checkbox
                   checked={rememberSecret}
                   id="remember-secret"
-                  onCheckedChange={(checked: boolean) =>
-                    setRememberSecret(checked)
-                  }
+                  onCheckedChange={setRememberSecret}
                 />
                 <Label
                   className="cursor-pointer font-normal text-muted-foreground text-sm"
@@ -307,7 +329,7 @@ export function TweetSubmitForm({
           {hasStoredSecret && !showSecretField && (
             <Button
               className="h-auto p-0 pl-1"
-              onClick={() => setShowSecretField(true)}
+              onClick={handleShowSecretField}
               size="sm"
               type="button"
               variant="link"
@@ -316,7 +338,7 @@ export function TweetSubmitForm({
             </Button>
           )}
 
-          {message && (
+          {message ? (
             <output
               aria-live="polite"
               className={`block rounded-md p-4 ${
@@ -327,7 +349,7 @@ export function TweetSubmitForm({
             >
               {message.text}
             </output>
-          )}
+          ) : null}
 
           <Button className="w-full" disabled={isSubmitting} type="submit">
             {isSubmitting ? "Adding…" : "Add Tweet"}

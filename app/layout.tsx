@@ -8,29 +8,29 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Shared Tweet Feed",
   description: "Share and view tweets together",
   generator: "v0.app",
+  icons: {
+    apple: "/apple-icon.png",
+    icon: [
+      {
+        media: "(prefers-color-scheme: light)",
+        url: "/icon-light-32x32.png",
+      },
+      {
+        media: "(prefers-color-scheme: dark)",
+        url: "/icon-dark-32x32.png",
+      },
+      {
+        type: "image/svg+xml",
+        url: "/icon.svg",
+      },
+    ],
+  },
   // X rejects media requests that identify this app as the referring site.
   // A document policy also covers video posters, which have no referrerPolicy prop.
   referrer: "no-referrer",
-  icons: {
-    icon: [
-      {
-        url: "/icon-light-32x32.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/icon-dark-32x32.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
-      },
-    ],
-    apple: "/apple-icon.png",
-  },
+  title: "Shared Tweet Feed",
 };
 
 export default function RootLayout({

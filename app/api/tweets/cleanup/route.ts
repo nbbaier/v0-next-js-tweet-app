@@ -54,9 +54,9 @@ export async function GET(request: NextRequest) {
 
       const expiredTweets = await getExpiredTweets();
       return NextResponse.json({
-        success: true,
-        expiredTweets,
         count: expiredTweets.length,
+        expiredTweets,
+        success: true,
       });
     }
 
@@ -105,9 +105,9 @@ export async function DELETE(request: NextRequest) {
 
       const expiredTweets = await getExpiredTweets();
       return NextResponse.json({
-        success: true,
-        expiredTweets,
         count: expiredTweets.length,
+        expiredTweets,
+        success: true,
       });
     }
 

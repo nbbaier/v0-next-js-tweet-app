@@ -69,7 +69,7 @@ export async function publishTweetSeen(
 ): Promise<void> {
   try {
     const channel = getChannel();
-    await channel.emit("tweet.seen", { tweetId, seen });
+    await channel.emit("tweet.seen", { seen, tweetId });
     console.log(`[Realtime] Published tweet:seen for ${tweetId}`);
   } catch (error) {
     console.error("[Realtime ERROR] Failed to publish tweet:seen:", error);
@@ -86,7 +86,7 @@ export async function publishTweetSaved(
 ): Promise<void> {
   try {
     const channel = getChannel();
-    await channel.emit("tweet.saved", { tweetId, saved });
+    await channel.emit("tweet.saved", { saved, tweetId });
     console.log(`[Realtime] Published tweet:saved for ${tweetId}`);
   } catch (error) {
     console.error("[Realtime ERROR] Failed to publish tweet:saved:", error);

@@ -2,7 +2,7 @@
 
 import { Bookmark, BookmarkCheck, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { memo, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { EmbeddedTweet, Tweet } from "react-tweet";
 import type { Tweet as TweetType } from "react-tweet/api";
 import {
@@ -50,8 +50,8 @@ function formatSubmittedAt(timestamp: number): string {
     return `${diffDays} days ago`;
   }
   return date.toLocaleDateString(undefined, {
-    month: "short",
     day: "numeric",
+    month: "short",
     year: "numeric",
   });
 }
@@ -87,7 +87,7 @@ function TweetWithActionsComponent({
     }
   }, []);
 
-  const handleToggleSaved = async () => {
+  const handleToggleSaved = useCallback(async () => {
     setIsTogglingSavedStatus(true);
     setError(null);
 
@@ -97,12 +97,12 @@ function TweetWithActionsComponent({
       } else {
         const secretToUse = apiSecret || storedSecret;
         const response = await fetch(`/api/tweets/${tweetId}`, {
-          method: "PATCH",
+          body: JSON.stringify({ saved: !isSaved }),
           headers: {
             "Content-Type": "application/json",
             ...(secretToUse ? { "x-api-secret": secretToUse } : {}),
           },
-          body: JSON.stringify({ saved: !isSaved }),
+          method: "PATCH",
         });
 
         if (!response.ok) {
@@ -112,16 +112,16 @@ function TweetWithActionsComponent({
 
         router.refresh();
       }
-    } catch (error) {
+    } catch (err) {
       setError(
-        error instanceof Error ? error.message : "Failed to update saved status"
+        err instanceof Error ? err.message : "Failed to update saved status"
       );
     } finally {
       setIsTogglingSavedStatus(false);
     }
-  };
+  }, [apiSecret, isSaved, onToggleSaved, router, storedSecret, tweetId]);
 
-  const handleToggleSeen = async () => {
+  const handleToggleSeen = useCallback(async () => {
     setIsTogglingSeenStatus(true);
     setError(null);
 
@@ -133,12 +133,12 @@ function TweetWithActionsComponent({
         // Fallback to original behavior
         const secretToUse = apiSecret || storedSecret;
         const response = await fetch(`/api/tweets/${tweetId}`, {
-          method: "PATCH",
+          body: JSON.stringify({ seen: !isSeen }),
           headers: {
             "Content-Type": "application/json",
             ...(secretToUse ? { "x-api-secret": secretToUse } : {}),
           },
-          body: JSON.stringify({ seen: !isSeen }),
+          method: "PATCH",
         });
 
         const data = await response.json();
@@ -149,16 +149,16 @@ function TweetWithActionsComponent({
 
         router.refresh();
       }
-    } catch (error) {
+    } catch (err) {
       setError(
-        error instanceof Error ? error.message : "Failed to update seen status"
+        err instanceof Error ? err.message : "Failed to update seen status"
       );
     } finally {
       setIsTogglingSeenStatus(false);
     }
-  };
+  }, [apiSecret, isSeen, onToggleSeen, router, storedSecret, tweetId]);
 
-  const handleDelete = async () => {
+  const handleDelete = useCallback(async () => {
     const secretToUse = apiSecret || storedSecret;
 
     if (!secretToUse) {
@@ -178,10 +178,10 @@ function TweetWithActionsComponent({
       } else {
         // Fallback to original behavior
         const response = await fetch(`/api/tweets/${tweetId}`, {
-          method: "DELETE",
           headers: {
             "x-api-secret": secretToUse,
           },
+          method: "DELETE",
         });
 
         const data = await response.json();
@@ -194,15 +194,28 @@ function TweetWithActionsComponent({
         setError(null);
         router.refresh();
       }
-    } catch (error) {
-      setError(
-        error instanceof Error ? error.message : "Failed to delete tweet"
-      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete tweet");
       setIsDeleting(false);
     }
-  };
+  }, [apiSecret, onDelete, router, storedSecret, tweetId]);
 
-  const seenButtonLabel = isSeen ? "Mark as Unseen" : "Mark as Seen";
+  const handleDialogOpenChange = useCallback((open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      setError(null);
+    }
+  }, []);
+
+  const handleCancelDelete = useCallback(() => {
+    setDialogOpen(false);
+    setError(null);
+  }, []);
+
+  let seenButtonLabel = isSeen ? "Mark as Unseen" : "Mark as Seen";
+  if (isTogglingSeenStatus) {
+    seenButtonLabel = "Updating…";
+  }
 
   return (
     <div className="flex w-full flex-col items-center space-y-1">
@@ -222,11 +235,11 @@ function TweetWithActionsComponent({
             Added by: Unknown
           </span>
         )}
-        {submittedAt && (
+        {submittedAt ? (
           <span className="text-muted-foreground/70 text-xs">
             {formatSubmittedAt(submittedAt)}
           </span>
-        )}
+        ) : null}
       </div>
 
       {/* Tweet display with conditional styling for seen tweets */}
@@ -236,9 +249,9 @@ function TweetWithActionsComponent({
         }`}
       >
         {content ? <EmbeddedTweet tweet={content} /> : <Tweet id={tweetId} />}
-        {isSeen && (
+        {isSeen ? (
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent to-background" />
-        )}
+        ) : null}
       </div>
 
       {/* Action buttons below the tweet - constrained to tweet width */}
@@ -259,26 +272,18 @@ function TweetWithActionsComponent({
             <Bookmark aria-hidden="true" className="h-4 w-4" />
           )}
         </Button>
-        {onToggleSeen && (
+        {onToggleSeen ? (
           <Button
             disabled={isTogglingSeenStatus}
             onClick={handleToggleSeen}
             size="sm"
             variant="outline"
           >
-            {isTogglingSeenStatus ? "Updating…" : seenButtonLabel}
+            {seenButtonLabel}
           </Button>
-        )}
+        ) : null}
 
-        <AlertDialog
-          onOpenChange={(open: boolean) => {
-            setDialogOpen(open);
-            if (!open) {
-              setError(null);
-            }
-          }}
-          open={dialogOpen}
-        >
+        <AlertDialog onOpenChange={handleDialogOpenChange} open={dialogOpen}>
           <AlertDialogTrigger
             render={
               <Button
@@ -299,21 +304,18 @@ function TweetWithActionsComponent({
                 be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            {error && (
+            {error ? (
               <output
                 aria-live="polite"
                 className="block rounded bg-red-50 p-2 text-red-600 text-xs dark:bg-red-900/20"
               >
                 {error}
               </output>
-            )}
+            ) : null}
             <AlertDialogFooter>
               <AlertDialogCancel
                 disabled={isDeleting}
-                onClick={() => {
-                  setDialogOpen(false);
-                  setError(null);
-                }}
+                onClick={handleCancelDelete}
               >
                 Cancel
               </AlertDialogCancel>
@@ -393,7 +395,7 @@ function arePropsEqual(
     return false;
   }
 
-  for (let i = 0; i < prevProps.submittedBy.length; i++) {
+  for (let i = 0; i < prevProps.submittedBy.length; i += 1) {
     if (prevProps.submittedBy[i] !== nextProps.submittedBy[i]) {
       return false;
     }

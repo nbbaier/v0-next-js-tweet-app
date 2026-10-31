@@ -49,7 +49,7 @@ describe("cleanupOldTweets", () => {
   it("deletes a tweet older than 3 days that is seen and not saved", async () => {
     mockGetTweetIds.mockResolvedValue(["111"]);
     mockGetMetadataBatch.mockResolvedValue([
-      makeMetadata("111", { submittedAt: NOW - 4 * DAY_MS, seen: true }),
+      makeMetadata("111", { seen: true, submittedAt: NOW - 4 * DAY_MS }),
     ]);
 
     const result = await cleanupOldTweets();
@@ -67,9 +67,9 @@ describe("cleanupOldTweets", () => {
     mockGetTweetIds.mockResolvedValue(["222"]);
     mockGetMetadataBatch.mockResolvedValue([
       makeMetadata("222", {
-        submittedAt: NOW - 4 * DAY_MS,
-        seen: true,
         saved: true,
+        seen: true,
+        submittedAt: NOW - 4 * DAY_MS,
       }),
     ]);
 
@@ -83,7 +83,7 @@ describe("cleanupOldTweets", () => {
   it("does not delete an old tweet that is unseen", async () => {
     mockGetTweetIds.mockResolvedValue(["333"]);
     mockGetMetadataBatch.mockResolvedValue([
-      makeMetadata("333", { submittedAt: NOW - 4 * DAY_MS, seen: false }),
+      makeMetadata("333", { seen: false, submittedAt: NOW - 4 * DAY_MS }),
     ]);
 
     const result = await cleanupOldTweets();
@@ -95,7 +95,7 @@ describe("cleanupOldTweets", () => {
   it("does not delete a seen tweet newer than 3 days", async () => {
     mockGetTweetIds.mockResolvedValue(["444"]);
     mockGetMetadataBatch.mockResolvedValue([
-      makeMetadata("444", { submittedAt: NOW - 2 * DAY_MS, seen: true }),
+      makeMetadata("444", { seen: true, submittedAt: NOW - 2 * DAY_MS }),
     ]);
 
     const result = await cleanupOldTweets();
@@ -142,8 +142,8 @@ describe("cleanupOldTweets", () => {
   it("records an error for a failed removal and keeps processing", async () => {
     mockGetTweetIds.mockResolvedValue(["666", "777"]);
     mockGetMetadataBatch.mockResolvedValue([
-      makeMetadata("666", { submittedAt: NOW - 5 * DAY_MS, seen: true }),
-      makeMetadata("777", { submittedAt: NOW - 5 * DAY_MS, seen: true }),
+      makeMetadata("666", { seen: true, submittedAt: NOW - 5 * DAY_MS }),
+      makeMetadata("777", { seen: true, submittedAt: NOW - 5 * DAY_MS }),
     ]);
     mockRemoveTweet.mockImplementation((id) => {
       if (id === "666") {
@@ -155,7 +155,7 @@ describe("cleanupOldTweets", () => {
     const result = await cleanupOldTweets();
 
     expect(result.errors).toEqual([
-      { tweetId: "666", error: "redis unavailable" },
+      { error: "redis unavailable", tweetId: "666" },
     ]);
     expect(result.deletedCount).toBe(1);
     expect(result.deletedTweetIds).toEqual(["777"]);
@@ -179,23 +179,23 @@ describe("getExpiredTweets", () => {
   it("returns only old, seen, unsaved tweets with ageInDays populated", async () => {
     mockGetTweetIds.mockResolvedValue(["old-seen", "old-saved", "fresh"]);
     mockGetMetadataBatch.mockResolvedValue([
-      makeMetadata("old-seen", { submittedAt: NOW - 6 * DAY_MS, seen: true }),
+      makeMetadata("old-seen", { seen: true, submittedAt: NOW - 6 * DAY_MS }),
       makeMetadata("old-saved", {
-        submittedAt: NOW - 6 * DAY_MS,
-        seen: true,
         saved: true,
+        seen: true,
+        submittedAt: NOW - 6 * DAY_MS,
       }),
-      makeMetadata("fresh", { submittedAt: NOW - 1 * DAY_MS, seen: true }),
+      makeMetadata("fresh", { seen: true, submittedAt: NOW - 1 * DAY_MS }),
     ]);
 
     const expired = await getExpiredTweets();
 
     expect(expired).toEqual([
       {
-        id: "old-seen",
-        submittedAt: NOW - 6 * DAY_MS,
         ageInDays: 6,
+        id: "old-seen",
         seen: true,
+        submittedAt: NOW - 6 * DAY_MS,
       },
     ]);
   });
@@ -203,7 +203,7 @@ describe("getExpiredTweets", () => {
   it("excludes old but unseen tweets", async () => {
     mockGetTweetIds.mockResolvedValue(["888"]);
     mockGetMetadataBatch.mockResolvedValue([
-      makeMetadata("888", { submittedAt: NOW - 10 * DAY_MS, seen: false }),
+      makeMetadata("888", { seen: false, submittedAt: NOW - 10 * DAY_MS }),
     ]);
 
     expect(await getExpiredTweets()).toEqual([]);

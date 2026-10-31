@@ -47,45 +47,54 @@ export async function cleanupOldTweets(): Promise<CleanupResult> {
     // Fetch all metadata in a single bulk request (reduces N Redis GETs to 1 MGET)
     const metadataBatch = await getTweetMetadataBatch(tweetIds);
 
-    // Check each tweet and delete if older than retention period AND marked as seen
-    for (let i = 0; i < tweetIds.length; i++) {
+    // Select tweets older than retention period AND marked as seen AND not saved
+    const toDelete: string[] = [];
+    for (let i = 0; i < tweetIds.length; i += 1) {
       const tweetId = tweetIds[i];
       const metadata = metadataBatch[i];
 
-      try {
-        if (!metadata) {
-          console.warn(`[Cleanup] No metadata found for tweet ${tweetId}`);
-          continue;
-        }
+      if (!metadata) {
+        console.warn(`[Cleanup] No metadata found for tweet ${tweetId}`);
+        continue;
+      }
 
-        // Check if tweet is older than retention period AND has been seen AND is not saved
-        if (
-          metadata.submittedAt < cutoffTime &&
-          metadata.seen === true &&
-          metadata.saved !== true
-        ) {
-          const ageInDays =
-            (now - metadata.submittedAt) / (24 * 60 * 60 * 1000);
-          console.log(
-            `[Cleanup] Deleting tweet ${tweetId} (age: ${ageInDays.toFixed(1)} days, seen: true)`
-          );
+      if (
+        metadata.submittedAt < cutoffTime &&
+        metadata.seen === true &&
+        metadata.saved !== true
+      ) {
+        const ageInDays = (now - metadata.submittedAt) / (24 * 60 * 60 * 1000);
+        console.log(
+          `[Cleanup] Deleting tweet ${tweetId} (age: ${ageInDays.toFixed(1)} days, seen: true)`
+        );
+        toDelete.push(tweetId);
+      } else if (metadata.submittedAt < cutoffTime && !metadata.seen) {
+        console.log(
+          `[Cleanup] Skipping unseen tweet ${tweetId} (age: ${((now - metadata.submittedAt) / (24 * 60 * 60 * 1000)).toFixed(1)} days)`
+        );
+      }
+    }
 
-          await removeTweetFromStorage(tweetId);
-          result.deletedCount++;
-          result.deletedTweetIds.push(tweetId);
-        } else if (metadata.submittedAt < cutoffTime && !metadata.seen) {
-          console.log(
-            `[Cleanup] Skipping unseen tweet ${tweetId} (age: ${((now - metadata.submittedAt) / (24 * 60 * 60 * 1000)).toFixed(1)} days)`
-          );
-        }
-      } catch (error) {
+    // Delete selected tweets concurrently, recording per-tweet failures
+    const outcomes = await Promise.allSettled(
+      toDelete.map((tweetId) => removeTweetFromStorage(tweetId))
+    );
+    for (const [i, outcome] of outcomes.entries()) {
+      const tweetId = toDelete[i];
+      if (outcome.status === "fulfilled") {
+        result.deletedCount += 1;
+        result.deletedTweetIds.push(tweetId);
+      } else {
         console.error(
           `[Cleanup ERROR] Failed to process tweet ${tweetId}:`,
-          error
+          outcome.reason
         );
         result.errors.push({
+          error:
+            outcome.reason instanceof Error
+              ? outcome.reason.message
+              : "Unknown error",
           tweetId,
-          error: error instanceof Error ? error.message : "Unknown error",
         });
       }
     }
@@ -124,7 +133,7 @@ export async function getExpiredTweets(): Promise<
       seen: boolean;
     }> = [];
 
-    for (let i = 0; i < tweetIds.length; i++) {
+    for (let i = 0; i < tweetIds.length; i += 1) {
       const tweetId = tweetIds[i];
       const metadata = metadataBatch[i];
 
@@ -136,10 +145,10 @@ export async function getExpiredTweets(): Promise<
       ) {
         const ageInDays = (now - metadata.submittedAt) / (24 * 60 * 60 * 1000);
         expiredTweets.push({
-          id: tweetId,
-          submittedAt: metadata.submittedAt,
           ageInDays,
+          id: tweetId,
           seen: metadata.seen,
+          submittedAt: metadata.submittedAt,
         });
       }
     }

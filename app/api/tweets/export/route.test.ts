@@ -46,10 +46,10 @@ function makeMetadata(id: string, overrides: { saved?: boolean } = {}) {
 
 function makeTweet(id: string): Tweet {
   return {
-    id_str: id,
-    text: `tweet ${id}`,
     display_text_range: [0, 8],
     entities: { hashtags: [], symbols: [], urls: [], user_mentions: [] },
+    id_str: id,
+    text: `tweet ${id}`,
   } as unknown as Tweet;
 }
 
@@ -141,11 +141,11 @@ describe("GET /api/tweets/export", () => {
     expect(body.count).toBe(2);
     expect(body.tweets).toEqual([
       {
+        content: null,
         id: "gone",
         metadata: makeMetadata("gone", { saved: true }),
-        content: null,
       },
-      { id: "missing", metadata: makeMetadata("missing"), content: null },
+      { content: null, id: "missing", metadata: makeMetadata("missing") },
     ]);
   });
 });

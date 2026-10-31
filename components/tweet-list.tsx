@@ -75,6 +75,7 @@ export function TweetList({
       return;
     }
     const sentinel = sentinelRef.current;
+    // biome-ignore lint/suspicious/noUnnecessaryConditions: false positive; ref is HTMLDivElement | null
     if (!sentinel) {
       return;
     }
@@ -117,7 +118,7 @@ export function TweetList({
           Add your first tweet using the form above, or toggle development
           tweets to see some examples.
         </p>
-        {onToggleDevTweets && (
+        {onToggleDevTweets ? (
           <Button
             className="mt-2"
             onClick={onToggleDevTweets}
@@ -125,7 +126,7 @@ export function TweetList({
           >
             {showDevTweets ? "Hide" : "Show"} Development Tweets
           </Button>
-        )}
+        ) : null}
       </div>
     );
   }
@@ -148,9 +149,9 @@ export function TweetList({
                 ? { duration: 0 }
                 : {
                     layout: {
-                      type: "spring",
-                      stiffness: 350,
                       damping: 30,
+                      stiffness: 350,
+                      type: "spring",
                     },
                     opacity: { duration: 0.2 },
                   }

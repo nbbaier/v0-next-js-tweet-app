@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle2, Key, XCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { type ChangeEvent, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -40,12 +40,12 @@ export function ApiSecretDialog() {
     }
   }, []);
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     const secretToUse = secret.trim();
     if (!secretToUse) {
       setMessage({
-        type: "error",
         text: "Please enter an API secret to save",
+        type: "error",
       });
       return;
     }
@@ -54,8 +54,8 @@ export function ApiSecretDialog() {
       localStorage.setItem(STORAGE_KEY, secretToUse);
       setHasStoredSecret(true);
       setMessage({
-        type: "success",
         text: "API secret saved successfully!",
+        type: "success",
       });
 
       setTimeout(() => {
@@ -63,20 +63,25 @@ export function ApiSecretDialog() {
         setMessage(null);
       }, 1000);
     }
-  };
+  }, [rememberSecret, secret]);
 
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     if (typeof window !== "undefined") {
       localStorage.removeItem(STORAGE_KEY);
       setSecret("");
       setHasStoredSecret(false);
       setRememberSecret(false);
       setMessage({
-        type: "success",
         text: "API secret cleared successfully!",
+        type: "success",
       });
     }
-  };
+  }, []);
+
+  const handleSecretChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => setSecret(e.target.value),
+    []
+  );
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
@@ -108,7 +113,7 @@ export function ApiSecretDialog() {
               autoComplete="off"
               id="api-secret"
               name="api-secret"
-              onChange={(e) => setSecret(e.target.value)}
+              onChange={handleSecretChange}
               placeholder="Enter your API secret…"
               type="password"
               value={secret}
@@ -122,7 +127,7 @@ export function ApiSecretDialog() {
             <Checkbox
               checked={rememberSecret}
               id="remember-secret"
-              onCheckedChange={(checked: boolean) => setRememberSecret(checked)}
+              onCheckedChange={setRememberSecret}
             />
             <Label
               className="cursor-pointer font-normal text-muted-foreground text-sm"
@@ -132,7 +137,7 @@ export function ApiSecretDialog() {
             </Label>
           </div>
 
-          {message && (
+          {message ? (
             <output
               aria-live="polite"
               className={`block rounded-md p-4 ${
@@ -143,17 +148,17 @@ export function ApiSecretDialog() {
             >
               {message.text}
             </output>
-          )}
+          ) : null}
 
           <div className="flex gap-2">
             <Button className="flex-1" onClick={handleSave}>
               Save Secret
             </Button>
-            {hasStoredSecret && (
+            {hasStoredSecret ? (
               <Button onClick={handleClear} variant="destructive">
                 Clear
               </Button>
-            )}
+            ) : null}
           </div>
         </div>
       </DialogContent>

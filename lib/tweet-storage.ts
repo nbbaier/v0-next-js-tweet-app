@@ -68,8 +68,8 @@ export async function addTweetToStorage(
         // Publish real-time update
         const updatedTweetData: TweetData = {
           id: tweetId,
-          submittedBy: updatedMetadata.posters.map((p) => p.name),
           seen: updatedMetadata.seen,
+          submittedBy: updatedMetadata.posters.map((p) => p.name),
         };
         try {
           await publishTweetUpdated(updatedTweetData);
@@ -92,17 +92,17 @@ export async function addTweetToStorage(
     // New tweet, create metadata
     const metadata: TweetMetadata = {
       id: tweetId,
-      submittedAt: timestamp,
       posters: submittedBy
         ? [{ name: submittedBy, submittedAt: timestamp }]
         : [],
+      submittedAt: timestamp,
       url: `https://twitter.com/i/status/${tweetId}`,
     };
 
     // Add to sorted set (score = timestamp for chronological ordering)
     await redis.zadd(TWEETS_LIST_KEY, {
-      score: timestamp,
       member: tweetId,
+      score: timestamp,
     });
 
     // Store metadata separately
@@ -113,8 +113,8 @@ export async function addTweetToStorage(
     // Publish real-time update
     const tweetData: TweetData = {
       id: tweetId,
-      submittedBy: metadata.posters.map((p) => p.name),
       seen: metadata.seen,
+      submittedBy: metadata.posters.map((p) => p.name),
     };
     console.log(
       `[Storage] About to publish tweet:added for ${tweetId}`,
@@ -178,12 +178,12 @@ function normalizeTweetMetadata(
     const legacy = metadata as LegacyTweetMetadata;
     return {
       id: legacy.id,
-      submittedAt: legacy.submittedAt,
       posters: legacy.submittedBy
         ? [{ name: legacy.submittedBy, submittedAt: legacy.submittedAt }]
         : [],
-      url: legacy.url,
       seen: legacy.seen,
+      submittedAt: legacy.submittedAt,
+      url: legacy.url,
     };
   }
   return metadata as TweetMetadata;
@@ -395,8 +395,8 @@ export async function updateTweetSaved(
     if (saved) {
       // Add to saved sorted set
       await redis.zadd(TWEETS_SAVED_KEY, {
-        score: Date.now(),
         member: tweetId,
+        score: Date.now(),
       });
     } else {
       // Remove from saved sorted set

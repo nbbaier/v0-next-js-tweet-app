@@ -61,6 +61,32 @@ function FilterBadge({
   );
 }
 
+function SelectFilterBadge({
+  count,
+  filter,
+  onSelectFilter,
+  selectedFilter,
+}: {
+  count: number;
+  filter: string | null;
+  onSelectFilter: (filter: string | null) => void;
+  selectedFilter: string | null;
+}) {
+  const handleClick = useCallback(
+    () => onSelectFilter(filter),
+    [filter, onSelectFilter]
+  );
+
+  return (
+    <FilterBadge
+      count={count}
+      label={filter ?? "All"}
+      onClick={handleClick}
+      variant={selectedFilter === filter ? "default" : "secondary"}
+    />
+  );
+}
+
 function FilterBadgesSection({
   showHideSeen,
   currentCounts,
@@ -86,20 +112,20 @@ function FilterBadgesSection({
   if (showFiltersAndToggle) {
     return (
       <>
-        <FilterBadge
+        <SelectFilterBadge
           count={currentCounts.total}
-          label="All"
-          onClick={() => onSelectFilter(null)}
-          variant={selectedFilter === null ? "default" : "secondary"}
+          filter={null}
+          onSelectFilter={onSelectFilter}
+          selectedFilter={selectedFilter}
         />
 
         {currentPeople.map(([person, count]) => (
-          <FilterBadge
+          <SelectFilterBadge
             count={count}
+            filter={person}
             key={person}
-            label={person}
-            onClick={() => onSelectFilter(person)}
-            variant={selectedFilter === person ? "default" : "secondary"}
+            onSelectFilter={onSelectFilter}
+            selectedFilter={selectedFilter}
           />
         ))}
 
@@ -128,20 +154,20 @@ function FilterBadgesSection({
 
   return (
     <>
-      <FilterBadge
+      <SelectFilterBadge
         count={currentCounts.total}
-        label="All"
-        onClick={() => onSelectFilter(null)}
-        variant={selectedFilter === null ? "default" : "secondary"}
+        filter={null}
+        onSelectFilter={onSelectFilter}
+        selectedFilter={selectedFilter}
       />
 
       {currentPeople.map(([person, count]) => (
-        <FilterBadge
+        <SelectFilterBadge
           count={count}
+          filter={person}
           key={person}
-          label={person}
-          onClick={() => onSelectFilter(person)}
-          variant={selectedFilter === person ? "default" : "secondary"}
+          onSelectFilter={onSelectFilter}
+          selectedFilter={selectedFilter}
         />
       ))}
     </>
@@ -172,12 +198,12 @@ function useTweetActions(
 
       try {
         const response = await fetch(`/api/tweets/${tweetId}`, {
-          method: "PATCH",
+          body: JSON.stringify({ seen: !currentSeenStatus }),
           headers: {
             "Content-Type": "application/json",
             ...(storedSecret ? { "x-api-secret": storedSecret } : {}),
           },
-          body: JSON.stringify({ seen: !currentSeenStatus }),
+          method: "PATCH",
         });
 
         if (!response.ok) {
@@ -222,8 +248,8 @@ function useTweetActions(
 
       try {
         const response = await fetch(`/api/tweets/${tweetId}`, {
-          method: "DELETE",
           headers: { "x-api-secret": storedSecret },
+          method: "DELETE",
         });
 
         if (!response.ok) {
@@ -278,12 +304,12 @@ function useTweetActions(
 
       try {
         const response = await fetch(`/api/tweets/${tweetId}`, {
-          method: "PATCH",
+          body: JSON.stringify({ saved: !currentSavedStatus }),
           headers: {
             "Content-Type": "application/json",
             ...(storedSecret ? { "x-api-secret": storedSecret } : {}),
           },
-          body: JSON.stringify({ saved: !currentSavedStatus }),
+          method: "PATCH",
         });
 
         if (!response.ok) {
@@ -303,7 +329,7 @@ function useTweetActions(
     [setTweets]
   );
 
-  return { handleToggleSeen, handleDelete, handleToggleSaved };
+  return { handleDelete, handleToggleSaved, handleToggleSeen };
 }
 
 function countByPoster(
@@ -398,6 +424,16 @@ export function FilterableTweetFeed({
     [hideSeenTweets, updateUrl]
   );
 
+  const handleShowFeed = useCallback(
+    () => handleTabChange("feed"),
+    [handleTabChange]
+  );
+
+  const handleShowSaved = useCallback(
+    () => handleTabChange("saved"),
+    [handleTabChange]
+  );
+
   const handleToggleHideSeen = useCallback(() => {
     updateUrl(selectedFilter, !hideSeenTweets);
   }, [hideSeenTweets, selectedFilter, updateUrl]);
@@ -405,14 +441,14 @@ export function FilterableTweetFeed({
   // Use real-time tweets hook
   const { tweets, setTweets } = useRealtimeTweets(initialTweets, {
     enabled: true,
-    onError: (error) => {
-      console.error("[FilterableTweetFeed] Real-time error:", error);
-    },
     onConnected: () => {
       console.log("[FilterableTweetFeed] Connected to real-time updates");
     },
     onDisconnected: () => {
       console.log("[FilterableTweetFeed] Disconnected from real-time updates");
+    },
+    onError: (error) => {
+      console.error("[FilterableTweetFeed] Real-time error:", error);
     },
   });
 
@@ -556,7 +592,7 @@ export function FilterableTweetFeed({
           {/* Tab switcher */}
           <Button
             className="text-sm"
-            onClick={() => handleTabChange("feed")}
+            onClick={handleShowFeed}
             size="sm"
             variant={activeTab === "feed" ? "default" : "ghost"}
           >
@@ -564,7 +600,7 @@ export function FilterableTweetFeed({
           </Button>
           <Button
             className="text-sm"
-            onClick={() => handleTabChange("saved")}
+            onClick={handleShowSaved}
             size="sm"
             variant={activeTab === "saved" ? "default" : "ghost"}
           >

@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,6 +14,7 @@ import { TweetSubmitForm } from "./tweet-submit-form";
 
 export function AddTweetDialog() {
   const [open, setOpen] = useState(false);
+  const handleSuccess = useCallback(() => setOpen(false), []);
 
   return (
     <Dialog onOpenChange={setOpen} open={open}>
@@ -25,7 +26,7 @@ export function AddTweetDialog() {
         <DialogHeader>
           <DialogTitle>Add a Tweet</DialogTitle>
         </DialogHeader>
-        <TweetSubmitForm onSuccess={() => setOpen(false)} />
+        <TweetSubmitForm onSuccess={handleSuccess} />
       </DialogContent>
     </Dialog>
   );

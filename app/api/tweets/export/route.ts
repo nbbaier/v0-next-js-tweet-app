@@ -41,15 +41,15 @@ export async function GET(request: NextRequest) {
 
     const exportedAt = new Date().toISOString();
     const doc = {
-      success: true,
-      exportedAt,
       count: allIds.length,
+      exportedAt,
+      success: true,
       // Iterate allIds, not `tweets`: fetchTweetsWithCache drops tweets whose
       // content is unavailable, but their metadata still belongs in a backup.
       tweets: allIds.map((id) => ({
+        content: contentById.get(id)?.content ?? null,
         id,
         metadata: metadataById.get(id) ?? null,
-        content: contentById.get(id)?.content ?? null,
       })),
     };
 
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("[API ERROR] Failed to export tweets:", error);
     return NextResponse.json(
-      { success: false, error: "Internal server error" },
+      { error: "Internal server error", success: false },
       { status: 500 }
     );
   }

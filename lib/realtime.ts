@@ -4,9 +4,9 @@ import { redis } from "./redis";
 
 const tweetDataSchema = z.object({
   id: z.string(),
-  submittedBy: z.array(z.string()),
-  seen: z.boolean().optional(),
   saved: z.boolean().optional(),
+  seen: z.boolean().optional(),
+  submittedBy: z.array(z.string()),
 });
 
 const schema = {
@@ -14,27 +14,27 @@ const schema = {
     added: z.object({
       tweet: tweetDataSchema,
     }),
-    updated: z.object({
-      tweet: tweetDataSchema,
-    }),
     removed: z.object({
       id: z.string(),
     }),
-    seen: z.object({
-      tweetId: z.string(),
-      seen: z.boolean(),
-    }),
     saved: z.object({
-      tweetId: z.string(),
       saved: z.boolean(),
+      tweetId: z.string(),
+    }),
+    seen: z.object({
+      seen: z.boolean(),
+      tweetId: z.string(),
+    }),
+    updated: z.object({
+      tweet: tweetDataSchema,
     }),
   },
 };
 
 export const realtime = new Realtime({
-  schema,
-  redis,
   maxDurationSecs: 300,
+  redis,
+  schema,
 });
 
 export type RealtimeEvents = InferRealtimeEvents<typeof realtime>;

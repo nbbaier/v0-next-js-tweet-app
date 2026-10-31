@@ -29,7 +29,7 @@ export function parseTweetUrl(input: string): ParsedTweet | null {
   for (const pattern of TWEET_URL_PATTERNS) {
     const match = trimmed.match(pattern);
     if (match) {
-      const tweetId = match[1];
+      const [, tweetId] = match;
       return {
         id: tweetId,
         url: `https://twitter.com/i/status/${tweetId}`,

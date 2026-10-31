@@ -17,9 +17,9 @@ import {
 
 const patchBodySchema = z
   .object({
-    seen: z.boolean().optional(),
     saved: z.boolean().optional(),
     secret: z.string().optional(),
+    seen: z.boolean().optional(),
   })
   .refine((b) => typeof b.seen === "boolean" || typeof b.saved === "boolean", {
     message: "Must provide 'seen' (boolean) or 'saved' (boolean).",
@@ -60,9 +60,9 @@ export async function DELETE(
     revalidatePath("/");
 
     return NextResponse.json({
+      message: "Tweet removed successfully",
       success: true,
       tweetId,
-      message: "Tweet removed successfully",
     });
   } catch (error) {
     console.error("[API ERROR] Failed to delete tweet:", error);
@@ -154,8 +154,8 @@ export async function PATCH(
     revalidatePath("/");
 
     return NextResponse.json({
-      success: true,
       metadata: updatedMetadata,
+      success: true,
     });
   } catch (error) {
     console.error("[API ERROR] Failed to update tweet:", error);

@@ -91,7 +91,7 @@ export async function fetchTweetsWithCache(
   const contentFetchIndices: number[] = [];
 
   // Prepare data and identify missing content
-  for (let i = 0; i < tweetIds.length; i++) {
+  for (let i = 0; i < tweetIds.length; i += 1) {
     const id = tweetIds[i];
     const cached = cachedTweets[i];
     const metadata = metadataBatch[i];
@@ -103,10 +103,10 @@ export async function fetchTweetsWithCache(
         results.push({
           ...cached,
           content,
-          submittedBy: metadata.posters.map((p) => p.name),
-          submittedAt: metadata.submittedAt,
-          seen: metadata.seen,
           saved: metadata.saved,
+          seen: metadata.seen,
+          submittedAt: metadata.submittedAt,
+          submittedBy: metadata.posters.map((p) => p.name),
         });
       } else {
         results.push({ ...cached, content });
@@ -116,12 +116,12 @@ export async function fetchTweetsWithCache(
       // We need to fetch content
       // We'll insert a placeholder and fill it later
       const placeholder: TweetData = {
-        id,
-        submittedBy: metadata?.posters.map((p) => p.name) || [],
-        submittedAt: metadata?.submittedAt,
-        seen: metadata?.seen,
-        saved: metadata?.saved,
         content: cached?.content, // Might be undefined
+        id,
+        saved: metadata?.saved,
+        seen: metadata?.seen,
+        submittedAt: metadata?.submittedAt,
+        submittedBy: metadata?.posters.map((p) => p.name) || [],
       };
       results.push(placeholder);
 
@@ -139,7 +139,7 @@ export async function fetchTweetsWithCache(
   if (contentFetches.length > 0) {
     const fetchedContents = await Promise.all(contentFetches);
 
-    for (let i = 0; i < fetchedContents.length; i++) {
+    for (let i = 0; i < fetchedContents.length; i += 1) {
       const content = fetchedContents[i];
       const originalIndex = contentFetchIndices[i];
       const tweetData = results[originalIndex];

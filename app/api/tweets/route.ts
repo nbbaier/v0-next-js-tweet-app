@@ -12,9 +12,9 @@ import { parseTweetUrl } from "@/lib/tweet-parser";
 import { addTweetToStorage, getTweetIdsFromStorage } from "@/lib/tweet-storage";
 
 const postBodySchema = z.object({
-  url: z.string().min(1).max(500),
   secret: z.string().optional(),
   submittedBy: z.string().trim().max(50).optional(),
+  url: z.string().min(1).max(500),
 });
 
 /**
@@ -62,9 +62,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
+        metadata,
         success: true,
         tweetId: parsed.id,
-        metadata,
       },
       { status: 201 }
     );
@@ -91,9 +91,9 @@ export async function GET(request: NextRequest) {
     const tweetIds = await getTweetIdsFromStorage();
 
     return NextResponse.json({
+      count: tweetIds.length,
       success: true,
       tweetIds,
-      count: tweetIds.length,
     });
   } catch (error) {
     console.error("[API ERROR] Failed to get tweets:", error);

@@ -25,12 +25,12 @@ export function useRealtimeTweets(
 
   // Tweet added handler
   const { status: statusAdded } = useRealtime<RealtimeEvents, "tweet.added">({
-    enabled,
     channels: ["tweets"],
+    enabled,
     events: ["tweet.added"],
     onData: (data) => {
       console.log("[Realtime Hook] ✅ Received tweet.added event:", data);
-      const tweet = data.data.tweet;
+      const { tweet } = data.data;
       setTweets((prev) => {
         if (prev.some((t) => t.id === tweet.id)) {
           return prev.map((t) => (t.id === tweet.id ? tweet : t));
@@ -43,8 +43,8 @@ export function useRealtimeTweets(
 
   // Tweet removed handler
   useRealtime<RealtimeEvents, "tweet.removed">({
-    enabled,
     channels: ["tweets"],
+    enabled,
     events: ["tweet.removed"],
     onData: (data) => {
       console.log("[Realtime Hook] ✅ Received tweet.removed event:", data);
@@ -55,12 +55,12 @@ export function useRealtimeTweets(
 
   // Tweet updated handler
   useRealtime<RealtimeEvents, "tweet.updated">({
-    enabled,
     channels: ["tweets"],
+    enabled,
     events: ["tweet.updated"],
     onData: (data) => {
       console.log("[Realtime Hook] ✅ Received tweet.updated event:", data);
-      const tweet = data.data.tweet;
+      const { tweet } = data.data;
       setTweets((prev) =>
         prev.map((t) => (t.id === tweet.id ? { ...t, ...tweet } : t))
       );
@@ -70,8 +70,8 @@ export function useRealtimeTweets(
 
   // Tweet saved handler
   useRealtime<RealtimeEvents, "tweet.saved">({
-    enabled,
     channels: ["tweets"],
+    enabled,
     events: ["tweet.saved"],
     onData: (data) => {
       console.log("[Realtime Hook] Received tweet.saved event:", data);
@@ -90,8 +90,8 @@ export function useRealtimeTweets(
 
   // Tweet seen handler
   useRealtime<RealtimeEvents, "tweet.seen">({
-    enabled,
     channels: ["tweets"],
+    enabled,
     events: ["tweet.seen"],
     onData: (data) => {
       console.log("[Realtime Hook] ✅ Received tweet.seen event:", data);
@@ -129,8 +129,8 @@ export function useRealtimeTweets(
   }, [initialTweets]);
 
   return {
-    tweets,
-    setTweets,
     isConnected,
+    setTweets,
+    tweets,
   };
 }

@@ -6,7 +6,6 @@ import { EmbeddedTweet, Tweet } from "react-tweet";
 import type { TweetData } from "@/lib/tweet-service";
 import { Confetti } from "./confetti";
 import { TweetWithActions } from "./tweet-with-actions";
-import { Button } from "./ui/button";
 
 // How many tweets to mount per page. The whole filtered list lives in memory
 // (so filter counts stay accurate), but we only render embeds incrementally to
@@ -22,7 +21,6 @@ interface TweetListProps {
   completionMessage?: string;
   isEmpty?: boolean;
   onDelete?: (tweetId: string) => Promise<void>;
-  onToggleDevTweets?: () => void;
   onToggleSaved?: (
     tweetId: string,
     currentSavedStatus: boolean
@@ -32,7 +30,6 @@ interface TweetListProps {
   // the active tab or filter changes).
   resetKey?: string;
   showActions?: boolean;
-  showDevTweets?: boolean;
   tweets: TweetData[];
 }
 
@@ -41,8 +38,6 @@ export function TweetList({
   showActions = true,
   apiSecret,
   isEmpty = false,
-  showDevTweets = false,
-  onToggleDevTweets,
   onToggleSeen,
   onToggleSaved,
   completionMessage,
@@ -114,19 +109,6 @@ export function TweetList({
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-12">
         <p className="text-lg text-muted-foreground">No tweets to display</p>
-        <p className="max-w-md text-center text-muted-foreground text-sm">
-          Add your first tweet using the form above, or toggle development
-          tweets to see some examples.
-        </p>
-        {onToggleDevTweets ? (
-          <Button
-            className="mt-2"
-            onClick={onToggleDevTweets}
-            variant="outline"
-          >
-            {showDevTweets ? "Hide" : "Show"} Development Tweets
-          </Button>
-        ) : null}
       </div>
     );
   }

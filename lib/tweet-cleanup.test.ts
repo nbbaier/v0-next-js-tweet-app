@@ -42,6 +42,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 describe("cleanupOldTweets", () => {
@@ -136,7 +137,6 @@ describe("cleanupOldTweets", () => {
       ["[Cleanup] No metadata found for tweet 902"],
       ["[Cleanup] No metadata found for tweet 903"],
     ]);
-    warn.mockRestore();
   });
 
   it("records an error for a failed removal and keeps processing", async () => {

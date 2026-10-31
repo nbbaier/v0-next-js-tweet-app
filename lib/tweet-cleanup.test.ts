@@ -42,6 +42,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 describe("cleanupOldTweets", () => {
@@ -115,6 +116,27 @@ describe("cleanupOldTweets", () => {
       deletedTweetIds: [],
       errors: [],
     });
+  });
+
+  it("skips every tweet with a warning when the bulk fetch falls back to all nulls", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    mockGetTweetIds.mockResolvedValue(["901", "902", "903"]);
+    mockGetMetadataBatch.mockResolvedValue([null, null, null]);
+
+    const result = await cleanupOldTweets();
+
+    expect(mockGetMetadataBatch).toHaveBeenCalledTimes(1);
+    expect(mockRemoveTweet).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      deletedCount: 0,
+      deletedTweetIds: [],
+      errors: [],
+    });
+    expect(warn.mock.calls).toEqual([
+      ["[Cleanup] No metadata found for tweet 901"],
+      ["[Cleanup] No metadata found for tweet 902"],
+      ["[Cleanup] No metadata found for tweet 903"],
+    ]);
   });
 
   it("records an error for a failed removal and keeps processing", async () => {

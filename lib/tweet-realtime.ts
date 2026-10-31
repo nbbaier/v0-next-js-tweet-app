@@ -1,95 +1,23 @@
+import type { EventData, EventPath, Realtime } from "@upstash/realtime";
 import { realtime } from "./realtime";
-import type { TweetData } from "./tweet-service";
 
 const TWEETS_CHANNEL = "tweets";
 
-/**
- * Gets a typed channel for publishing events.
- * Using the realtime.channel() method provides proper type safety
- * for event names and payloads based on the schema.
- */
-function getChannel() {
-  return realtime.channel(TWEETS_CHANNEL);
-}
+type RealtimeOpts = typeof realtime extends Realtime<infer O> ? O : never;
 
 /**
- * Helper function to publish a tweet added event
+ * Publishes an event on the global tweets channel.
+ * Never throws: realtime is best-effort, so a failed publish must not turn a
+ * successful storage write into an error response.
  */
-export async function publishTweetAdded(tweet: TweetData): Promise<void> {
-  try {
-    const channel = getChannel();
-    await channel.emit("tweet.added", { tweet });
-    console.log(
-      `[Realtime] Successfully published tweet:added for ${tweet.id}`
-    );
-  } catch (error) {
-    console.error("[Realtime ERROR] Failed to publish tweet:added:", error);
-    console.error(
-      "[Realtime ERROR] Error details:",
-      error instanceof Error ? error.stack : error
-    );
-    throw error;
-  }
-}
-
-/**
- * Helper function to publish a tweet updated event
- */
-export async function publishTweetUpdated(tweet: TweetData): Promise<void> {
-  try {
-    const channel = getChannel();
-    await channel.emit("tweet.updated", { tweet });
-    console.log(`[Realtime] Published tweet:updated for ${tweet.id}`);
-  } catch (error) {
-    console.error("[Realtime ERROR] Failed to publish tweet:updated:", error);
-    throw error;
-  }
-}
-
-/**
- * Helper function to publish a tweet removed event
- */
-export async function publishTweetRemoved(tweetId: string): Promise<void> {
-  try {
-    const channel = getChannel();
-    await channel.emit("tweet.removed", { id: tweetId });
-    console.log(`[Realtime] Published tweet:removed for ${tweetId}`);
-  } catch (error) {
-    console.error("[Realtime ERROR] Failed to publish tweet:removed:", error);
-    throw error;
-  }
-}
-
-/**
- * Helper function to publish a tweet seen status change event
- */
-export async function publishTweetSeen(
-  tweetId: string,
-  seen: boolean
+export async function publishTweetEvent<K extends EventPath<RealtimeOpts>>(
+  event: K,
+  data: EventData<RealtimeOpts, K>
 ): Promise<void> {
   try {
-    const channel = getChannel();
-    await channel.emit("tweet.seen", { seen, tweetId });
-    console.log(`[Realtime] Published tweet:seen for ${tweetId}`);
+    await realtime.channel(TWEETS_CHANNEL).emit(event, data);
+    console.log(`[Realtime] Published ${event}`);
   } catch (error) {
-    console.error("[Realtime ERROR] Failed to publish tweet:seen:", error);
-    throw error;
-  }
-}
-
-/**
- * Helper function to publish a tweet saved status change event
- */
-export async function publishTweetSaved(
-  tweetId: string,
-  saved: boolean
-): Promise<void> {
-  try {
-    const channel = getChannel();
-    await channel.emit("tweet.saved", { saved, tweetId });
-    console.log(`[Realtime] Published tweet:saved for ${tweetId}`);
-  } catch (error) {
-    console.error("[Realtime ERROR] Failed to publish tweet:saved:", error);
-    throw error;
+    console.error(`[Realtime ERROR] Failed to publish ${event}:`, error);
   }
 }

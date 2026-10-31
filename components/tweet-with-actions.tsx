@@ -41,10 +41,10 @@ function formatSubmittedAt(timestamp: number): string {
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) {
-    return `today at ${date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+    return `Today at ${date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
   }
   if (diffDays === 1) {
-    return `yesterday at ${date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
+    return `Yesterday at ${date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}`;
   }
   if (diffDays < 7) {
     return `${diffDays} days ago`;
@@ -224,7 +224,7 @@ function TweetWithActionsComponent({
         )}
         {submittedAt && (
           <span className="text-muted-foreground/70 text-xs">
-            Added {formatSubmittedAt(submittedAt)}
+            {formatSubmittedAt(submittedAt)}
           </span>
         )}
       </div>

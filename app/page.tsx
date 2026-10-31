@@ -24,7 +24,7 @@ export default async function Home() {
       >
         <div className="w-full max-w-[550px] px-4">
           <Suspense fallback={null}>
-            <FilterableTweetFeed showActions={true} tweets={tweets} />
+            <FilterableTweetFeed tweets={tweets} />
           </Suspense>
         </div>
       </main>

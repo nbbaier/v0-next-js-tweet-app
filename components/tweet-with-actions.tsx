@@ -19,7 +19,6 @@ import {
 import { Button } from "./ui/button";
 
 interface TweetWithActionsProps {
-  apiSecret?: string;
   content?: TweetType;
   onDelete?: (tweetId: string) => Promise<void>;
   onToggleSaved?: (
@@ -63,7 +62,6 @@ function TweetWithActionsComponent({
   seen: initialSeen = false,
   saved: initialSaved = false,
   content,
-  apiSecret,
   onToggleSeen,
   onToggleSaved,
   onDelete,
@@ -95,12 +93,11 @@ function TweetWithActionsComponent({
       if (onToggleSaved) {
         await onToggleSaved(tweetId, isSaved);
       } else {
-        const secretToUse = apiSecret || storedSecret;
         const response = await fetch(`/api/tweets/${tweetId}`, {
           body: JSON.stringify({ saved: !isSaved }),
           headers: {
             "Content-Type": "application/json",
-            ...(secretToUse ? { "x-api-secret": secretToUse } : {}),
+            ...(storedSecret ? { "x-api-secret": storedSecret } : {}),
           },
           method: "PATCH",
         });
@@ -119,7 +116,7 @@ function TweetWithActionsComponent({
     } finally {
       setIsTogglingSavedStatus(false);
     }
-  }, [apiSecret, isSaved, onToggleSaved, router, storedSecret, tweetId]);
+  }, [isSaved, onToggleSaved, router, storedSecret, tweetId]);
 
   const handleToggleSeen = useCallback(async () => {
     setIsTogglingSeenStatus(true);
@@ -131,12 +128,11 @@ function TweetWithActionsComponent({
         await onToggleSeen(tweetId, isSeen);
       } else {
         // Fallback to original behavior
-        const secretToUse = apiSecret || storedSecret;
         const response = await fetch(`/api/tweets/${tweetId}`, {
           body: JSON.stringify({ seen: !isSeen }),
           headers: {
             "Content-Type": "application/json",
-            ...(secretToUse ? { "x-api-secret": secretToUse } : {}),
+            ...(storedSecret ? { "x-api-secret": storedSecret } : {}),
           },
           method: "PATCH",
         });
@@ -156,12 +152,10 @@ function TweetWithActionsComponent({
     } finally {
       setIsTogglingSeenStatus(false);
     }
-  }, [apiSecret, isSeen, onToggleSeen, router, storedSecret, tweetId]);
+  }, [isSeen, onToggleSeen, router, storedSecret, tweetId]);
 
   const handleDelete = useCallback(async () => {
-    const secretToUse = apiSecret || storedSecret;
-
-    if (!secretToUse) {
+    if (!storedSecret) {
       setError("No API secret found. Please set it in the form above.");
       return;
     }
@@ -179,7 +173,7 @@ function TweetWithActionsComponent({
         // Fallback to original behavior
         const response = await fetch(`/api/tweets/${tweetId}`, {
           headers: {
-            "x-api-secret": secretToUse,
+            "x-api-secret": storedSecret,
           },
           method: "DELETE",
         });
@@ -198,7 +192,7 @@ function TweetWithActionsComponent({
       setError(err instanceof Error ? err.message : "Failed to delete tweet");
       setIsDeleting(false);
     }
-  }, [apiSecret, onDelete, router, storedSecret, tweetId]);
+  }, [onDelete, router, storedSecret, tweetId]);
 
   const handleDialogOpenChange = useCallback((open: boolean) => {
     setDialogOpen(open);
@@ -362,9 +356,6 @@ function arePropsEqual(
     return false;
   }
   if (prevProps.submittedAt !== nextProps.submittedAt) {
-    return false;
-  }
-  if (prevProps.apiSecret !== nextProps.apiSecret) {
     return false;
   }
   // Functions are stable if using useCallback properly, but we check them anyway

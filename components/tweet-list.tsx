@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { EmbeddedTweet, Tweet } from "react-tweet";
 import type { TweetData } from "@/lib/tweet-service";
 import { Confetti } from "./confetti";
 import { TweetWithActions } from "./tweet-with-actions";
@@ -17,7 +16,6 @@ const TWEETS_PER_PAGE = 10;
 const SENTINEL_ROOT_MARGIN = "800px 0px";
 
 interface TweetListProps {
-  apiSecret?: string;
   completionMessage?: string;
   isEmpty?: boolean;
   onDelete?: (tweetId: string) => Promise<void>;
@@ -29,14 +27,11 @@ interface TweetListProps {
   // Changes to this value reset pagination back to the first page (e.g. when
   // the active tab or filter changes).
   resetKey?: string;
-  showActions?: boolean;
   tweets: TweetData[];
 }
 
 export function TweetList({
   tweets,
-  showActions = true,
-  apiSecret,
   isEmpty = false,
   onToggleSeen,
   onToggleSaved,
@@ -139,28 +134,17 @@ export function TweetList({
                   }
             }
           >
-            {showActions ? (
-              <TweetWithActions
-                apiSecret={apiSecret}
-                content={tweet.content}
-                onDelete={onDelete}
-                onToggleSaved={onToggleSaved}
-                onToggleSeen={onToggleSeen}
-                saved={tweet.saved}
-                seen={tweet.seen}
-                submittedAt={tweet.submittedAt}
-                submittedBy={tweet.submittedBy}
-                tweetId={tweet.id}
-              />
-            ) : (
-              <div className="tweet-container flex justify-center">
-                {tweet.content ? (
-                  <EmbeddedTweet tweet={tweet.content} />
-                ) : (
-                  <Tweet id={tweet.id} />
-                )}
-              </div>
-            )}
+            <TweetWithActions
+              content={tweet.content}
+              onDelete={onDelete}
+              onToggleSaved={onToggleSaved}
+              onToggleSeen={onToggleSeen}
+              saved={tweet.saved}
+              seen={tweet.seen}
+              submittedAt={tweet.submittedAt}
+              submittedBy={tweet.submittedBy}
+              tweetId={tweet.id}
+            />
           </motion.div>
         ))}
       </AnimatePresence>

@@ -1,5 +1,6 @@
 _.log
 .cache
+.amp/portals/
 .claude/settings.local.json
 .claude/worktrees
 .cursor/hooks/state/continual-learning*

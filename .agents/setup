@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Orb setup for this repository. Runs once per fresh orb (and again on stale
+# snapshots). Must be fast, non-interactive, and idempotent.
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$repo_root"
+
+log() { printf '\n[setup] %s\n' "$*"; }
+step_start=""
+timed() {
+  step_start="$(date +%s)"
+  "$@"
+  local rc=$?
+  log "$( printf '%s took %ss' "$*" "$(($(date +%s) - step_start))" )"
+  return "$rc"
+}
+
+log "Repo: $repo_root (node $(node --version))"
+
+# --- pnpm (pinned via package.json "packageManager": pnpm@11.5.0) -----------
+if [ "$(pnpm --version 2>/dev/null)" != "11.5.0" ]; then
+  log "Installing pnpm 11.5.0 via corepack"
+  export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+  corepack enable pnpm
+  corepack prepare pnpm@11.5.0 --activate
+else
+  log "pnpm 11.5.0 already installed"
+fi
+
+# --- Dependencies ------------------------------------------------------------
+timed pnpm install --frozen-lockfile
+
+# --- Environment -------------------------------------------------------------
+# The app throws at import time without Upstash credentials. Seed placeholder
+# values (same dummies CI uses) so build/test/dev work out of the box; real
+# credentials come from Amp project secrets or .env.local set by the user.
+if [ ! -f .env.local ]; then
+  log "Seeding .env.local with placeholder credentials"
+  cat > .env.local <<'EOF'
+# Placeholder credentials so build/test/dev start without live Redis.
+# Real credentials are read from Amp project secrets at runtime; replace these
+# with your Upstash REST API URL/token for a working live feed.
+UPSTASH_KV_KV_REST_API_URL=https://example.invalid
+UPSTASH_KV_KV_REST_API_TOKEN=ci-dummy-token
+TWEET_API_SECRET=ci-dummy-secret
+EOF
+else
+  log ".env.local already exists"
+fi
+
+log "Setup complete"

@@ -114,6 +114,18 @@ The tweet will be removed from the feed immediately.
 -  This happens automatically - no manual action needed
 -  You can also trigger cleanup manually via the API (see API Reference below)
 
+### Backing Up Your Collection
+
+Because cleanup permanently deletes old tweets, download a JSON backup of the full collection (feed and saved tweets) from `GET /api/tweets/export`. It requires the `x-api-secret` header:
+
+```bash
+curl -H "x-api-secret: $TWEET_API_SECRET" \
+  -o tweets-export.json \
+  https://your-app.vercel.app/api/tweets/export
+```
+
+The response is `{ exportedAt, count, tweets }`, where each entry in `tweets` is `{ id, metadata, content }`. `metadata` holds the stored submission data (`submittedAt`, `posters`, `url`, `seen`, `saved`); `content` is the full tweet, or `null` when it can no longer be fetched from X. Uncached tweets are fetched during the export, so it can be slow on large collections.
+
 ## Advanced Usage
 
 ### iOS Shortcuts
@@ -357,5 +369,4 @@ Consider adding these features in the future:
 -  Comments or notes on tweets
 -  Categories/tags for organization
 -  Search and filtering
--  Export functionality
 -  Pagination for large collections

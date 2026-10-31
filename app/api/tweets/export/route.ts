@@ -5,12 +5,8 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { requireApiSecret } from "@/lib/api-auth";
-import { getTweetIds } from "@/lib/tweet-config";
-import { fetchTweetsWithCache } from "@/lib/tweet-service";
-import {
-  getSavedTweetIdsFromStorage,
-  getTweetMetadataBatch,
-} from "@/lib/tweet-storage";
+import { fetchTweetsWithCache, getAllTweetIds } from "@/lib/tweet-service";
+import { getTweetMetadataBatch } from "@/lib/tweet-storage";
 
 /**
  * GET /api/tweets/export
@@ -23,11 +19,7 @@ export async function GET(request: NextRequest) {
       return authError;
     }
 
-    const [tweetIds, savedTweetIds] = await Promise.all([
-      getTweetIds(),
-      getSavedTweetIdsFromStorage(),
-    ]);
-    const allIds = [...new Set([...tweetIds, ...savedTweetIds])];
+    const allIds = await getAllTweetIds();
 
     const [tweets, metadataBatch] = await Promise.all([
       // Read-only: a backup must never delete tweets X reports as unavailable

@@ -72,14 +72,12 @@ export function TweetSubmitForm({
   }, []);
 
   // Handle keyboard shortcuts
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    // Meta+Enter (Cmd+Enter on Mac, Ctrl+Enter on Windows/Linux) to submit
+  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
+    // Meta+Enter (Cmd+Enter on Mac, Ctrl+Enter on Windows/Linux) to submit.
+    // requestSubmit() runs native validation, unlike dispatching a raw submit event.
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
       e.preventDefault();
-      const form = e.currentTarget as HTMLFormElement;
-      form.dispatchEvent(
-        new Event("submit", { bubbles: true, cancelable: true })
-      );
+      e.currentTarget.form?.requestSubmit();
     }
   }, []);
 

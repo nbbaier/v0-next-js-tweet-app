@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
 
     const exportedAt = new Date().toISOString();
     const doc = {
+      success: true,
       exportedAt,
       count: allIds.length,
       // Iterate allIds, not `tweets`: fetchTweetsWithCache drops tweets whose
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error("[API ERROR] Failed to export tweets:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { success: false, error: "Internal server error" },
       { status: 500 }
     );
   }

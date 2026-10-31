@@ -114,6 +114,7 @@ describe("GET /api/tweets/export", () => {
     );
 
     const body = await response.json();
+    expect(body.success).toBe(true);
     expect(body.count).toBe(3);
     expect(body.tweets.map((t: { id: string }) => t.id)).toEqual([
       "a",

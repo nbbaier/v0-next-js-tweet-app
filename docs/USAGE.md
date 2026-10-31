@@ -124,7 +124,7 @@ curl --fail -H "x-api-secret: $TWEET_API_SECRET" \
   https://your-app.vercel.app/api/tweets/export
 ```
 
-The response is `{ exportedAt, count, tweets }`, where each entry in `tweets` is `{ id, metadata, content }`. `metadata` holds the stored submission data (`submittedAt`, `posters`, `url`, `seen`, `saved`); `content` is the full tweet, or `null` when it can no longer be fetched from X. Uncached tweets are fetched during the export, so it can be slow on large collections.
+The response is `{ success, exportedAt, count, tweets }`, where each entry in `tweets` is `{ id, metadata, content }`. `metadata` holds the stored submission data (`submittedAt`, `posters`, `url`, `seen`, `saved`); `content` is the full tweet, or `null` when it can no longer be fetched from X. Uncached tweets are fetched during the export, so it can be slow on large collections.
 
 ## Advanced Usage
 

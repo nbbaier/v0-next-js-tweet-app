@@ -5,7 +5,12 @@
 
 import { fetchTweet, type QuotedTweet, type Tweet } from "react-tweet/api";
 import { getCachedTweets, setCachedTweet } from "./tweet-cache";
-import { getTweetMetadataBatch, removeTweetFromStorage } from "./tweet-storage";
+import {
+  getSavedTweetIdsFromStorage,
+  getTweetIdsFromStorage,
+  getTweetMetadataBatch,
+  removeTweetFromStorage,
+} from "./tweet-storage";
 
 export interface TweetData {
   content?: Tweet; // The actual tweet content from react-tweet
@@ -40,6 +45,18 @@ function normalizeTweetContent(tweet: Tweet): Tweet {
       ? normalizeTweetBase(tweet.quoted_tweet)
       : undefined,
   };
+}
+
+/**
+ * IDs of every tweet in the collection: the feed (newest first) followed by
+ * saved tweets no longer in the feed. Returns [] if storage is unavailable.
+ */
+export async function getAllTweetIds(): Promise<string[]> {
+  const [feedIds, savedIds] = await Promise.all([
+    getTweetIdsFromStorage(),
+    getSavedTweetIdsFromStorage(),
+  ]);
+  return [...new Set([...feedIds, ...savedIds])];
 }
 
 export interface FetchTweetsOptions {

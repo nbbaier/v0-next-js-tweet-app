@@ -25,19 +25,15 @@ import {
 } from "@/components/ui/select";
 
 interface TweetSubmitFormProps {
-  apiSecret?: string;
   onSuccess?: () => void;
 }
 
 const STORAGE_KEY = "tweet_api_secret";
 const NAME_STORAGE_KEY = "tweet_submitter_name";
 
-export function TweetSubmitForm({
-  apiSecret,
-  onSuccess,
-}: TweetSubmitFormProps) {
+export function TweetSubmitForm({ onSuccess }: TweetSubmitFormProps) {
   const [url, setUrl] = useState("");
-  const [secret, setSecret] = useState(apiSecret || "");
+  const [secret, setSecret] = useState("");
   const [submittedBy, setSubmittedBy] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberSecret, setRememberSecret] = useState(false);
@@ -271,7 +267,7 @@ export function TweetSubmitForm({
           </Field>
 
           {/* API Secret field - only show if not stored or user wants to change */}
-          {!apiSecret && (showSecretField || !hasStoredSecret) && (
+          {(showSecretField || !hasStoredSecret) && (
             <div className="space-y-4">
               <Field>
                 <FieldLabel className="pl-1" htmlFor="api-secret">

@@ -10,7 +10,6 @@ import type { TweetData } from "@/lib/tweet-service";
 import { TweetList } from "./tweet-list";
 
 interface FilterableTweetFeedProps {
-  showActions?: boolean;
   tweets: TweetData[];
 }
 
@@ -363,7 +362,6 @@ function getPeopleFromCounts(
 
 export function FilterableTweetFeed({
   tweets: initialTweets,
-  showActions = true,
 }: FilterableTweetFeedProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -635,7 +633,6 @@ export function FilterableTweetFeed({
             onToggleSaved={handleToggleSaved}
             onToggleSeen={handleToggleSeen}
             resetKey={`feed:${selectedFilter ?? "all"}:${hideSeenTweets}`}
-            showActions={showActions}
             tweets={filteredTweets}
           />
         ) : (
@@ -644,7 +641,6 @@ export function FilterableTweetFeed({
             onDelete={handleDelete}
             onToggleSaved={handleToggleSaved}
             resetKey={`saved:${selectedFilter ?? "all"}`}
-            showActions={showActions}
             tweets={filteredSavedTweets}
           />
         )}

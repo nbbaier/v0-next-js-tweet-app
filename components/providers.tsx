@@ -1,7 +1,7 @@
 "use client";
 
 import { RealtimeProvider } from "@upstash/realtime/client";
-import { ThemeProvider } from "./theme-provider";
+import { ThemeProvider } from "next-themes";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (

@@ -3,13 +3,7 @@
  */
 
 import { redis } from "./redis";
-import {
-  publishTweetAdded,
-  publishTweetRemoved,
-  publishTweetSaved,
-  publishTweetSeen,
-  publishTweetUpdated,
-} from "./tweet-realtime";
+import { publishTweetEvent } from "./tweet-realtime";
 import type { TweetData } from "./tweet-service";
 
 const TWEETS_LIST_KEY = "tweets:list";
@@ -71,14 +65,7 @@ export async function addTweetToStorage(
           seen: updatedMetadata.seen,
           submittedBy: updatedMetadata.posters.map((p) => p.name),
         };
-        try {
-          await publishTweetUpdated(updatedTweetData);
-        } catch (publishError) {
-          console.error(
-            "[Storage] Failed to publish update event but metadata was stored:",
-            publishError
-          );
-        }
+        await publishTweetEvent("tweet.updated", { tweet: updatedTweetData });
 
         return updatedMetadata;
       }
@@ -116,19 +103,7 @@ export async function addTweetToStorage(
       seen: metadata.seen,
       submittedBy: metadata.posters.map((p) => p.name),
     };
-    console.log(
-      `[Storage] About to publish tweet:added for ${tweetId}`,
-      tweetData
-    );
-    try {
-      await publishTweetAdded(tweetData);
-      console.log(`[Storage] Completed publishing tweet:added for ${tweetId}`);
-    } catch (publishError) {
-      console.error(
-        "[Storage] Failed to publish event but tweet was stored:",
-        publishError
-      );
-    }
+    await publishTweetEvent("tweet.added", { tweet: tweetData });
 
     return metadata;
   } catch (error) {
@@ -323,7 +298,7 @@ export async function updateTweetSeen(
     );
 
     // Publish real-time update
-    await publishTweetSeen(tweetId, seen);
+    await publishTweetEvent("tweet.seen", { seen, tweetId });
 
     return updatedMetadata;
   } catch (error) {
@@ -357,7 +332,7 @@ export async function removeTweetFromStorage(
 
     // Publish real-time update
     if (removed > 0) {
-      await publishTweetRemoved(tweetId);
+      await publishTweetEvent("tweet.removed", { id: tweetId });
     }
 
     return removed > 0;
@@ -408,7 +383,7 @@ export async function updateTweetSaved(
     );
 
     // Publish real-time update
-    await publishTweetSaved(tweetId, saved);
+    await publishTweetEvent("tweet.saved", { saved, tweetId });
 
     return updatedMetadata;
   } catch (error) {

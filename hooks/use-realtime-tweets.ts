@@ -68,23 +68,6 @@ export function useRealtimeTweets(
     },
   });
 
-  // Tweet reorder handler
-  useRealtime<RealtimeEvents, "tweet.reorder">({
-    enabled,
-    channels: ["tweets"],
-    events: ["tweet.reorder"],
-    onData: (data) => {
-      console.log("[Realtime Hook] ✅ Received tweet.reorder event:", data);
-      setTweets((prev) => {
-        const tweetMap = new Map(prev.map((t) => [t.id, t]));
-        return data.data.tweetIds
-          .map((id: string) => tweetMap.get(id))
-          .filter((t): t is TweetData => t !== undefined);
-      });
-      console.log("[Realtime] Tweets reordered");
-    },
-  });
-
   // Tweet saved handler
   useRealtime<RealtimeEvents, "tweet.saved">({
     enabled,

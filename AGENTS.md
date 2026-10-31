@@ -7,12 +7,15 @@
 | `pnpm dev` | Start development server |
 | `pnpm build` | Type check + Next.js build |
 | `pnpm start` | Production server |
-| `pnpm lint` | Biome linting |
+| `pnpm check` | Biome/Ultracite linting |
+| `pnpm fix` | Biome/Ultracite autofix |
+| `pnpm typecheck` | TypeScript type check (`tsc --noEmit`) |
+| `pnpm test` | Run Vitest suites |
 | `biome format --write .` | Format code |
 
 ## Tech Stack
 
-- **Framework**: Next.js 16.0.0 (App Router), React 19.2.0, TypeScript 5.x
+- **Framework**: Next.js 16.x (App Router), React 19.x, TypeScript 6.x
 - **Styling**: Tailwind CSS 4.x, Base UI, next-themes (dark mode)
 - **Database**: Upstash Redis (tweet storage + caching)
 - **Realtime**: Upstash Realtime with SSE
@@ -54,7 +57,7 @@ TWEET_API_SECRET=                # API auth secret
 
 ## Code Style
 
-- **Formatting**: Biome with tabs, double quotes, auto-organized imports
+- **Formatting**: Biome (Ultracite preset) with 2-space indentation, double quotes, auto-organized imports
 - **TypeScript**: Strict mode, explicit types, avoid `any`
 - **Naming**: PascalCase components, camelCase functions, kebab-case files
 - **Styling**: Tailwind utilities, `cn()` helper, dark mode via `next-themes`
@@ -69,10 +72,10 @@ Channel: `"tweets"` (global feed)
 | `tweet.added` | `{ tweet }` |
 | `tweet.updated` | `{ tweet }` |
 | `tweet.removed` | `{ id }` |
-| `tweet.seen` | `{ id }` |
-| `tweet.reorder` | `{ tweets }` |
+| `tweet.seen` | `{ tweetId, seen }` |
+| `tweet.saved` | `{ tweetId, saved }` |
 
-**Note**: Client uses separate `useRealtime()` hook per event type (v0.3.0 API).
+**Note**: `hooks/use-realtime-tweets.ts` currently calls `useRealtime()` (`@upstash/realtime` 1.x) once per event type.
 
 ## Common Tasks
 
@@ -102,7 +105,7 @@ curl -X POST http://localhost:3000/api/tweets \
 
 - Auto-syncs with v0.app: https://v0.app/chat/g3irQjK6slk
 - Deployed on Vercel (auto-sync from production branch)
-- Biome handles most formatting automatically - run `pnpm lint` before committing
+- Biome handles most formatting automatically - run `pnpm check` before committing
 - React 19: Use ref as prop (no `forwardRef`)
 - Next.js: Use Server Components for async data fetching
 

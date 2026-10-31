@@ -20,9 +20,6 @@ const schema = {
     removed: z.object({
       id: z.string(),
     }),
-    reorder: z.object({
-      tweetIds: z.array(z.string()),
-    }),
     seen: z.object({
       tweetId: z.string(),
       seen: z.boolean(),

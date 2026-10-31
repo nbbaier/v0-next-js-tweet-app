@@ -164,8 +164,8 @@ export function TweetList({
                 onToggleSaved={onToggleSaved}
                 onToggleSeen={onToggleSeen}
                 saved={tweet.saved}
-                savedAt={tweet.savedAt}
                 seen={tweet.seen}
+                submittedAt={tweet.submittedAt}
                 submittedBy={tweet.submittedBy}
                 tweetId={tweet.id}
               />

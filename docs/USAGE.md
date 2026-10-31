@@ -119,7 +119,7 @@ The tweet will be removed from the feed immediately.
 Because cleanup permanently deletes old tweets, download a JSON backup of the full collection (feed and saved tweets) from `GET /api/tweets/export`. It requires the `x-api-secret` header:
 
 ```bash
-curl -H "x-api-secret: $TWEET_API_SECRET" \
+curl --fail -H "x-api-secret: $TWEET_API_SECRET" \
   -o tweets-export.json \
   https://your-app.vercel.app/api/tweets/export
 ```

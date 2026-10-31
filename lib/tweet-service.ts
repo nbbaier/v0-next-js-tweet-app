@@ -17,7 +17,7 @@ export interface TweetData {
 }
 
 function normalizeTweetBase<T extends QuotedTweet | Tweet>(tweet: T): T {
-  const entities = tweet.entities ?? {};
+  const entities: Partial<Tweet["entities"]> = tweet.entities ?? {};
 
   return {
     ...tweet,
@@ -42,10 +42,24 @@ function normalizeTweetContent(tweet: Tweet): Tweet {
   };
 }
 
-async function fetchTweetContent(tweetId: string): Promise<Tweet | undefined> {
+export interface FetchTweetsOptions {
+  /**
+   * Remove tweets that X reports as deleted or not found from storage.
+   * Defaults to true; read-only callers (e.g. export) must pass false.
+   */
+  removeUnavailable?: boolean;
+}
+
+async function fetchTweetContent(
+  tweetId: string,
+  removeUnavailable: boolean
+): Promise<Tweet | undefined> {
   const result = await fetchTweet(tweetId);
 
   if (result.tombstone || result.notFound) {
+    if (!removeUnavailable) {
+      return;
+    }
     console.error(
       `[TweetService] Tweet ${tweetId} is unavailable; removing it from storage.`
     );
@@ -60,7 +74,8 @@ async function fetchTweetContent(tweetId: string): Promise<Tweet | undefined> {
  * Fetch multiple tweets with caching
  */
 export async function fetchTweetsWithCache(
-  tweetIds: string[]
+  tweetIds: string[],
+  { removeUnavailable = true }: FetchTweetsOptions = {}
 ): Promise<TweetData[]> {
   // Optimization: Use bulk fetch for cache and metadata to reduce Redis round-trips
   // This reduces 2N calls to 2 calls (+ writes on miss)
@@ -112,7 +127,7 @@ export async function fetchTweetsWithCache(
 
       // Schedule fetch
       contentFetches.push(
-        fetchTweetContent(id).catch((e): undefined => {
+        fetchTweetContent(id, removeUnavailable).catch((e): undefined => {
           console.error(`Failed to fetch tweet ${id}`, e);
         })
       );

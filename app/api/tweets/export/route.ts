@@ -30,7 +30,8 @@ export async function GET(request: NextRequest) {
     const allIds = [...new Set([...tweetIds, ...savedTweetIds])];
 
     const [tweets, metadataBatch] = await Promise.all([
-      fetchTweetsWithCache(allIds),
+      // Read-only: a backup must never delete tweets X reports as unavailable
+      fetchTweetsWithCache(allIds, { removeUnavailable: false }),
       getTweetMetadataBatch(allIds),
     ]);
     const contentById = new Map(tweets.map((tweet) => [tweet.id, tweet]));

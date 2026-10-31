@@ -16,8 +16,8 @@ A real-time collaborative tweet feed built with Next.js, featuring instant updat
 
 ## Tech Stack
 
--  **Framework**: Next.js 16.0.0 (App Router), React 19.2.0
--  **TypeScript**: 5.x (strict mode)
+-  **Framework**: Next.js 16.x (App Router), React 19.x
+-  **TypeScript**: 6.x (strict mode)
 -  **Styling**: Tailwind CSS 4.x, Base UI components
 -  **Database**: Upstash Redis (sorted sets)
 -  **Real-time**: Upstash Realtime (Server-Sent Events)
@@ -378,7 +378,7 @@ The app uses **Upstash Realtime** for instant updates:
 -  `tweet.updated` - Tweet metadata changed
 -  `tweet.removed` - Tweet deleted
 -  `tweet.seen` - Seen status changed
--  `tweet.reorder` - Tweet order changed
+-  `tweet.saved` - Saved status changed
 
 **Architecture:**
 
@@ -402,8 +402,10 @@ The app uses **Upstash Realtime** for instant updates:
 pnpm dev        # Start dev server
 pnpm build      # Build for production
 pnpm start      # Start production server
-pnpm lint       # Run ESLint
-biome check     # Run Biome linter
+pnpm check      # Run Biome/Ultracite linter
+pnpm fix        # Autofix lint/format issues
+pnpm typecheck  # TypeScript type check
+pnpm test       # Run Vitest suites
 biome format --write .  # Format code
 ```
 

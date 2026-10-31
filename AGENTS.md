@@ -72,7 +72,8 @@ Channel: `"tweets"` (global feed)
 | `tweet.added` | `{ tweet }` |
 | `tweet.updated` | `{ tweet }` |
 | `tweet.removed` | `{ id }` |
-| `tweet.seen` | `{ id }` |
+| `tweet.seen` | `{ tweetId, seen }` |
+| `tweet.saved` | `{ tweetId, saved }` |
 
 **Note**: `hooks/use-realtime-tweets.ts` currently calls `useRealtime()` (`@upstash/realtime` 1.x) once per event type.
 

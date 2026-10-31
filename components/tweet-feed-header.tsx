@@ -1,5 +1,3 @@
-"use client";
-
 import { AddTweetDialog } from "@/components/add-tweet-dialog";
 import { ApiSecretDialog } from "@/components/api-secret-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
